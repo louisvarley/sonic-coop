@@ -6,7 +6,7 @@
 
 import { Room, type Client } from "@colyseus/core";
 import {
-  GameSim, captureState, encodeDelta, encodeSnapshot, decodeInput, decodeU32, makeRoomCode, KEYFRAME,
+  GameSim, captureState, encodeDelta, encodeSnapshot, decodeInput, decodeU32, isCharacterAvailable, makeRoomCode, KEYFRAME,
   type GameEvent, type GameId, type LobbyState, type LobbyPlayer, type ClientLobbyMessage, type StartInfo, type ScriptHost,
 } from "@ringlink/engine";
 import { availableGames, loadVfs } from "./gamedata.js";
@@ -155,9 +155,12 @@ export class CoopRoom extends Room {
       if ("setGame" in msg && isHost && availableGames().includes(msg.setGame)) {
         this.lobby.game = msg.setGame;
         this.lobby.startStage = 0;
+        for (const p of this.lobby.players) {
+          if (!isCharacterAvailable(msg.setGame, p.character)) p.character = 0;
+        }
         for (const p of this.lobby.players) p.ready = false;
       }
-      if ("setCharacter" in msg && (msg.setCharacter === 0 || msg.setCharacter === 1)) player.character = msg.setCharacter;
+      if ("setCharacter" in msg && isCharacterAvailable(this.lobby.game, msg.setCharacter)) player.character = msg.setCharacter;
       if ("ready" in msg) player.ready = !!msg.ready;
       if ("setStartStage" in msg && isHost && DEV_TOOLS) this.lobby.startStage = Math.max(0, Math.floor(Number(msg.setStartStage) || 0));
       if ("start" in msg && isHost) this.tryStart(client);

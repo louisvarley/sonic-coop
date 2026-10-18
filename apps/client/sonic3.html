@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ring Link - Sonic 3 experiment</title>
+  </head>
+  <body>
+    <main>
+      <h1>Sonic 3: experimental local test</h1>
+      <p>This is not full Sonic 3 support. Upright movement and a subset of static objects only.
+        No online co-op, loops, abilities, enemies, bosses, stage progression, or music yet.</p>
+      <p>Player 1: arrows + Z to jump. Player 2: WASD + J to jump. Gamepads 1 and 2 are separate.</p>
+      <p><button id="start" disabled>Start / resume</button> <button id="pause" disabled>Pause</button>
+        <button id="restart" disabled>Restart</button> <a href="/">Back to Ring Link</a></p>
+      <p id="status" role="status">Loading the local experimental pack...</p>
+      <div class="views"><section><h2>Sonic</h2><canvas id="p1" width="424" height="240"></canvas><p id="hud1"></p></section>
+        <section><h2>Tails</h2><canvas id="p2" width="424" height="240"></canvas><p id="hud2"></p></section></div>
+      <details><summary>Unsupported scene objects</summary><pre id="unsupported"></pre></details>
+    </main>
+    <script type="module" src="/src/game/sonic3-experiment.ts"></script>
+  </body>
+</html>

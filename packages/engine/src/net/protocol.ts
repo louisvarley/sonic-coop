@@ -15,7 +15,12 @@ export type GameId = "sonic1" | "sonic2";
 export const CHARACTERS = [
   { id: 0, name: "Sonic" },
   { id: 1, name: "Tails" },
+  { id: 2, name: "Knuckles" },
 ] as const;
+
+export function isCharacterAvailable(game: GameId, id: number): boolean {
+  return CHARACTERS.some((character) => character.id === id && (game === "sonic2" || id < 2));
+}
 
 export interface LobbyPlayer {
   id: string;

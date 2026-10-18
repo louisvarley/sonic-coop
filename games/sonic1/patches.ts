@@ -1,5 +1,5 @@
 import type { ScriptPatch } from "../../tools/patch.js";
-import { signpostGather } from "../shared/patches.js";
+import { leadingPlayerXCheck, signpostGather } from "../shared/patches.js";
 
 // Co-op changes to the original Sonic 1 scripts (see docs/ARCHITECTURE.md, "Co-op on top of the original scripts").
 // Every edit is guarded by `coop.enabled`, so single-player behaves exactly like the original.
@@ -347,6 +347,38 @@ ${respawnCall("\t\t\t\tif LIVES > 0\n\t\t\t\t\tLIVES--\n\t\t\t\tend if")}
 		else
 			DrawNumbers(24, 56, 220, coop.p2Lives, 2, 8, false)
 		end if`,
+  },
+
+  // ---- boss triggers: either co-op player can start the encounter -----------------------------------------------
+  {
+    file: "GHZ/Eggman.txt",
+    reason: "the leading co-op player starts the Green Hill boss encounter",
+    find: `			if player[0].xpos > object[-1].xpos`,
+    replace: leadingPlayerXCheck("\t\t\t", "> object[-1].xpos"),
+  },
+  {
+    file: "MZ/Eggman.txt",
+    reason: "the leading co-op player starts the Marble Zone boss encounter",
+    find: `		if player[0].xpos > marker[+1].xpos`,
+    replace: leadingPlayerXCheck("\t\t", "> marker[+1].xpos"),
+  },
+  {
+    file: "SLZ/Eggman.txt",
+    reason: "the leading co-op player starts the Star Light boss encounter",
+    find: `		if player[0].xpos >= object[-3].xpos`,
+    replace: leadingPlayerXCheck("\t\t", ">= object[-3].xpos"),
+  },
+  {
+    file: "SYZ/Eggman.txt",
+    reason: "the leading co-op player starts the Spring Yard boss encounter",
+    find: `		if player[0].xpos > bossMarker[+1].xpos`,
+    replace: leadingPlayerXCheck("\t\t", "> bossMarker[+1].xpos"),
+  },
+  {
+    file: "SBZ/Eggman.txt",
+    reason: "the leading co-op player starts the Scrap Brain boss encounter",
+    find: `		if player[0].xpos >= temp0`,
+    replace: leadingPlayerXCheck("\t\t", ">= temp0"),
   },
 
   // ---- goal: whichever player reaches the sign post first finishes the act -----------------------------------

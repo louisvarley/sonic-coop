@@ -11,6 +11,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import { readRsdkIndex, decryptRsdkFile } from "./rsdk.js";
 import { writePak, type PakEntry } from "../packages/engine/src/core/pak.js";
@@ -30,7 +31,7 @@ function arg(name: string, def: string): string {
   return i >= 0 ? process.argv[i + 1] : def;
 }
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const source = path.resolve(root, arg("source", "../sonic"));
 const out = path.resolve(root, arg("out", "data"));
 
@@ -100,7 +101,8 @@ async function main() {
     }
 
     // Script sources, with this project's patches applied.
-    const { patches } = (await import(path.join(root, "games", game.id, "patches.ts"))) as { patches: ScriptPatch[] };
+    const patchUrl = pathToFileURL(path.join(root, "games", game.id, "patches.ts")).href;
+    const { patches } = (await import(patchUrl)) as { patches: ScriptPatch[] };
     const scriptDir = path.join(scriptsRoot, game.scriptsDir);
     const sources = new Map<string, string>();
     for (const rel of walk(scriptDir)) {

@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Vfs } from "../packages/engine/src/core/pak.js";
 import { GameSim } from "../packages/engine/src/game.js";
 import { nullHost } from "../packages/engine/src/host.js";
 
-export const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Game data is extracted from the user's own files and is not part of the repository. */
 export function hasData(game: string): boolean {

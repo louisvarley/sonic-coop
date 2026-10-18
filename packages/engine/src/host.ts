@@ -13,6 +13,8 @@ export interface ScriptHost {
   resumeMusic(): void;
   swapMusicTrack(path: string, track: number, loopPoint: number, ratio: number): void;
   setMusicVolume(volume: number): void;
+  /** Reconcile music after restoring an authoritative simulation snapshot. */
+  syncMusic?(track: number, playing: boolean): void;
   /** Sound effect slot `id` now refers to Data/SoundFX/<path>. */
   loadSfx?(id: number, path: string): void;
   stopAllSfx?(): void;

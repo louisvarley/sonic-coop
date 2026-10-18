@@ -1,0 +1,11 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; background: #0b1640; color: #f1f5ff; }
+body { margin: 0; }
+main { max-width: 1200px; padding: 20px; margin: auto; }
+h1 { margin-top: 0; }
+a { color: #a7d7ff; }
+button { padding: 8px 12px; cursor: pointer; }
+.views { display: flex; gap: 16px; flex-wrap: wrap; }
+.views section { flex: 1 1 424px; min-width: 0; }
+canvas { width: 100%; image-rendering: pixelated; border: 1px solid #8497c9; box-sizing: border-box; }
+pre { white-space: pre-wrap; }
+#status[data-error="true"] { color: #ff9f9f; }

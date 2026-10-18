@@ -7,7 +7,7 @@ describe.skipIf(!hasData("sonic2"))("sonic2 co-op", () => {
   const setup = (chars: number[]) => {
     const sim = newSim("sonic2", chars.length);
     sim.configurePlayers(chars);
-    startStage(sim, "EMERALD HILL ZONE 1");
+    startStage(sim, "EMERALD HILL ZONE 1", 1, chars[0] ?? 0);
     return sim;
   };
 
@@ -19,6 +19,15 @@ describe.skipIf(!hasData("sonic2"))("sonic2 co-op", () => {
     expect(E.typeNames[p2.type]).toBe("Player2Object");
     expect(p2.values[16]).toBe(0); // isSidekick
     expect(E.cams[CAM_STRIDE + CAM_INDEX.cameraTarget]).toBe(1);
+  });
+
+  it("sets up Knuckles as either co-op player", () => {
+    for (const characters of [[2, 0], [0, 2]]) {
+      const sim = setup(characters);
+      const events = sim.tick([0, 0]);
+      expect(sim.E.objectEntityList[characters.indexOf(2)].propertyValue).toBe(2);
+      expect(events.some((event) => event.type === "scriptError")).toBe(false);
+    }
   });
 
   it("each player moves with their own pad and has an independent camera", () => {

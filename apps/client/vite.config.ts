@@ -14,7 +14,9 @@ export default defineConfig({
     },
     fs: { allow: [path.resolve(__dirname, "../..")] },
   },
-  build: { target: "es2022", sourcemap: true },
+  build: { target: "es2022", sourcemap: true, rollupOptions: {
+    input: { main: path.resolve(__dirname, "index.html"), sonic3: path.resolve(__dirname, "sonic3.html") },
+  } },
   plugins: [
     {
       // In development the extracted game data is served straight from ../../data (in production nginx does it).

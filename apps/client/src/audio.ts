@@ -15,21 +15,26 @@ export class AudioHost implements ScriptHost {
   readonly ctx: AudioContext;
   private master: GainNode;
   private musicGain: GainNode;
+  private musicPauseGain: GainNode;
   private sfxGain: GainNode;
   private buffers = new Map<string, Promise<AudioBuffer | null>>();
   private tracks: Track[] = [];
   private sfxPaths: string[] = [];
   private music: { source: AudioBufferSourceNode; started: number; offset: number; track: number; buffer: AudioBuffer } | null = null;
+  private requestedMusicTrack: number | null = null;
   private musicToken = 0;
   private playingSfx = new Map<number, AudioBufferSourceNode>();
   private settings = { music: 0.7, sfx: 0.8, muted: false };
+  private scriptMusicVolume = 1;
 
   constructor(private game: string, private audioIndex: Record<string, string>, private onLog: (m: string) => void = () => {}) {
     this.ctx = new AudioContext({ latencyHint: "interactive" });
     this.master = this.ctx.createGain();
     this.musicGain = this.ctx.createGain();
+    this.musicPauseGain = this.ctx.createGain();
     this.sfxGain = this.ctx.createGain();
-    this.musicGain.connect(this.master);
+    this.musicGain.connect(this.musicPauseGain);
+    this.musicPauseGain.connect(this.master);
     this.sfxGain.connect(this.master);
     this.master.connect(this.ctx.destination);
     try {
@@ -56,7 +61,7 @@ export class AudioHost implements ScriptHost {
 
   private applyVolumes(): void {
     this.master.gain.value = this.settings.muted ? 0 : 1;
-    this.musicGain.gain.value = this.settings.music;
+    this.musicGain.gain.value = this.settings.music * this.scriptMusicVolume;
     this.sfxGain.gain.value = this.settings.sfx;
   }
 
@@ -75,6 +80,7 @@ export class AudioHost implements ScriptHost {
             .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${r.status}`))))
             .then((b) => this.ctx.decodeAudioData(b))
             .catch((e) => {
+              if (this.buffers.get(path) === p) this.buffers.delete(path);
               this.onLog(`audio ${path}: ${e}`);
               return null;
             })
@@ -139,7 +145,10 @@ export class AudioHost implements ScriptHost {
   // ---- music -----------------------------------------------------------------------------------------------------
 
   setMusicTrack(path: string, track: number, loop: boolean, loopPoint: number): void {
-    this.tracks[track] = { path: path ? `Data/Music/${path}` : "", loop, loopPoint };
+    const trackPath = path ? `Data/Music/${path}` : "";
+    const previous = this.tracks[track];
+    this.tracks[track] = { path: trackPath, loop, loopPoint };
+    if (this.requestedMusicTrack === track && previous?.path !== trackPath) this.stopMusic();
     if (path) void this.load(`Data/Music/${path}`);
   }
 
@@ -162,8 +171,13 @@ export class AudioHost implements ScriptHost {
     }
     const resumeAt = startPos && ratio ? (this.musicPosition() * 10000) / ratio : 0;
     const token = ++this.musicToken;
+    this.requestedMusicTrack = track;
     void this.load(t.path).then((buf) => {
-      if (!buf || token !== this.musicToken) return;
+      if (token !== this.musicToken) return;
+      if (!buf) {
+        this.requestedMusicTrack = null;
+        return;
+      }
       this.stopSource();
       const src = this.ctx.createBufferSource();
       src.buffer = buf;
@@ -192,15 +206,24 @@ export class AudioHost implements ScriptHost {
 
   stopMusic(): void {
     this.musicToken++;
+    this.requestedMusicTrack = null;
     this.stopSource();
   }
 
+  syncMusic(track: number, playing: boolean): void {
+    if (!playing) {
+      if (this.requestedMusicTrack !== null || this.music) this.stopMusic();
+    } else if (this.requestedMusicTrack !== track) {
+      this.playMusic(track, 0);
+    }
+  }
+
   pauseMusic(): void {
-    if (this.ctx.state === "running") void this.musicGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.02);
+    this.musicPauseGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.02);
   }
 
   resumeMusic(): void {
-    void this.musicGain.gain.setTargetAtTime(this.settings.music, this.ctx.currentTime, 0.02);
+    this.musicPauseGain.gain.setTargetAtTime(1, this.ctx.currentTime, 0.02);
   }
 
   swapMusicTrack(path: string, track: number, loopPoint: number, ratio: number): void {
@@ -214,8 +237,8 @@ export class AudioHost implements ScriptHost {
 
   /** music.volume (0-100) from the scripts, used for fades. */
   setMusicVolume(volume: number): void {
-    const v = Math.max(0, Math.min(100, volume)) / 100;
-    this.musicGain.gain.setTargetAtTime(v * this.settings.music, this.ctx.currentTime, 0.03);
+    this.scriptMusicVolume = Math.max(0, Math.min(100, volume)) / 100;
+    this.musicGain.gain.setTargetAtTime(this.scriptMusicVolume * this.settings.music, this.ctx.currentTime, 0.03);
   }
 
   dispose(): void {

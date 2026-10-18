@@ -18,14 +18,14 @@ export class Input {
   gamepad = -1;
   enabled = true;
 
-  constructor(target: Window = window) {
+  constructor(target: Window = window, bindings?: Record<string, Action>) {
     let saved: Record<string, Action> | null = null;
     try {
       saved = JSON.parse(localStorage.getItem("ringlink.keys") ?? "null");
     } catch {
       saved = null;
     }
-    this.keys = saved ?? { ...DEFAULT_KEYS };
+    this.keys = bindings ? { ...bindings } : saved ?? { ...DEFAULT_KEYS };
     target.addEventListener("keydown", (e) => {
       if (!this.enabled || (e.target instanceof HTMLInputElement)) return;
       if (this.keys[e.code]) {

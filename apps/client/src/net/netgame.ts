@@ -28,6 +28,7 @@ export class GatedHost implements ScriptHost {
   resumeMusic() { if (!this.muted) this.inner.resumeMusic(); }
   swapMusicTrack(p: string, t: number, lp: number, r: number) { if (!this.muted) this.inner.swapMusicTrack(p, t, lp, r); }
   setMusicVolume(v: number) { if (!this.muted) this.inner.setMusicVolume(v); }
+  syncMusic(track: number, playing: boolean) { this.inner.syncMusic?.(track, playing); }
   loadSfx(id: number, path: string) { this.inner.loadSfx?.(id, path); }
   stopAllSfx() { if (!this.muted) this.inner.stopAllSfx?.(); }
   releaseStageSfx() { this.inner.releaseStageSfx?.(); }
@@ -102,6 +103,8 @@ export class NetGame {
       this.host.muted = false;
       this.sim.E.draw = draw;
     }
+    this.host.syncMusic(this.sim.E.trackID, this.sim.E.musicStatus !== 0);
+    this.host.setMusicVolume(this.sim.E.musicVolume);
     this.started = true;
     this.stats.pending = this.pending.length;
   }
@@ -117,7 +120,7 @@ export class NetGame {
     if (!this.started) return [];
     const seq = ++this.seq;
     this.room.sendBytes("in", encodeInput(seq, pad));
-    if (this.pending.length >= MAX_PREDICTION) return []; // the server is far behind: wait for it
+    if (this.pending.length >= MAX_PREDICTION) this.pending.shift();
     this.pending.push({ seq, pad });
     const events = this.sim.tick(this.padsWith(pad));
     if (this.onEvent) for (const e of events) this.onEvent(e);

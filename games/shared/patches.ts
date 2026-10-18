@@ -1,5 +1,18 @@
 // Script fragments shared by the Sonic 1 and Sonic 2 co-op patches.
 
+/** Replace a player-1-only horizontal gate with a check for the player furthest ahead. Indented with `indent`. */
+export function leadingPlayerXCheck(indent: string, condition: string): string {
+  return [
+    `${indent}temp7 = player[0].xpos`,
+    `${indent}if coop.enabled == true`,
+    `${indent}\tif player[1].xpos > temp7`,
+    `${indent}\t\ttemp7 = player[1].xpos`,
+    `${indent}\tend if`,
+    `${indent}end if`,
+    `${indent}if temp7 ${condition}`,
+  ].join("\n");
+}
+
 /**
  * When the leading player (currentPlayer) passes the sign post, a partner who is far behind is brought next to
  * them, so both take part in the end-of-act run. Indented with `indent`.

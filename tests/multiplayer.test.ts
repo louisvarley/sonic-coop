@@ -58,7 +58,7 @@ describe.skipIf(!hasData("sonic2"))("online co-op", () => {
 
     roomA.send("lobby", { setGame: "sonic2" });
     roomA.send("lobby", { setCharacter: 0 });
-    roomB.send("lobby", { setCharacter: 1 });
+    roomB.send("lobby", { setCharacter: 2 });
     let startA: StartInfo | null = null, startB: StartInfo | null = null;
     roomA.onMessage("start", (s: StartInfo) => (startA = s));
     roomB.onMessage("start", (s: StartInfo) => (startB = s));
@@ -69,7 +69,7 @@ describe.skipIf(!hasData("sonic2"))("online co-op", () => {
     await until(() => !!startA && !!startB);
     expect(startA!.slot).toBe(0);
     expect(startB!.slot).toBe(1);
-    expect(startB!.characters).toEqual([0, 1]);
+    expect(startB!.characters).toEqual([0, 2]);
 
     const gameA = new NetGame(roomA, loadVfs("sonic2"), nullHost, startA!, { headless: true });
     const gameB = new NetGame(roomB, loadVfs("sonic2"), nullHost, startB!, { headless: true });
@@ -80,6 +80,10 @@ describe.skipIf(!hasData("sonic2"))("online co-op", () => {
     roomA.send("loaded");
     roomB.send("loaded");
     await until(() => gameA.started && gameB.started);
+
+    const tickBeforeBacklog = gameB.sim.E.tick;
+    for (let f = 0; f < 60; f++) gameB.step(0);
+    expect(gameB.sim.E.tick).toBe(tickBeforeBacklog + 60);
 
     // play: A runs right, B runs left then jumps; 60 frames per second of wall time
     for (let f = 0; f < 420; f++) {

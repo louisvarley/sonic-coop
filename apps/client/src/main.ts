@@ -1,7 +1,7 @@
 // Ring Link: the browser app (home, lobby, game).
 
 import { Client, type Room } from "colyseus.js";
-import { CHARACTERS, type LobbyState, type StartInfo, type GameId } from "@ringlink/engine";
+import { CHARACTERS, isCharacterAvailable, type LobbyState, type StartInfo, type GameId } from "@ringlink/engine";
 import { GameRunner } from "./game/runner.js";
 import { Input } from "./input.js";
 import "./style.css";
@@ -213,7 +213,7 @@ function renderLobby(): void {
   }
 
   const chars = el("div", { class: "choices" });
-  for (const c of CHARACTERS) {
+  for (const c of CHARACTERS.filter((character) => isCharacterAvailable(l.game, character.id))) {
     const b = el("button", { class: `choice char-${c.name.toLowerCase()}${me?.character === c.id ? " selected" : ""}` }, el("strong", {}, c.name));
     b.onclick = () => room!.send("lobby", { setCharacter: c.id });
     chars.append(b);
@@ -229,7 +229,7 @@ function renderLobby(): void {
             { class: p.ready ? "ready" : "" },
             el("span", { class: "slot" }, `P${s + 1}`),
             el("span", { class: "name" }, p.name + (p.id === l.hostId ? " ★" : "") + (p.id === room.sessionId ? " (you)" : "")),
-            el("span", { class: "char" }, CHARACTERS[p.character]?.name ?? "?"),
+            el("span", { class: "char" }, CHARACTERS.find((character) => character.id === p.character)?.name ?? "?"),
             el("span", { class: "state" }, !p.connected ? "reconnecting…" : p.ready ? "Ready" : "Not ready"),
           )
         : el("li", { class: "empty" }, el("span", { class: "slot" }, `P${s + 1}`), el("span", { class: "name" }, "Waiting for a player…")),

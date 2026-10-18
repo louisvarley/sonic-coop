@@ -1,5 +1,5 @@
 import type { ScriptPatch } from "../../tools/patch.js";
-import { signpostGather } from "../shared/patches.js";
+import { leadingPlayerXCheck, signpostGather } from "../shared/patches.js";
 
 // Co-op changes to the original Sonic 2 scripts (see docs/ARCHITECTURE.md, "Co-op on top of the original scripts").
 // Every edit is guarded by `coop.enabled`, so single-player behaves exactly like the original.
@@ -121,6 +121,12 @@ end function`,
 		camera[1].target = SLOT_PLAYER2
 		camera[1].xpos = player[SLOT_PLAYER2].ixpos
 		camera[1].ypos = player[SLOT_PLAYER2].iypos
+		if coop.p2Character == PLAYER_KNUCKLES_A
+			LoadAnimation("Knuckles.ani")
+			player[SLOT_PLAYER2].character 		= PLAYER_KNUCKLES_A
+			player[SLOT_PLAYER2].jumpOffset 	= -5
+			player[SLOT_PLAYER2].jumpAbility 	= Player_Action_DblJumpKnux
+		else
 		if coop.p2Character == PLAYER_TAILS_A
 			LoadAnimation("Tails.ani")
 			player[SLOT_PLAYER2].character 		= PLAYER_TAILS_A
@@ -131,6 +137,7 @@ end function`,
 			player[SLOT_PLAYER2].character 		= PLAYER_SONIC_A
 			player[SLOT_PLAYER2].jumpOffset 	= -5
 			player[SLOT_PLAYER2].jumpAbility 	= Player_Action_DblJumpSonic
+		end if
 		end if
 		playerCount = 2
 		temp7 = true
@@ -232,6 +239,70 @@ public function Player_State_Death`,
 				stage.timeEnabled 		= false
 
 				player.type 			= TypeName[Death Event]`,
+  },
+
+  // ---- boss triggers: either co-op player can start the encounter ------------------------------------------------
+  {
+    file: "EHZ/Eggman.txt",
+    reason: "the leading co-op player starts the Emerald Hill boss encounter",
+    find: `		if player[0].xpos > object.xpos`,
+    replace: leadingPlayerXCheck("\t\t", "> object.xpos"),
+  },
+  {
+    file: "CPZ/Eggman.txt",
+    reason: "the leading co-op player starts the Chemical Plant boss encounter",
+    find: `		if player[0].xpos > object.xpos`,
+    replace: leadingPlayerXCheck("\t\t", "> object.xpos"),
+  },
+  {
+    file: "ARZ/Eggman.txt",
+    reason: "the leading co-op player starts the Aquatic Ruin boss encounter",
+    find: `		if player[0].xpos > object.xpos`,
+    replace: leadingPlayerXCheck("\t\t", "> object.xpos"),
+  },
+  {
+    file: "OOZ/Eggman.txt",
+    reason: "the leading co-op player starts the Oil Ocean boss encounter",
+    find: `	case OOZEGGMAN_AWAITPLAYER
+		if player[0].xpos > object.xpos`,
+    replace: `	case OOZEGGMAN_AWAITPLAYER
+${leadingPlayerXCheck("\t\t", "> object.xpos")}`,
+  },
+  {
+    file: "HTZ/Eggman.txt",
+    reason: "the leading co-op player starts the Hill Top boss encounter",
+    find: `		if player[0].xpos >= temp0 // Only activate when the player's past the trigger point`,
+    replace: `${leadingPlayerXCheck("\t\t", ">= temp0")} // Only activate when the player's past the trigger point`,
+  },
+  {
+    file: "MPZ/Eggman.txt",
+    reason: "the leading co-op player starts the Mystic Cave boss encounter",
+    find: `		if player[0].xpos >= object.xpos`,
+    replace: leadingPlayerXCheck("\t\t", ">= object.xpos"),
+  },
+  {
+    file: "CNZ/Eggman.txt",
+    reason: "the leading co-op player starts the Casino Night boss encounter",
+    find: `		if player[0].xpos > object[-1].xpos`,
+    replace: leadingPlayerXCheck("\t\t", "> object[-1].xpos"),
+  },
+  {
+    file: "HPZ/Eggman.txt",
+    reason: "the leading co-op player starts the Hidden Palace boss encounter",
+    find: `		if player[0].xpos > object[+1].xpos`,
+    replace: leadingPlayerXCheck("\t\t", "> object[+1].xpos"),
+  },
+  {
+    file: "WFZ/Eggman.txt",
+    reason: "the leading co-op player starts the Wing Fortress boss encounter",
+    find: `		if player[0].xpos > temp0`,
+    replace: leadingPlayerXCheck("\t\t", "> temp0"),
+  },
+  {
+    file: "MCZ/Eggman.txt",
+    reason: "the leading co-op player reaches the boss entry threshold",
+    find: `		if player[0].xpos > temp0`,
+    replace: leadingPlayerXCheck("\t\t", "> temp0"),
   },
 
   // ---- level rules that must follow each player's own camera ----------------------------------------------------
