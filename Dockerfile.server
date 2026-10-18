@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1
+# Ring Link game server: authoritative simulation + Colyseus rooms.
+
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY packages/engine/package.json packages/engine/
+COPY apps/server/package.json apps/server/
+COPY apps/client/package.json apps/client/
+RUN npm ci --no-audit --no-fund
+COPY tsconfig.base.json ./
+COPY packages/engine packages/engine
+COPY apps/server apps/server
+RUN npm -w apps/server run build
+# runtime dependencies only (the engine is bundled into dist/main.js)
+RUN node -e "const p=require('./apps/server/package.json');delete p.dependencies['@ringlink/engine'];require('fs').writeFileSync('/tmp/package.json',JSON.stringify({name:'ringlink-server',private:true,type:'module',dependencies:p.dependencies}))"
+RUN mkdir /out && cp /tmp/package.json /out/ && cp -r apps/server/dist /out/dist && cd /out && npm install --omit=dev --no-audit --no-fund
+
+FROM node:22-alpine
+ARG APP_VERSION=dev
+ENV NODE_ENV=production PORT=2567 DATA_DIR=/data APP_VERSION=${APP_VERSION}
+WORKDIR /app
+COPY --from=build --chown=node:node /out ./
+USER node
+EXPOSE 2567
+HEALTHCHECK --interval=15s --timeout=4s --start-period=10s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:${PORT}/health >/dev/null || exit 1
+STOPSIGNAL SIGTERM
+CMD ["node", "--enable-source-maps", "dist/main.js"]

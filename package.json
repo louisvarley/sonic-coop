@@ -1,0 +1,26 @@
+{
+  "name": "ring-link",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ring Link: online co-op Sonic 1 & 2 in the browser",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "extract": "tsx tools/extract.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev:server": "npm -w apps/server run dev",
+    "dev:client": "npm -w apps/client run dev",
+    "build": "npm -w apps/client run build && npm -w apps/server run build"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "playwright-core": "^1.52.0",
+    "tsx": "4.19.4",
+    "typescript": "5.8.3",
+    "vitest": "3.1.2"
+  }
+}

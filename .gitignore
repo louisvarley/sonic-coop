@@ -1,0 +1,7 @@
+node_modules/
+dist/
+# Game data derived from the user's own Data.rsdk / ROMs: never commit
+data/
+*.rsdk
+*.zip
+.env

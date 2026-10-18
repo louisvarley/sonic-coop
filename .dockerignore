@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+data
+.git
+*.rsdk
+*.zip
+*.bin
+tests
+docs
+tools/dev
+.env

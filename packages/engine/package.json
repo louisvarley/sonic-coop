@@ -1,0 +1,11 @@
+{
+  "name": "@ringlink/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "RSDKv4 engine port (shared simulation, software renderer, netcode helpers)",
+  "main": "src/index.ts",
+  "dependencies": {
+    "fflate": "0.8.2"
+  }
+}

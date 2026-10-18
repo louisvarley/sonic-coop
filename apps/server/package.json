@@ -1,0 +1,23 @@
+{
+  "name": "@ringlink/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "esbuild src/main.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/main.js --sourcemap --external:@colyseus/core --external:@colyseus/ws-transport --external:@colyseus/schema --external:express --external:fflate"
+  },
+  "dependencies": {
+    "@colyseus/core": "0.16.26",
+    "@colyseus/schema": "3.0.76",
+    "@colyseus/ws-transport": "0.16.5",
+    "@ringlink/engine": "0.1.0",
+    "express": "4.22.3",
+    "fflate": "0.8.2"
+  },
+  "devDependencies": {
+    "@types/express": "4.17.21",
+    "esbuild": "0.25.4"
+  }
+}

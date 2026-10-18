@@ -1,0 +1,38 @@
+# Development: docker compose -f compose.yaml -f compose.dev.yaml up --build
+# Source is bind-mounted; the server restarts on change (tsx watch) and the browser app hot-reloads (Vite).
+services:
+  server:
+    build:
+      target: build
+    command: npx tsx watch --clear-screen=false apps/server/src/main.ts
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+      DATA_DIR: /app/data
+      ENABLE_DEV_TOOLS: ${ENABLE_DEV_TOOLS:-1}
+    volumes:
+      - ./packages/engine/src:/app/packages/engine/src:ro
+      - ./apps/server/src:/app/apps/server/src:ro
+      - ${DATA_PATH:-./data}:/app/data:ro
+    ports:
+      - "${SERVER_PORT:-2567}:2567"
+      - "9229:9229"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:2567/health >/dev/null || exit 1"]
+
+  client:
+    build:
+      target: build
+    command: npx vite --host 0.0.0.0 --port 8080
+    working_dir: /app/apps/client
+    environment:
+      API_TARGET: http://server:2567
+      CLIENT_PORT: "8080"
+    volumes:
+      - ./packages/engine/src:/app/packages/engine/src:ro
+      - ./apps/client/src:/app/apps/client/src:ro
+      - ./apps/client/index.html:/app/apps/client/index.html:ro
+      - ./apps/client/vite.config.ts:/app/apps/client/vite.config.ts:ro
+      - ${DATA_PATH:-./data}:/app/data:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1"]

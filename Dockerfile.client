@@ -1,0 +1,25 @@
+# syntax=docker/dockerfile:1
+# Ring Link web front end: the built browser app, the game data (from a read-only volume) and a reverse proxy
+# to the game server, all on one port.
+
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY packages/engine/package.json packages/engine/
+COPY apps/server/package.json apps/server/
+COPY apps/client/package.json apps/client/
+RUN npm ci --no-audit --no-fund
+COPY tsconfig.base.json ./
+COPY packages/engine packages/engine
+COPY apps/client apps/client
+ARG APP_VERSION=dev
+RUN npm -w apps/client run build && echo "${APP_VERSION}" > apps/client/dist/version.txt
+
+FROM nginxinc/nginx-unprivileged:1.27-alpine
+ARG APP_VERSION=dev
+ENV SERVER_UPSTREAM=server:2567 APP_VERSION=${APP_VERSION}
+COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=build /app/apps/client/dist /usr/share/nginx/html
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=4s --start-period=5s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:8080/healthz >/dev/null || exit 1

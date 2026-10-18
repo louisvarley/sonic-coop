@@ -1,0 +1,226 @@
+// Browser audio for the engine: music tracks and sound effects from the game's own files, decoded with Web Audio.
+// Files are fetched lazily by their RSDK path key; nothing here affects the simulation.
+
+import { rsdkPathKey, type ScriptHost } from "@ringlink/engine";
+
+interface Track {
+  path: string;
+  loop: boolean;
+  loopPoint: number;
+}
+
+const MUSIC_RATE = 44100;
+
+export class AudioHost implements ScriptHost {
+  readonly ctx: AudioContext;
+  private master: GainNode;
+  private musicGain: GainNode;
+  private sfxGain: GainNode;
+  private buffers = new Map<string, Promise<AudioBuffer | null>>();
+  private tracks: Track[] = [];
+  private sfxPaths: string[] = [];
+  private music: { source: AudioBufferSourceNode; started: number; offset: number; track: number; buffer: AudioBuffer } | null = null;
+  private musicToken = 0;
+  private playingSfx = new Map<number, AudioBufferSourceNode>();
+  private settings = { music: 0.7, sfx: 0.8, muted: false };
+
+  constructor(private game: string, private audioIndex: Record<string, string>, private onLog: (m: string) => void = () => {}) {
+    this.ctx = new AudioContext({ latencyHint: "interactive" });
+    this.master = this.ctx.createGain();
+    this.musicGain = this.ctx.createGain();
+    this.sfxGain = this.ctx.createGain();
+    this.musicGain.connect(this.master);
+    this.sfxGain.connect(this.master);
+    this.master.connect(this.ctx.destination);
+    try {
+      Object.assign(this.settings, JSON.parse(localStorage.getItem("ringlink.audio") ?? "{}"));
+    } catch {
+      /* private mode */
+    }
+    this.applyVolumes();
+  }
+
+  get volumes() {
+    return { ...this.settings };
+  }
+
+  setVolumes(v: Partial<{ music: number; sfx: number; muted: boolean }>): void {
+    Object.assign(this.settings, v);
+    try {
+      localStorage.setItem("ringlink.audio", JSON.stringify(this.settings));
+    } catch {
+      /* ignore */
+    }
+    this.applyVolumes();
+  }
+
+  private applyVolumes(): void {
+    this.master.gain.value = this.settings.muted ? 0 : 1;
+    this.musicGain.gain.value = this.settings.music;
+    this.sfxGain.gain.value = this.settings.sfx;
+  }
+
+  /** Browsers start audio suspended until a user gesture. */
+  resume(): void {
+    if (this.ctx.state !== "running") void this.ctx.resume();
+  }
+
+  private load(path: string): Promise<AudioBuffer | null> {
+    let p = this.buffers.get(path);
+    if (!p) {
+      const key = rsdkPathKey(path);
+      const ext = this.audioIndex[key];
+      p = ext
+        ? fetch(`/data/${this.game}/audio/${key}.${ext}`)
+            .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${r.status}`))))
+            .then((b) => this.ctx.decodeAudioData(b))
+            .catch((e) => {
+              this.onLog(`audio ${path}: ${e}`);
+              return null;
+            })
+        : Promise.resolve(null);
+      this.buffers.set(path, p);
+    }
+    return p;
+  }
+
+  /** Start fetching every registered sound effect so the first play is instant. */
+  preload(): void {
+    for (const p of this.sfxPaths) if (p) void this.load(`Data/SoundFX/${p}`);
+  }
+
+  log(m: string): void {
+    this.onLog(m);
+  }
+
+  // ---- sound effects ---------------------------------------------------------------------------------------------
+
+  loadSfx(id: number, path: string): void {
+    this.sfxPaths[id] = path;
+    if (path) void this.load(`Data/SoundFX/${path}`);
+  }
+
+  playSfx(id: number, loop: number): void {
+    const path = this.sfxPaths[id];
+    if (!path) return;
+    void this.load(`Data/SoundFX/${path}`).then((buf) => {
+      if (!buf) return;
+      this.stopSfx(id);
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = !!loop;
+      src.connect(this.sfxGain);
+      src.start();
+      this.playingSfx.set(id, src);
+      src.onended = () => {
+        if (this.playingSfx.get(id) === src) this.playingSfx.delete(id);
+      };
+    });
+  }
+
+  stopSfx(id: number): void {
+    const s = this.playingSfx.get(id);
+    if (s) {
+      try {
+        s.stop();
+      } catch {
+        /* already stopped */
+      }
+      this.playingSfx.delete(id);
+    }
+  }
+
+  stopAllSfx(): void {
+    for (const id of [...this.playingSfx.keys()]) this.stopSfx(id);
+  }
+
+  setSfxAttributes(): void {}
+
+  // ---- music -----------------------------------------------------------------------------------------------------
+
+  setMusicTrack(path: string, track: number, loop: boolean, loopPoint: number): void {
+    this.tracks[track] = { path: path ? `Data/Music/${path}` : "", loop, loopPoint };
+    if (path) void this.load(`Data/Music/${path}`);
+  }
+
+  private musicPosition(): number {
+    if (!this.music) return 0;
+    const { buffer, started, offset, source } = this.music;
+    let pos = offset + (this.ctx.currentTime - started);
+    if (source.loop && pos > buffer.duration) {
+      const loopStart = source.loopStart;
+      pos = loopStart + ((pos - loopStart) % (buffer.duration - loopStart));
+    }
+    return pos;
+  }
+
+  playMusic(track: number, startPos: number, ratio = 0): void {
+    const t = this.tracks[track];
+    if (!t || !t.path) {
+      this.stopMusic();
+      return;
+    }
+    const resumeAt = startPos && ratio ? (this.musicPosition() * 10000) / ratio : 0;
+    const token = ++this.musicToken;
+    void this.load(t.path).then((buf) => {
+      if (!buf || token !== this.musicToken) return;
+      this.stopSource();
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = t.loop;
+      if (t.loop) {
+        src.loopStart = Math.min(t.loopPoint / MUSIC_RATE, buf.duration - 0.01);
+        src.loopEnd = buf.duration;
+      }
+      src.connect(this.musicGain);
+      const offset = Math.min(resumeAt, buf.duration - 0.01);
+      src.start(0, offset);
+      this.music = { source: src, started: this.ctx.currentTime, offset, track, buffer: buf };
+    });
+  }
+
+  private stopSource(): void {
+    if (this.music) {
+      try {
+        this.music.source.stop();
+      } catch {
+        /* ignore */
+      }
+      this.music = null;
+    }
+  }
+
+  stopMusic(): void {
+    this.musicToken++;
+    this.stopSource();
+  }
+
+  pauseMusic(): void {
+    if (this.ctx.state === "running") void this.musicGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.02);
+  }
+
+  resumeMusic(): void {
+    void this.musicGain.gain.setTargetAtTime(this.settings.music, this.ctx.currentTime, 0.02);
+  }
+
+  swapMusicTrack(path: string, track: number, loopPoint: number, ratio: number): void {
+    if (!path) {
+      this.stopMusic();
+      return;
+    }
+    this.tracks[track] = { path: `Data/Music/${path}`, loop: true, loopPoint };
+    this.playMusic(track, 1, ratio);
+  }
+
+  /** music.volume (0-100) from the scripts, used for fades. */
+  setMusicVolume(volume: number): void {
+    const v = Math.max(0, Math.min(100, volume)) / 100;
+    this.musicGain.gain.setTargetAtTime(v * this.settings.music, this.ctx.currentTime, 0.03);
+  }
+
+  dispose(): void {
+    this.stopMusic();
+    this.stopAllSfx();
+    void this.ctx.close();
+  }
+}
