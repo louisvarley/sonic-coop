@@ -1,12 +1,16 @@
 // RSDKv5 archives keep hashed paths in the index; encrypted entries also need their original path.
+// Sonic Origins (RSDKv5U) uses the same container for its legacy games, with the engine revision in the signature:
+// "RSDKv3" (Sonic CD), "RSDKv4" (Sonic 1 and 2) and "RSDKv5" (Sonic 3 & Knuckles).
 // Format reference: https://github.com/RSDKModding/RSDKv5-Decompilation/blob/master/RSDKv5/RSDK/Core/Reader.cpp
 
 import { md5Words, rsdkPathKey } from "../packages/engine/src/core/md5.js";
 import type { RsdkFile } from "./rsdk.js";
 
+export const RSDKV5_SIGNATURES = ["RSDKv3", "RSDKv4", "RSDKv5"];
+
 export function readRsdkV5Index(pack: Uint8Array): RsdkFile[] {
   if (pack.length < 8) throw new Error("truncated RSDKv5 header");
-  if (String.fromCharCode(...pack.subarray(0, 6)) !== "RSDKv5") throw new Error("not an RSDKv5 data pack");
+  if (!RSDKV5_SIGNATURES.includes(String.fromCharCode(...pack.subarray(0, 6)))) throw new Error("not an RSDKv5 data pack");
   const view = new DataView(pack.buffer, pack.byteOffset, pack.byteLength);
   const count = view.getUint16(6, true);
   const dataStart = 8 + count * 24;

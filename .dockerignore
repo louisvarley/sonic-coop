@@ -3,6 +3,13 @@
 data
 .git
 *.rsdk
+*.xmf
+*.acb
+*.awb
+*.apk
+*.apks
+*.xapk
+*.ipa
 *.zip
 *.bin
 tests

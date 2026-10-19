@@ -26,10 +26,14 @@ services:
       - "2567"
     stop_grace_period: 15s
 
-  # Runs on every "up": finds the .rsdk files in this folder (any name), identifies them by content and extracts
-  # whatever is missing into DATA_PATH. Drop your .rsdk files next to this file and docker compose up -d --build.
+  # Runs on every "up": finds the game files in this folder (any name; see README.md), identifies them by content and
+  # extracts whatever is missing or out of date into DATA_PATH. Drop your files next to this file and
+  # docker compose up -d --build.
   extract:
-    image: node:22-bookworm
+    build:
+      context: docker
+      dockerfile: extract.Dockerfile
+    image: ringlink-extract:latest
     working_dir: /app
     environment:
       RSDK_DIR: /app

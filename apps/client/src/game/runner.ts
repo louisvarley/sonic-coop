@@ -1,7 +1,9 @@
 // Runs one online game in the page: the predicted simulation, the 60 Hz loop, rendering and the overlays.
 
 import type { Room } from "colyseus.js";
-import { SoftwareRenderer, BTN, CAM_INDEX, CAM_STRIDE, type GameEvent, type LobbyState, type StartInfo } from "@ringlink/engine";
+import {
+  SoftwareRenderer, SoftwareRenderer3, Engine, BTN, CAM_INDEX, CAM_STRIDE, CAM3_INDEX, CAM3_STRIDE, type GameEvent, type LobbyState, type StartInfo,
+} from "@ringlink/engine";
 import { NetGame } from "../net/netgame.js";
 import { AudioHost } from "../audio.js";
 import { Input } from "../input.js";
@@ -10,6 +12,7 @@ import { loadGameData } from "./data.js";
 const SCREEN_W = 424;
 const SCREEN_H = 240;
 const FRAME_MS = 1000 / 60;
+const GAME_TITLES: Record<string, string> = { sonic1: "Sonic 1", sonic2: "Sonic 2", soniccd: "Sonic CD" };
 
 export interface RunnerUI {
   root: HTMLElement;
@@ -20,7 +23,7 @@ export interface RunnerUI {
 export class GameRunner {
   private net: NetGame | null = null;
   private audio: AudioHost | null = null;
-  private renderer = new SoftwareRenderer(SCREEN_W);
+  private renderer: SoftwareRenderer | SoftwareRenderer3;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private overlay: HTMLCanvasElement;
@@ -49,6 +52,7 @@ export class GameRunner {
     private input: Input,
     private ui: RunnerUI,
   ) {
+    this.renderer = info.game === "soniccd" ? new SoftwareRenderer3(SCREEN_W) : new SoftwareRenderer(SCREEN_W);
     const root = ui.root;
     root.innerHTML = `
       <div class="game-stage">
@@ -80,7 +84,7 @@ export class GameRunner {
     } catch {
       /* ignore */
     }
-    root.querySelector<HTMLElement>(".game-bar-title")!.textContent = `${info.game === "sonic1" ? "Sonic 1" : "Sonic 2"} · Room ${lobby().code} · Player ${info.slot + 1}`;
+    root.querySelector<HTMLElement>(".game-bar-title")!.textContent = `${GAME_TITLES[info.game] ?? info.game} · Room ${lobby().code} · Player ${info.slot + 1}`;
     root.querySelector<HTMLButtonElement>('[data-act="dev"]')!.hidden = !lobby().devTools;
     root.querySelector(".game-bar")!.addEventListener("click", (e) => this.onBar((e.target as HTMLElement).closest("button")?.dataset.act));
     this.updateScaleButton();
@@ -96,7 +100,7 @@ export class GameRunner {
     } else if (e.code === "F1" && this.lobby().devTools) {
       e.preventDefault();
       this.toggleDev();
-    } else if (e.code === "F3" && this.lobby().devTools && this.net) {
+    } else if (e.code === "F3" && this.lobby().devTools && this.net?.sim.E instanceof Engine) {
       e.preventDefault();
       this.net.sim.E.showHitboxes = !this.net.sim.E.showHitboxes;
     } else if (e.code === "F4" && this.lobby().devTools) {
@@ -176,13 +180,13 @@ export class GameRunner {
     const { info } = this;
     this.status.textContent = "Downloading game data…";
     const data = await loadGameData(info.game, (f) => (this.status.textContent = `Downloading game data… ${Math.round(f * 100)}%`));
-    this.audio = new AudioHost(info.game, data.audioIndex, (m) => console.debug(`[game] ${m}`));
+    this.audio = new AudioHost(info.game, data.audioIndex, (m) => console.debug(`[game] ${m}`), data.audioLoops);
     this.status.textContent = "Starting…";
     // one frame of yield so the status paints before the (synchronous) stage load
     await new Promise((r) => setTimeout(r, 0));
     this.net = new NetGame(this.room, data.vfs, this.audio, info, { headless: false });
-    this.net.sim.E.draw = this.renderer;
-    this.renderer.overlay = (E, r) => this.drawHitboxes(E, r);
+    this.setDraw(true);
+    if (this.renderer instanceof SoftwareRenderer) this.renderer.overlay = (E, r) => this.drawHitboxes(E, r);
     this.net.onEvent = (e) => this.onGameEvent(e);
     this.room.onMessage("snap", (bytes: Uint8Array) => this.net?.onSnapshot(bytes));
     this.room.onMessage("event", (e: GameEvent) => this.onServerEvent(e));
@@ -232,10 +236,10 @@ export class GameRunner {
         pad |= BTN.TELEPORT;
         this.pendingTeleport = false;
       }
-      net.sim.E.draw = i === steps - 1 ? this.renderer : null;
+      this.setDraw(i === steps - 1);
       net.step(pad);
     }
-    net.sim.E.draw = this.renderer;
+    this.setDraw(true);
     if (steps > 0) {
       this.renderer.toRGBA(this.pixels);
       this.ctx.putImageData(this.image, 0, 0);
@@ -249,6 +253,19 @@ export class GameRunner {
       if (this.showDev) this.updateDevPanel();
     }
   };
+
+  /** Draw (into the renderer) on the next tick, or simulate headless. */
+  private setDraw(on: boolean): void {
+    if (!this.net) return;
+    (this.net.sim.E as { draw: unknown }).draw = on ? this.renderer : null;
+  }
+
+  /** Camera scroll offset of a player slot. */
+  private camScroll(slot: number): [number, number] {
+    const E = this.net!.sim.E;
+    if (E instanceof Engine) return [E.cams[slot * CAM_STRIDE + CAM_INDEX.xScrollOffset], E.cams[slot * CAM_STRIDE + CAM_INDEX.yScrollOffset]];
+    return [E.cams[slot * CAM3_STRIDE + CAM3_INDEX.xScrollOffset], E.cams[slot * CAM3_STRIDE + CAM3_INDEX.yScrollOffset]];
+  }
 
   // ---- developer overlays ----------------------------------------------------------------------------------------
 
@@ -268,13 +285,12 @@ export class GameRunner {
     o.clearRect(0, 0, this.overlay.width, this.overlay.height);
     if (!this.showIds || !this.net) return;
     const E = this.net.sim.E;
-    const xo = E.cams[this.info.slot * CAM_STRIDE + CAM_INDEX.xScrollOffset];
-    const yo = E.cams[this.info.slot * CAM_STRIDE + CAM_INDEX.yScrollOffset];
+    const [xo, yo] = this.camScroll(this.net.sim.viewCamera);
     o.font = "10px monospace";
     o.textAlign = "center";
     for (let i = 0; i < 0x4a0; i++) {
       const e = E.objectEntityList[i];
-      if (!e.type || !E.processObjectFlag[i]) continue;
+      if (!e.type || (E instanceof Engine && !E.processObjectFlag[i])) continue;
       const x = ((e.xpos >> 16) - xo) * 2, y = ((e.ypos >> 16) - yo) * 2;
       if (x < 0 || y < 0 || x > this.overlay.width || y > this.overlay.height) continue;
       const label = `${i}:${E.typeNames[e.type]}`;
@@ -295,13 +311,15 @@ export class GameRunner {
     lines.push(`fps ${this.fps}  ping ${this.ping.toFixed(0)} ms  tick ${E.tick}  server tick ${net.stats.serverTick}`);
     lines.push(`snapshots ${net.stats.snapshots} (last ${net.stats.lastSnapshotBytes} B)  predicted ${net.stats.pending}  resim ${net.stats.resimTicks}`);
     for (let p = 0; p < E.playerSlots; p++) {
-      const e = E.objectEntityList[p];
-      const st = E.scriptFunctionList[e.state]?.name ?? e.state;
-      const cam = p * CAM_STRIDE;
+      // RSDKv3 keeps the physics in a separate player struct bound to the entity
+      const e = E instanceof Engine ? E.objectEntityList[p] : E.objectEntityList[E.playerList[p].boundEntity];
+      const body = E instanceof Engine ? E.objectEntityList[p] : E.playerList[p];
+      const st = E instanceof Engine ? (E.scriptFunctionList[e.state]?.name ?? e.state) : e.state;
+      const [cx, cy] = this.camScroll(p);
       lines.push(
-        `P${p + 1} ${E.typeNames[e.type]} pos ${e.xpos >> 16},${e.ypos >> 16} vel ${(e.xvel / 65536).toFixed(2)},${(e.yvel / 65536).toFixed(2)} speed ${(e.speed / 65536).toFixed(2)} rings ${e.values[0]}`,
+        `P${p + 1} ${E.typeNames[e.type]} pos ${body.xpos >> 16},${body.ypos >> 16} vel ${(body.xvel / 65536).toFixed(2)},${(body.yvel / 65536).toFixed(2)} speed ${(body.speed / 65536).toFixed(2)} v0 ${e.values[0]}`,
       );
-      lines.push(`   state ${st} anim ${e.animation} cam ${E.cams[cam + CAM_INDEX.xScrollOffset]},${E.cams[cam + CAM_INDEX.yScrollOffset]}`);
+      lines.push(`   state ${st} anim ${e.animation} cam ${cx},${cy}`);
     }
     const bosses = E.objectEntityList.filter((e) => e.type && /eggman|boss|robot|mecha/i.test(E.typeNames[e.type])).slice(0, 4);
     for (const b of bosses) lines.push(`boss ${E.typeNames[b.type]} @${b.xpos >> 16},${b.ypos >> 16} state ${b.state} v0..3 ${Array.from(b.values.slice(0, 4)).join(",")}`);

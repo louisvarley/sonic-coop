@@ -1,7 +1,14 @@
 node_modules/
 dist/
-# Game data derived from the user's own Data.rsdk / ROMs: never commit
+# Game data derived from the user's own game files: never commit
 data/
 *.rsdk
+*.xmf
+*.acb
+*.awb
+*.apk
+*.apks
+*.xapk
+*.ipa
 *.zip
 .env

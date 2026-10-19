@@ -5,7 +5,7 @@
 // Other players are predicted by repeating the pad the server last saw them use. No DOM: also used by tests.
 
 import {
-  GameSim, applyDelta, decodeSnapshot, encodeInput, encodeU32, KEYFRAME, type GameEvent, type ScriptHost, type StartInfo, type Vfs,
+  createGameSim, applyDelta, decodeSnapshot, encodeInput, encodeU32, KEYFRAME, type AnyGameSim, type GameEvent, type ScriptHost, type StartInfo, type Vfs,
 } from "@ringlink/engine";
 
 export interface RoomLike {
@@ -46,7 +46,7 @@ export interface NetStats {
 const MAX_PREDICTION = 45;
 
 export class NetGame {
-  readonly sim: GameSim;
+  readonly sim: AnyGameSim;
   readonly host: GatedHost;
   readonly slot: number;
   private seq = 0;
@@ -61,9 +61,10 @@ export class NetGame {
   constructor(private room: RoomLike, vfs: Vfs, host: ScriptHost, readonly info: StartInfo, opts: { headless: boolean }) {
     this.host = new GatedHost(host);
     this.slot = info.slot;
-    this.sim = new GameSim(vfs, this.host, { headless: opts.headless, players: info.characters.length });
+    this.sim = createGameSim(info.game, vfs, this.host, { headless: opts.headless, players: info.characters.length });
     this.sim.configurePlayers(info.characters);
-    this.sim.viewCamera = info.slot;
+    // a seat beyond the players the game drives (Sonic CD is one player) watches player 1
+    this.sim.viewCamera = info.slot < this.sim.E.playerSlots ? info.slot : 0;
     this.remotePads = new Array(info.characters.length).fill(0);
   }
 
@@ -91,8 +92,9 @@ export class NetGame {
   }
 
   private reconcile(state: Uint8Array, ackSeq: number): void {
-    const draw = this.sim.E.draw;
-    this.sim.E.draw = null;
+    const drawable = this.sim.E as { draw: unknown };
+    const draw = drawable.draw;
+    drawable.draw = null;
     this.host.muted = true;
     try {
       if (this.sim.applyState(state)) this.stats.stageLoads++;
@@ -101,10 +103,11 @@ export class NetGame {
       this.stats.resimTicks += this.pending.length;
     } finally {
       this.host.muted = false;
-      this.sim.E.draw = draw;
+      drawable.draw = draw;
     }
     this.host.syncMusic(this.sim.E.trackID, this.sim.E.musicStatus !== 0);
-    this.host.setMusicVolume(this.sim.E.musicVolume);
+    const E = this.sim.E;
+    this.host.setMusicVolume("musicVolume" in E ? E.musicVolume : E.masterVolume);
     this.started = true;
     this.stats.pending = this.pending.length;
   }

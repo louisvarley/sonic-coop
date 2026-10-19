@@ -10,7 +10,7 @@ export const PROTOCOL_VERSION = 1;
 export const TICK_RATE = 60;
 export const KEYFRAME = 0xffffffff;
 
-export type GameId = "sonic1" | "sonic2" | "sonic3";
+export type GameId = "sonic1" | "sonic2" | "sonic3" | "soniccd";
 
 export const CHARACTERS = [
   { id: 0, name: "Sonic" },
@@ -19,7 +19,8 @@ export const CHARACTERS = [
 ] as const;
 
 export function isCharacterAvailable(game: GameId, id: number): boolean {
-  // Sonic 3 seats are fixed: player 1 is Sonic, player 2 is Tails.
+  // Sonic 3 seats are fixed: player 1 is Sonic, player 2 is Tails. Sonic CD's standalone scripts know Sonic and Tails
+  // (Knuckles and Amy exist only in its Origins-platform code, which needs the Origins runtime).
   return CHARACTERS.some((character) => character.id === id && (game === "sonic2" || id < 2));
 }
 
@@ -31,6 +32,13 @@ export interface LobbyPlayer {
   ready: boolean;
   connected: boolean;
   loaded: boolean;
+}
+
+export interface LobbyStage {
+  level: string;
+  act: string;
+  /** Regular stage list position, when it differs from the index (Sonic CD lists only each act's first time zone). */
+  listPos?: number;
 }
 
 export interface LobbyState {
@@ -45,7 +53,7 @@ export interface LobbyState {
   /** Stage list position to start from (regular list); the first zone by default. */
   startStage: number;
   /** The selected game's levels (index = startStage), for the level selector. */
-  stages?: { level: string; act: string }[];
+  stages?: LobbyStage[];
   devTools: boolean;
   message?: string;
 }

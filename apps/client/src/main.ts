@@ -18,8 +18,8 @@ let runner: GameRunner | Sonic3Runner | null = null;
 let reconnectToken = "";
 let leaving = false;
 
-const GAME_NAMES: Record<GameId, string> = { sonic1: "Sonic the Hedgehog", sonic2: "Sonic the Hedgehog 2", sonic3: "Sonic the Hedgehog 3 (experimental)" };
-const GAME_SHORT: Record<GameId, string> = { sonic1: "Sonic 1", sonic2: "Sonic 2", sonic3: "Sonic 3" };
+const GAME_NAMES: Record<GameId, string> = { sonic1: "Sonic the Hedgehog", sonic2: "Sonic the Hedgehog 2", sonic3: "Sonic the Hedgehog 3 (experimental)", soniccd: "Sonic the Hedgehog CD" };
+const GAME_SHORT: Record<GameId, string> = { sonic1: "Sonic 1", sonic2: "Sonic 2", sonic3: "Sonic 3", soniccd: "Sonic CD" };
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string, string> = {}, ...children: (Node | string)[]): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -209,6 +209,7 @@ function renderLobby(): void {
 
   const games = el("div", { class: "choices" });
   const listed: GameId[] = ["sonic1", "sonic2"];
+  if (l.games?.includes("soniccd") || l.game === "soniccd") listed.push("soniccd");
   if (l.games?.includes("sonic3") || l.game === "sonic3") listed.push("sonic3");
   for (const g of listed) {
     const b = el("button", { class: `choice${l.game === g ? " selected" : ""}` }, el("strong", {}, GAME_SHORT[g]), el("small", {}, GAME_NAMES[g]));
@@ -276,7 +277,11 @@ function renderLobby(): void {
       l.message ? el("p", { class: "notice" }, l.message) : "",
       el("section", {}, el("h2", {}, "Game"), games),
       ...stageSection,
-      el("section", {}, el("h2", {}, "Your character"), chars, l.game === "sonic3" ? el("p", { class: "hint" }, "Sonic 3 is experimental: player 1 is Sonic and player 2 is Tails.") : ""),
+      el("section", {}, el("h2", {}, "Your character"), chars, l.game === "sonic3"
+        ? el("p", { class: "hint" }, "Sonic 3 is experimental: player 1 is Sonic and player 2 is Tails.")
+        : l.game === "soniccd"
+          ? el("p", { class: "hint" }, "Sonic CD is single-player: player 1 plays and everyone else watches.")
+          : ""),
       el("section", {}, el("h2", {}, "Players"), list),
       ...extras,
       el("div", { class: "row actions" }, readyBtn, startBtn, leaveBtn),

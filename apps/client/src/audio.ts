@@ -27,7 +27,13 @@ export class AudioHost implements ScriptHost {
   private settings = { music: 0.7, sfx: 0.8, muted: false };
   private scriptMusicVolume = 1;
 
-  constructor(private game: string, private audioIndex: Record<string, string>, private onLog: (m: string) => void = () => {}) {
+  constructor(
+    private game: string,
+    private audioIndex: Record<string, string>,
+    private onLog: (m: string) => void = () => {},
+    /** Loop points that come with the audio itself (Sonic Origins); they replace the scripts' loop points. */
+    private audioLoops: Record<string, [number, number]> = {},
+  ) {
     this.ctx = new AudioContext({ latencyHint: "interactive" });
     this.master = this.ctx.createGain();
     this.musicGain = this.ctx.createGain();
@@ -156,9 +162,10 @@ export class AudioHost implements ScriptHost {
     if (!this.music) return 0;
     const { buffer, started, offset, source } = this.music;
     let pos = offset + (this.ctx.currentTime - started);
-    if (source.loop && pos > buffer.duration) {
+    const loopEnd = source.loopEnd || buffer.duration;
+    if (source.loop && pos > loopEnd) {
       const loopStart = source.loopStart;
-      pos = loopStart + ((pos - loopStart) % (buffer.duration - loopStart));
+      pos = loopStart + ((pos - loopStart) % (loopEnd - loopStart));
     }
     return pos;
   }
@@ -183,8 +190,9 @@ export class AudioHost implements ScriptHost {
       src.buffer = buf;
       src.loop = t.loop;
       if (t.loop) {
-        src.loopStart = Math.min(t.loopPoint / MUSIC_RATE, buf.duration - 0.01);
-        src.loopEnd = buf.duration;
+        const own = this.audioLoops[rsdkPathKey(t.path)];
+        src.loopStart = Math.min(own ? own[0] : t.loopPoint / MUSIC_RATE, buf.duration - 0.01);
+        src.loopEnd = own ? Math.min(own[1], buf.duration) : buf.duration;
       }
       src.connect(this.musicGain);
       const offset = Math.min(resumeAt, buf.duration - 0.01);
