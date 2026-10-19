@@ -12,6 +12,8 @@ engine; co-op is a small set of script patches. No game data is included: you su
 The `game-files/` folder is included in the repository via a placeholder; all user-added contents are ignored by Git
 and excluded from Docker build contexts. Docker mounts the originals read-only: extraction never modifies or deletes
 them. Generated packs and audio go into the separate `DATA_PATH` (`./data` by default).
+Extraction tools and npm dependencies are installed into the extraction image at build time; host workspace
+dependency folders are neither mounted nor modified.
 
 `docker compose up -d --build` runs the `extract` service before starting the server. It identifies games by content,
 so any file names work, and processes new or changed source files, missing packs, and updated co-op patches.

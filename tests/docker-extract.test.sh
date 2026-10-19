@@ -15,7 +15,8 @@ printf 'original\n' > "$work/games/soniccd/patches.ts"
 sed "s|/app|$work|g" docker/extract.sh > "$work/extract.sh"
 cat > "$work/bin/npm" <<'EOF'
 #!/bin/sh
-exit 0
+echo "Dependencies must be installed at image build time, not during extraction" >&2
+exit 1
 EOF
 cat > "$work/bin/npx" <<'EOF'
 #!/bin/sh

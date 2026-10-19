@@ -27,20 +27,18 @@ services:
     stop_grace_period: 15s
 
   # Drop original game files into game-files/, then run docker compose up -d --build.
-  # Extraction runs before the server; originals and project sources are mounted read-only.
+  # Extraction runs before the server; only originals (read-only) and generated data are mounted.
   extract:
     build:
-      context: docker
-      dockerfile: extract.Dockerfile
+      context: .
+      dockerfile: docker/extract.Dockerfile
     image: ringlink-extract:latest
     working_dir: /app
     environment:
       RSDK_DIR: /app/game-files
     volumes:
-      - .:/app:ro
       - ./game-files:/app/game-files:ro
       - ${DATA_PATH:-./data}:/app/data
-      - extract_node_modules:/app/node_modules
     command: sh docker/extract.sh
 
   client:
@@ -60,6 +58,3 @@ services:
     depends_on:
       server:
         condition: service_healthy
-
-volumes:
-  extract_node_modules:

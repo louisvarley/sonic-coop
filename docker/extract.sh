@@ -6,7 +6,6 @@ set -u
 cd /app
 export RSDK_DIR="${RSDK_DIR:-/app/game-files}"
 [ -d "$RSDK_DIR" ] || { echo "Game files folder not found: $RSDK_DIR" >&2; exit 1; }
-npm ci --no-audit --no-fund >/dev/null 2>&1 || npm ci --no-audit --no-fund || exit 1
 npx tsx tools/rsdk-detect.ts "$RSDK_DIR" || exit 1
 
 stale() { # $1 = output file; true when missing or older than any game file
