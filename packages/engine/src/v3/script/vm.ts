@@ -291,7 +291,13 @@ function setVar(E: Engine3, id: number, arrayVal: number, value: number): void {
       ent.values[id - VAR.OBJECTVALUE0] = value; return;
     case VAR.OBJECTOUTOFBOUNDS: return;
     case VAR.PLAYERSTATE: bound().state = value; return;
-    case VAR.PLAYERCONTROLMODE: plr.controlMode = value; return;
+    case VAR.PLAYERCONTROLMODE:
+      plr.controlMode = value;
+      // scripts outside the players (title card, signposts, ...) steer player 1 only: the others follow
+      if (E.activePlayer === 0 && E.playerSlots > 1 && E.objectLoop !== 0 && E.objectLoop !== 1 && E.objectLoop !== 5 && E.objectLoop !== 6) {
+        for (let p = 1; p < E.playerSlots; p++) E.playerList[p].controlMode = value;
+      }
+      return;
     case VAR.PLAYERCONTROLLOCK: plr.controlLock = value; return;
     case VAR.PLAYERCOLLISIONMODE: plr.collisionMode = value; return;
     case VAR.PLAYERCOLLISIONPLANE: plr.collisionPlane = value; return;

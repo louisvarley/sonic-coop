@@ -11,7 +11,7 @@ import { SetActivePalette, SetPaletteEntry, LoadPalette } from "./palette.js";
 import { ClearGraphicsData, RemoveGraphicsFile } from "./sprite.js";
 import { ClearAnimationData } from "./animation.js";
 import { ReadGifPictureData } from "../sprite.js";
-import { ProcessObjects, ProcessPausedObjects, ProcessStartupObjects, SetObjectTypeName, cameraForEntity, playerOfEntity, bindPlayerAnimation } from "./object.js";
+import { ProcessObjects, ProcessPausedObjects, ProcessStartupObjects, SetObjectTypeName, cameraForEntity, playerOfEntity, bindPlayerAnimation, P2_ENTITY, P2_TAIL_ENTITY } from "./object.js";
 import { ProcessScript, PauseSound, ResumeSound } from "./script/vm.js";
 import { ResetCollisionStorage } from "./collision.js";
 import { ConvertStringToInteger3 } from "./script/compiler.js";
@@ -890,7 +890,9 @@ export function DrawObjectList(E: Engine3, list: number, camera: number | null):
     E.objectLoop = l.entityRefs[i];
     const type = E.objectEntityList[E.objectLoop].type;
     if (!type) continue;
-    E.activePlayer = playerOfEntity(E, E.objectLoop);
+    const own = E.objectLoop === 0 || E.objectLoop === 1 || E.objectLoop === P2_ENTITY || E.objectLoop === P2_TAIL_ENTITY;
+    // HUD and other stage objects read the viewing player (rings, lives icon); the draw pass does not change the sim's state
+    E.activePlayer = !own && camera !== null && E.playerSlots > 1 ? Math.min(camera, E.playerSlots - 1) : playerOfEntity(E, E.objectLoop);
     const s = E.objectScriptList[type];
     bindPlayerAnimation(E, E.objectLoop, type);
     if (E.scriptCode[s.subDraw.scriptCodePtr] > 0) {
@@ -898,6 +900,7 @@ export function DrawObjectList(E: Engine3, list: number, camera: number | null):
       ProcessScript(E, s.subDraw.scriptCodePtr, s.subDraw.jumpTablePtr, C.SUB_DRAW);
     }
   }
+  E.activePlayer = 0;
 }
 
 /**
