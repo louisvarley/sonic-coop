@@ -157,6 +157,99 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
     expect(playerDraws[playerDraws.length - 1]).toMatchObject({ slot: 5, x: player2.screenXPos, y: player2.screenYPos });
   });
 
+  for (const view of [0, 1]) {
+    it(`draws both characters with their own animations in view ${view}`, () => {
+      const sim = new GameSim3(loadVfs("soniccd"), nullHost, { headless: false, players: 2 });
+      sim.configurePlayers([0, 1]);
+      sim.startStage(1, 0);
+      sim.viewCamera = view;
+      const renderer = new SoftwareRenderer3(424);
+      const draws = new Set<number>();
+      const drawAnimation = renderer.DrawObjectAnimation.bind(renderer);
+      renderer.DrawObjectAnimation = (E, info, entity, x, y) => {
+        if (entity.slot === 0 || entity.slot === 5) {
+          const slot = entity.slot === 0 ? 0 : 1;
+          expect(E.activePlayer).toBe(slot);
+          expect(info.animFile.fileName).toBe(slot === 0 ? "Sonic.Ani" : "Tails.Ani");
+          expect(info.animFile.index).toBe(E.playerList[slot].animationFile);
+          const animation = E.animationList[info.animFile.aniListOffset + entity.animation];
+          const frame = E.animFrames[animation.frameListOffset + entity.frame];
+          expect(E.gfxSurface[frame.sheetID].fileName).toContain(slot === 0 ? "Sonic" : "Tails");
+          draws.add(slot);
+        }
+        drawAnimation(E, info, entity, x, y);
+      };
+      sim.E.draw = renderer;
+      const server = newCD2([0, 1]);
+      for (let f = 0; f < 90; f++) server.tick([0, 0]);
+      sim.applyState(captureState(server.E));
+      for (let f = 0; f < 150; f++) sim.tick([0, f < 60 ? 0 : BTN.RIGHT]);
+      expect(draws).toEqual(new Set([0, 1]));
+    });
+
+    it(`draws the viewing character's HUD in view ${view}`, () => {
+      const sim = new GameSim3(loadVfs("soniccd"), nullHost, { headless: false, players: 2 });
+      sim.configurePlayers([0, 1]);
+      sim.startStage(1, 0);
+      sim.viewCamera = view;
+      const renderer = new SoftwareRenderer3(424);
+      const sheets = new Set<string>();
+      const drawSprite = renderer.DrawSprite.bind(renderer);
+      renderer.DrawSprite = (E, x, y, w, h, sx, sy, sheet) => {
+        if (E.typeNames[E.objectEntityList[E.objectLoop].type] === "HUD") sheets.add(E.gfxSurface[sheet].fileName);
+        drawSprite(E, x, y, w, h, sx, sy, sheet);
+      };
+      sim.E.draw = renderer;
+      for (let f = 0; f < 100; f++) sim.tick([0, 0]);
+      expect(sim.E.compiler.errors).toEqual([]);
+      expect(sheets).toEqual(new Set([view === 0 ? "Data/Sprites/Global/Display.gif" : "Data/Sprites/Global/Display_t.gif"]));
+    });
+  }
+
+  for (const slot of [0, 1]) {
+    for (const death of ["Death", "Drown"]) {
+      for (const checkpoint of [false, true]) {
+        it(`respawns player ${slot + 1} after ${death} at ${checkpoint ? "the checkpoint" : "the start"} with a working camera`, () => {
+          const sim = newCD2([0, 1]);
+          for (let f = 0; f < 100; f++) sim.tick([0, 0]);
+          const E = sim.E;
+          const player = E.playerList[slot], entity = E.boundEntity(player);
+          let x = entity.xpos, y = entity.ypos;
+          if (checkpoint) {
+            const post = E.objectEntityList.find((e) => E.typeNames[e.type] === "LampPost");
+            expect(post).toBeDefined();
+            sim.setGlobal("LampPost.Check", post!.slot);
+            sim.setGlobal("LampPost.Side", 0x180000);
+            x = post!.xpos + 0x180000;
+            y = post!.ypos;
+          }
+          entity.state = E.scriptFunctionList.findIndex((fn) => fn.name === `Player_State_${death}`);
+          player.tileCollisions = 0;
+          player.objectInteractions = 0;
+          player.yvel = 0x110000;
+          player.ypos = 4000 << 16;
+          E.setCamera(slot);
+          E.yScrollOffset = E.yScrollA = 3800;
+          E.yScrollB = 4040;
+          E.setCamera(0);
+          sim.tick([0, 0]);
+          expect(player.xpos).toBe(x);
+          expect(Math.abs(player.ypos - y)).toBeLessThan(2 << 16);
+          expect(E.typeNames[entity.type]).toBe("PlayerObject");
+          expect(player.controlMode).toBe(0);
+          expect(player.tileCollisions).toBe(1);
+          E.setCamera(slot);
+          expect((player.ypos >> 16) - E.yScrollOffset).toBeGreaterThan(0);
+          expect((player.ypos >> 16) - E.yScrollOffset).toBeLessThan(240);
+          E.setCamera(0);
+          const respawnX = player.xpos;
+          for (let f = 0; f < 40; f++) sim.tick(slot === 0 ? [BTN.RIGHT, 0] : [0, BTN.RIGHT]);
+          expect(player.xpos).toBeGreaterThan(respawnX + (10 << 16));
+        });
+      }
+    }
+  }
+
   it("two players are deterministic and rejoin from a snapshot", () => {
     const a = newCD2([0, 1]);
     const pad = (f: number) => [script(f), f % 120 < 60 ? BTN.RIGHT : BTN.LEFT];
@@ -169,6 +262,44 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
       b.tick(pad(f));
     }
     expect(stateHash(captureState(b.E))).toBe(stateHash(captureState(a.E)));
+  });
+
+  it("respawns both players even when neither partner is alive", () => {
+    const sim = newCD2([0, 1]);
+    for (let f = 0; f < 100; f++) sim.tick([0, 0]);
+    const death = sim.E.scriptFunctionList.findIndex((fn) => fn.name === "Player_State_Death");
+    for (const player of sim.E.playerList.slice(0, 2)) {
+      sim.E.boundEntity(player).state = death;
+      player.yvel = 0x110000;
+      player.tileCollisions = 0;
+      player.objectInteractions = 0;
+    }
+    sim.tick([0, 0]);
+    for (const player of sim.E.playerList.slice(0, 2)) {
+      expect(sim.E.boundEntity(player).state).not.toBe(death);
+      expect(player.controlMode).toBe(0);
+      expect(player.tileCollisions).toBe(1);
+    }
+    const rejoined = newCD2([0, 1]);
+    rejoined.applyState(captureState(sim.E));
+    for (let f = 0; f < 60; f++) {
+      sim.tick([BTN.RIGHT, BTN.RIGHT]);
+      rejoined.tick([BTN.RIGHT, BTN.RIGHT]);
+    }
+    expect(stateHash(captureState(rejoined.E))).toBe(stateHash(captureState(sim.E)));
+  });
+
+  it("preserves the original single-player death and life deduction", () => {
+    const sim = newCD();
+    sim.startStage(1, 0);
+    for (let f = 0; f < 100; f++) sim.tick([0]);
+    const player = sim.E.playerList[0];
+    sim.E.boundEntity(player).state = sim.E.scriptFunctionList.findIndex((fn) => fn.name === "Player_State_Death");
+    player.yvel = 0x110000;
+    player.tileCollisions = 0;
+    sim.tick([0]);
+    expect(sim.E.typeNames[sim.E.boundEntity(player).type]).toBe("DeathEvent");
+    expect(sim.global("Player.Lives")).toBe(2);
   });
 });
 

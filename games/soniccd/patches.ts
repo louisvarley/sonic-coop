@@ -51,46 +51,50 @@ const SETUP_TAILS = `			case PLAYER_TAILS_A
 				BindPlayerToObject(Stage.ActivePlayer, TempValue3)`;
 
 const COOP_RESPAWN = `
-// Co-op: a player who falls off the screen dead comes back next to their partner instead of ending the act, as long as
-// the partner is still alive. TempValue0 is the fall speed at which the death would complete.
+// Respawn independently at the shared checkpoint, or the original spawn before any checkpoint is reached.
+// TempValue0 is the fall speed at which the death would complete.
 function Player_CoopRespawn
 	if Stage.PlayerCount > 1
 		if Player.YVelocity > TempValue0
-			TempValue6 = Stage.ActivePlayer
-			TempValue7 = 1
-			TempValue7 -= TempValue6
-			Stage.ActivePlayer = TempValue7
-			CheckEqual(Player.State, Player_State_Death)
-			TempValue5 = CheckResult
-			CheckEqual(Player.State, Player_State_Drown)
-			TempValue5 |= CheckResult
-			TempValue3 = Player.XPos
-			TempValue4 = Player.YPos
-			Stage.ActivePlayer = TempValue6
-
-			if TempValue5 == false
-				Player.State			 = Player_State_Air_NoDropDash
-				Player.XPos				 = TempValue3
-				Player.YPos				 = TempValue4
-				Player.YPos				-= 0x200000
-				Player.Speed			 = 0
-				Player.XVelocity		 = 0
-				Player.YVelocity		 = 0
-				Player.Gravity			 = GRAVITY_AIR
-				Player.Animation		 = ANI_JUMPING
-				Player.Rotation			 = 0
-				Player.Angle			 = 0
-				Player.TileCollisions	 = true
-				Player.ObjectInteraction = true
-				Player.Visible			 = true
-				Player.ControlMode		 = CONTROLMODE_NORMAL
-				Player.DrawOrder		 = 4
-				Player.Priority			 = PRIORITY_ACTIVE
-				Player.Rings			 = 0
-				Player.InvincibleTimer	 = 120
-				Player.BlinkTimer		 = 3
-				Screen.CameraEnabled	 = true
+			TempValue3 = Object.XPos
+			TempValue4 = Object.YPos
+			if LampPost.Check > 31
+				ArrayPos1 = LampPost.Check
+				TempValue3 = Object[ArrayPos1].XPos
+				TempValue3 += LampPost.Side
+				TempValue4 = Object[ArrayPos1].YPos
 			end if
+
+			Player.State			 = Player_State_Air
+			Player.XPos				 = TempValue3
+			Player.YPos				 = TempValue4
+			Player.Speed			 = 0
+			Player.XVelocity		 = 0
+			Player.YVelocity		 = 0
+			Player.Gravity			 = GRAVITY_AIR
+			Player.Animation		 = ANI_JUMPING
+			Player.Rotation			 = 0
+			Player.Angle			 = 0
+			Player.CollisionMode	 = 0
+			Player.ControlLock		 = 0
+			Player.LookPos			 = 0
+			Player.TileCollisions	 = true
+			Player.ObjectInteraction = true
+			Player.Visible			 = true
+			Player.ControlMode		 = CONTROLMODE_NORMAL
+			Player.DrawOrder		 = 4
+			Player.Priority			 = PRIORITY_ACTIVE
+			Player.Rings			 = 0
+			Player.InvincibleTimer	 = 120
+			Player.BlinkTimer		 = 3
+			Screen.CameraEnabled	 = true
+			Screen.AdjustCameraY	 = 0
+			TempValue3 >>= 16
+			TempValue3 -= Screen.CenterX
+			Screen.XOffset = TempValue3
+			TempValue4 >>= 16
+			TempValue4 -= Screen.CenterY
+			Screen.YOffset = TempValue4
 		end if
 	end if
 end function
@@ -154,7 +158,7 @@ end function`,
   },
   {
     file: "Players/PlayerObject.txt",
-    reason: "respawn next to the partner instead of dying",
+    reason: "respawn at the checkpoint instead of ending the act",
     find: `		Player.Animation = ANI_DYING
 	end if
 
@@ -169,7 +173,7 @@ end function`,
   },
   {
     file: "Players/PlayerObject.txt",
-    reason: "respawn next to the partner instead of drowning",
+    reason: "respawn at the checkpoint after drowning",
     find: `	Player.Animation   = ANI_DROWNING
 
 	if Player.YVelocity > 0x80000`,
@@ -179,6 +183,31 @@ end function`,
 	CallFunction(Player_CoopRespawn)
 
 	if Player.YVelocity > 0x80000`,
+  },
+  {
+    file: "Global/HUD.txt",
+    reason: "preload both characters' HUD sheets for co-op",
+    find: `sub ObjectStartup
+	// Standard Platforms and Mobile Platforms have different drawing routines`,
+    replace: `sub ObjectStartup
+	if Stage.PlayerCount > 1
+		LoadSpriteSheet("Global/Display.gif")
+		LoadSpriteSheet("Global/Display_t.gif")
+	end if
+	// Standard Platforms and Mobile Platforms have different drawing routines`,
+  },
+  {
+    file: "Global/HUD.txt",
+    reason: "draw each view's lives icon with its own character's HUD sheet",
+    find: `sub ObjectDraw`,
+    replace: `sub ObjectDraw
+	if Stage.PlayerCount > 1
+		if Stage.PlayerListPos == PLAYER_TAILS_A
+			LoadSpriteSheet("Global/Display_t.gif")
+		else
+			LoadSpriteSheet("Global/Display.gif")
+		end if
+	end if`,
   },
   {
     file: "Players/TailsObject.txt",

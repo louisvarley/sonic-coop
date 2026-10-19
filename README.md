@@ -33,9 +33,10 @@ docker compose run --rm extract npx tsx tools/extract.ts --out data --game sonic
 docker compose up -d --build
 ```
 
-Restarting the server reloads its cached game data. Hard-refresh both players' browsers (Ctrl+Shift+R) after the
-update: browsers can cache the old `core.pak` for an hour.
-The Sonic CD manifest at `/data/soniccd/manifest.json` should report `scripts.patches: 9` for the current co-op scripts.
+Restarting the server reloads its cached game data. Refresh both players' browsers after updating the client.
+The client revalidates the manifest at each game start and versions pack downloads by extraction date, so a
+re-extracted pack does not reuse the browser's older cached scripts.
+The Sonic CD manifest at `/data/soniccd/manifest.json` should report `scripts.patches: 11` for the current co-op scripts.
 
 The existing global Git/Docker exclusions for game-file extensions also remain in place as a safeguard for files
 accidentally left outside `game-files/`.
@@ -111,3 +112,5 @@ of the decompilation).
 - Use the Origins pack. The 2011 mobile and Steam packs are recognised but their file encryption is not implemented.
 - Sonic CD supports two-player online co-op: each player controls Sonic or Tails in the same world. Knuckles and Amy
   are only spawned by the scripts' Origins-runtime code, which this project doesn't provide.
+- In co-op, death and drowning respawn that player at the most recently activated shared checkpoint, or the stage's
+  start before a checkpoint is reached. Their camera resets there without restarting the partner's game.

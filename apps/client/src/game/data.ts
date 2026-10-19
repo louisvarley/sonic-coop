@@ -11,7 +11,13 @@ export interface GameData {
   audioLoops: AudioLoops;
 }
 
-const cache = new Map<string, Promise<{ pak: Uint8Array; audioIndex: Record<string, string>; audioLoops: AudioLoops }>>();
+interface CachedData {
+  pak: Uint8Array;
+  audioIndex: Record<string, string>;
+  audioLoops: AudioLoops;
+}
+
+const cache = new Map<string, { version: string; promise: Promise<CachedData> }>();
 
 async function fetchWithProgress(url: string, onProgress: (done: number, total: number) => void): Promise<Uint8Array> {
   const res = await fetch(url);
@@ -37,20 +43,25 @@ async function fetchWithProgress(url: string, onProgress: (done: number, total: 
 }
 
 export async function loadGameData(game: string, onProgress: (fraction: number) => void): Promise<GameData> {
-  let p = cache.get(game);
-  if (!p) {
-    p = (async () => {
-      const manifest = await fetch(`/data/${game}/manifest.json`).then((r) => {
-        if (!r.ok) throw new Error(`${game} data is not installed on this server`);
-        return r.json() as Promise<{ audio: Record<string, string>; loops?: AudioLoops; coreBytes: number }>;
-      });
-      const pak = await fetchWithProgress(`/data/${game}/core.pak`, (d, t) => onProgress(d / (t || manifest.coreBytes || d)));
+  const manifest = await fetch(`/data/${game}/manifest.json`, { cache: "no-cache" }).then((r) => {
+    if (!r.ok) throw new Error(`${game} data is not installed on this server`);
+    return r.json() as Promise<{ audio: Record<string, string>; loops?: AudioLoops; coreBytes: number; extractedAt: string }>;
+  });
+  if (!manifest.extractedAt) throw new Error(`${game} manifest has no extraction version; regenerate its game data`);
+  let entry = cache.get(game);
+  if (!entry || entry.version !== manifest.extractedAt) {
+    const promise = (async () => {
+      const pak = await fetchWithProgress(`/data/${game}/core.pak?v=${encodeURIComponent(manifest.extractedAt)}`,
+        (d, t) => onProgress(d / (t || manifest.coreBytes || d)));
       return { pak, audioIndex: manifest.audio, audioLoops: manifest.loops ?? {} };
     })();
-    cache.set(game, p);
-    p.catch(() => cache.delete(game));
+    entry = { version: manifest.extractedAt, promise };
+    cache.set(game, entry);
+    promise.catch(() => {
+      if (cache.get(game)?.promise === promise) cache.delete(game);
+    });
   }
-  const { pak, audioIndex, audioLoops } = await p;
+  const { pak, audioIndex, audioLoops } = await entry.promise;
   onProgress(1);
   const vfs = new Vfs();
   vfs.addPak(pak);
