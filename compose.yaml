@@ -17,25 +17,27 @@ services:
       SNAPSHOT_RATE: ${SNAPSHOT_RATE:-20}
       RECONNECT_SECONDS: ${RECONNECT_SECONDS:-60}
       ENABLE_DEV_TOOLS: ${ENABLE_DEV_TOOLS:-0}
-      ENABLE_SONIC3_EXPERIMENT: ${ENABLE_SONIC3_EXPERIMENT:-0}
     volumes:
       - ${DATA_PATH:-./data}:/data:ro
+    depends_on:
+      extract:
+        condition: service_completed_successfully
     expose:
       - "2567"
     stop_grace_period: 15s
 
-  # One-shot: finds every .rsdk in this folder (any file name), identifies it by content and extracts it into ./data.
-  #   docker compose run --rm extract
+  # Runs on every "up": finds the .rsdk files in this folder (any name), identifies them by content and extracts
+  # whatever is missing into DATA_PATH. Drop your .rsdk files next to this file and docker compose up -d --build.
   extract:
-    profiles: ["tools"]
     image: node:22-bookworm
     working_dir: /app
     environment:
       RSDK_DIR: /app
     volumes:
       - .:/app
+      - ${DATA_PATH:-./data}:/app/data
       - extract_node_modules:/app/node_modules
-    command: sh -c "npm ci --no-audit --no-fund && npx tsx tools/rsdk-detect.ts /app && npx tsx tools/extract.ts --out data && npx tsx tools/export-rsdkv5.ts"
+    command: sh docker/extract.sh
 
   client:
     build:
