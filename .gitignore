@@ -2,6 +2,8 @@ node_modules/
 dist/
 # Game data derived from the user's own game files: never commit
 data/
+game-files/*
+!game-files/.gitkeep
 *.rsdk
 *.xmf
 *.acb

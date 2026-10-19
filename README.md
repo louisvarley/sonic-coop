@@ -5,16 +5,36 @@ engine; co-op is a small set of script patches. No game data is included: you su
 
 ## Running
 
-1. Copy your game files (see below) into this folder, next to `compose.yaml`.
+1. Copy your game files (see below) directly into `game-files/` (no subfolders).
 2. `cp .env.example .env` (optional) and `docker compose up -d --build`.
 3. Open `http://localhost:8080`.
 
-On every start the `extract` service identifies the files by their content, so any file names work, and extracts
-whatever is missing or out of date into `DATA_PATH` (`./data` by default). To see what was found:
-`npm run detect -- .`
+The `game-files/` folder is included in the repository via a placeholder; all user-added contents are ignored by Git
+and excluded from Docker build contexts. Docker mounts the originals read-only: extraction never modifies or deletes
+them. Generated packs and audio go into the separate `DATA_PATH` (`./data` by default).
 
-All game files are ignored by git and Docker (`*.rsdk`, `*.xmf`, `*.acb`, `*.awb`, `*.apk`, `*.apks`, `*.xapk`,
-`*.ipa`, `*.zip`), so they are never committed or copied into an image.
+`docker compose up -d --build` runs the `extract` service before starting the server. It identifies games by content,
+so any file names work, and processes new or changed source files, missing packs, and updated co-op patches.
+Source-content checks also detect replacements that retain an older file timestamp.
+`docker compose build` alone only builds images; use `up -d --build` to run extraction as well.
+To see what was found: `docker compose run --rm extract npx tsx tools/rsdk-detect.ts /app/game-files`.
+
+If upgrading an existing installation, move the original RSDK/app packages and audio files from the project root
+into `game-files/`, keeping their filenames. Leave the generated `data/` folder where it is.
+To force a Sonic CD refresh on a Docker deployment, run:
+
+```sh
+docker compose stop server client
+docker compose run --rm extract npx tsx tools/extract.ts --out data --game soniccd
+docker compose up -d --build
+```
+
+Restarting the server reloads its cached game data. Hard-refresh both players' browsers (Ctrl+Shift+R) after the
+update: browsers can cache the old `core.pak` for an hour.
+The Sonic CD manifest at `/data/soniccd/manifest.json` should report `scripts.patches: 9` for the current co-op scripts.
+
+The existing global Git/Docker exclusions for game-file extensions also remain in place as a safeguard for files
+accidentally left outside `game-files/`.
 
 ## Game files
 

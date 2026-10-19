@@ -26,9 +26,8 @@ services:
       - "2567"
     stop_grace_period: 15s
 
-  # Runs on every "up": finds the game files in this folder (any name; see README.md), identifies them by content and
-  # extracts whatever is missing or out of date into DATA_PATH. Drop your files next to this file and
-  # docker compose up -d --build.
+  # Drop original game files into game-files/, then run docker compose up -d --build.
+  # Extraction runs before the server; originals and project sources are mounted read-only.
   extract:
     build:
       context: docker
@@ -36,9 +35,10 @@ services:
     image: ringlink-extract:latest
     working_dir: /app
     environment:
-      RSDK_DIR: /app
+      RSDK_DIR: /app/game-files
     volumes:
-      - .:/app
+      - .:/app:ro
+      - ./game-files:/app/game-files:ro
       - ${DATA_PATH:-./data}:/app/data
       - extract_node_modules:/app/node_modules
     command: sh docker/extract.sh
