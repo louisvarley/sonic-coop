@@ -2,6 +2,9 @@
 FROM node:22-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+# These bind-mounted caches may be owned by the host user rather than container root.
+RUN git config --system --add safe.directory /app/data/cache/scripts-decomp \
+    && git config --system --add safe.directory /app/data/cache/scripts-decomp-v3
 COPY package.json package-lock.json ./
 COPY packages/engine/package.json packages/engine/
 COPY apps/server/package.json apps/server/
