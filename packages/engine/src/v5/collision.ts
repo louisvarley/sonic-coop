@@ -27,6 +27,20 @@ export interface V5CollisionHit {
 
 /** World-pixel collision queries. Layer selection is explicit: editor visibility is not collision enablement. */
 export class V5CollisionWorld {
+  private removed = new Map<number, Set<number>>();
+
+  setRemovedTiles(tiles: readonly { layer: number; index: number }[]): void {
+    const next = new Map<number, Set<number>>();
+    for (const { layer, index } of tiles) {
+      if (!Number.isInteger(layer) || !Number.isInteger(index) || !this.layers[layer] || index < 0 || index >= this.layers[layer].tiles.length) {
+        throw new Error("invalid v5 removed tile");
+      }
+      if (!next.has(layer)) next.set(layer, new Set());
+      next.get(layer)!.add(index);
+    }
+    this.removed = next;
+  }
+
   constructor(readonly layers: readonly V5CollisionLayer[], readonly paths: readonly (readonly V5CollisionMask[])[]) {
     if (paths.length !== 2 || paths.some((path) => path.length !== 1024
       || path.some((mask) => mask.heights.length !== 16 || mask.solid.length !== 16 || mask.direction > 1))) {
@@ -97,7 +111,9 @@ export class V5CollisionWorld {
       for (let axis = minTile; axis <= maxTile; axis++) {
         const tx = vertical ? Math.floor(perpendicular / 16) : axis;
         const ty = vertical ? axis : Math.floor(perpendicular / 16);
-        const tile = layer.tiles[ty * layer.width + tx];
+        const index = ty * layer.width + tx;
+        if (this.removed.get(layerIndex)?.has(index)) continue;
+        const tile = layer.tiles[index];
         if (tile === 0xffff || !(tile & solidity)) continue;
         const mask = this.paths[plane][tile & 0x3ff];
         const local = this.surface(mask, tile, side, perpendicular & 15);

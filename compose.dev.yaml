@@ -32,6 +32,7 @@ services:
       - ./packages/engine/src:/app/packages/engine/src:ro
       - ./apps/client/src:/app/apps/client/src:ro
       - ./apps/client/index.html:/app/apps/client/index.html:ro
+      - ./apps/client/sonic3.html:/app/apps/client/sonic3.html:ro
       - ./apps/client/vite.config.ts:/app/apps/client/vite.config.ts:ro
       - ${DATA_PATH:-./data}:/app/data:ro
     healthcheck:

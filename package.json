@@ -14,6 +14,7 @@
     "preview:sonic3": "tsx tools/preview-rsdkv5.ts",
     "simulate:sonic3": "tsx tools/simulate-rsdkv5.ts",
     "export:sonic3": "tsx tools/export-rsdkv5.ts",
+    "check:sonic3": "tsx tools/dev/check-sonic3.ts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev:server": "npm -w apps/server run dev",

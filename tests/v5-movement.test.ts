@@ -53,7 +53,7 @@ describe("experimental v5 upright movement", () => {
     settle(roof.sim);
     let minimumY = Infinity;
     for (let i = 0; i < 40; i++) { roof.sim.tick([BTN.A, 0]); minimumY = Math.min(minimumY, roof.sim.capture().players[0].y); }
-    expect(minimumY / FP).toBeGreaterThanOrEqual(96 + 19);
+    expect(minimumY / FP).toBeGreaterThanOrEqual(96 + 14);
     expect(roof.sim.capture().players[0].grounded).toBe(true);
   });
 
@@ -77,7 +77,7 @@ describe("experimental v5 upright movement", () => {
     for (let x = 9; x < 64; x++) tiles[9 * 64 + x] = 0xf000;
     const ramp = new V5Movement(new V5CollisionWorld(world.layers, paths), [0], [{ x: 96 * FP, y: 100 * FP }]);
     for (let i = 0; i < 60; i++) ramp.tick([0]);
-    for (let i = 0; i < 70; i++) ramp.tick([BTN.RIGHT]);
+    for (let i = 0; i < 80; i++) ramp.tick([BTN.RIGHT]);
     expect(ramp.capture().players[0].x).toBeGreaterThan(160 * FP);
     expect(ramp.capture().players[0]).toMatchObject({ y: 125 * FP, grounded: true });
     // Reset the shared fixture into a platform ending at x=128.
@@ -102,6 +102,62 @@ describe("experimental v5 upright movement", () => {
     for (const pads of inputs.slice(105)) { a.tick(pads); b.tick(pads); expect(b.capture()).toEqual(a.capture()); }
   });
 
+  it("rolls with a smaller hitbox, preserves foot position and cannot accelerate on the ground", () => {
+    const { sim } = fixture(); settle(sim);
+    const state = sim.capture();
+    state.players[0].vx = 3 * FP; sim.restore(state);
+    sim.tick([BTN.DOWN | BTN.RIGHT, 0]);
+    const rolling = sim.capture().players[0];
+    expect(rolling).toMatchObject({ rolling: true, y: 146 * FP, grounded: true });
+    expect(rolling.vx).toBeLessThan(3 * FP);
+    for (let i = 0; i < 150; i++) sim.tick([0, 0]);
+    expect(sim.capture().players[0]).toMatchObject({ rolling: false, y: 141 * FP, vx: 0 });
+  });
+
+  it("does not uncurl into a low ceiling, and stands once there is enough clearance", () => {
+    const { sim, tiles } = fixture(); settle(sim);
+    const state = sim.capture();
+    Object.assign(state.players[0], { rolling: true, y: 146 * FP });
+    sim.restore(state);
+    for (let x = 0; x < 64; x++) tiles[7 * 64 + x] = 0xf000;
+    sim.tick([0, 0]);
+    expect(sim.capture().players[0]).toMatchObject({ rolling: true, y: 146 * FP });
+    for (let x = 0; x < 64; x++) tiles[7 * 64 + x] = 0xffff;
+    sim.tick([0, 0]);
+    expect(sim.capture().players[0]).toMatchObject({ rolling: false, y: 141 * FP });
+  });
+
+  it("uncurls on landing after a running jump without turning the jump into a ground roll", () => {
+    const { sim } = fixture(); settle(sim);
+    const state = sim.capture(); state.players[0].vx = 3 * FP; sim.restore(state);
+    sim.tick([BTN.RIGHT | BTN.A, 0]);
+    expect(sim.capture().players[0]).toMatchObject({ rolling: true, grounded: false, jumping: true });
+    for (let frame = 0; frame < 90; frame++) sim.tick([BTN.RIGHT, 0]);
+    expect(sim.capture().players[0]).toMatchObject({ rolling: false, grounded: true, jumping: false, y: 141 * FP });
+    expect(sim.capture().players[0].vx).toBeGreaterThan(3 * FP);
+  });
+
+  it("charges on jump edges, releases a directional spindash and rolls back its charge exactly", () => {
+    const { sim } = fixture(), { sim: replay } = fixture(); settle(sim); settle(replay);
+    const start = sim.capture(); start.players[0].facing = -1; sim.restore(start);
+    sim.tick([BTN.DOWN | BTN.A, BTN.DOWN | BTN.B]);
+    expect(sim.capture().players[0]).toMatchObject({ spinCharge: 2 * FP, rolling: true, grounded: true, vx: 0 });
+    const firstCharge = sim.capture().players[0].spinCharge;
+    sim.tick([BTN.DOWN | BTN.A, BTN.DOWN]);
+    expect(sim.capture().players[0].spinCharge).toBeLessThan(firstCharge);
+    sim.tick([BTN.DOWN, BTN.DOWN]);
+    sim.tick([BTN.DOWN | BTN.A, BTN.DOWN]);
+    expect(sim.capture().players[0].spinCharge).toBeGreaterThan(firstCharge);
+    const charged = sim.capture(); replay.restore(charged);
+    for (const pads of [[0, 0], [BTN.LEFT, BTN.RIGHT], [BTN.A, BTN.B], ...Array.from({ length: 120 }, () => [0, 0])]) {
+      sim.tick(pads); replay.tick(pads); expect(replay.capture()).toEqual(sim.capture());
+    }
+    replay.restore(charged); replay.tick([0, 0]);
+    expect(replay.capture().players[0].vx).toBeLessThan(-8 * FP);
+    expect(replay.capture().players[1].vx).toBeGreaterThan(8 * FP);
+    expect(replay.capture().players.every((p) => p.spinCharge === 0 && p.rolling)).toBe(true);
+  });
+
   it("validates inputs and snapshots atomically", () => {
     const { sim } = fixture();
     const before = sim.capture();
@@ -109,7 +165,9 @@ describe("experimental v5 upright movement", () => {
       expect(() => sim.tick(pads)).toThrow("inputs");
       expect(sim.capture()).toEqual(before);
     }
-    for (const change of [{ x: NaN }, { plane: 2 }, { vy: 99 * FP }, { pad: -1 }]) {
+    for (const change of [{ x: NaN }, { plane: 2 }, { vy: 99 * FP }, { pad: -1 },
+      { facing: 0 }, { rolling: 1 }, { highPriority: 1 }, { spinCharge: 9 * FP }, { spinCharge: FP },
+      { flightTime: -1 }, { flightTime: 481 }, { flying: true }, { controlLock: 17 }, { groundObject: -1 }]) {
       const invalid = sim.capture(); Object.assign(invalid.players[1], change);
       expect(() => sim.restore(invalid)).toThrow("snapshot");
       expect(sim.capture()).toEqual(before);

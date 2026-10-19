@@ -8,6 +8,7 @@ import { CoopRoom } from "./room.js";
 import { availableGames, DATA_DIR } from "./gamedata.js";
 import { log } from "./log.js";
 import { stats } from "./stats.js";
+import { Sonic3ExperimentRoom } from "./sonic3-room.js";
 
 const PORT = Number(process.env.PORT ?? 2567);
 const VERSION = process.env.APP_VERSION ?? "dev";
@@ -43,6 +44,7 @@ app.get("/rooms/:code", async (req, res) => {
 const server = http.createServer(app);
 const gameServer = new Server({ transport: new WebSocketTransport({ server, pingInterval: 5000, pingMaxRetries: 3 }) });
 gameServer.define("coop", CoopRoom);
+if (process.env.ENABLE_SONIC3_EXPERIMENT === "1") gameServer.define("sonic3-experiment", Sonic3ExperimentRoom);
 
 gameServer.listen(PORT).then(() => {
   log("server", `Ring Link server ${VERSION} listening on :${PORT} (data: ${DATA_DIR}, games: ${availableGames().join(", ") || "none"})`);

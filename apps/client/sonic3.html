@@ -4,19 +4,48 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Ring Link - Sonic 3 experiment</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
     <main>
       <h1>Sonic 3: experimental local test</h1>
-      <p>This is not full Sonic 3 support. Upright movement and a subset of static objects only.
-        No online co-op, loops, abilities, enemies, bosses, stage progression, or music yet.</p>
-      <p>Player 1: arrows + Z to jump. Player 2: WASD + J to jump. Gamepads 1 and 2 are separate.</p>
+      <p>This is not full Sonic 3 support. Walking, jumping, rolling, spindash, plane switches, moving platforms,
+        directional springs, timed spikes, collapsing platforms, item boxes, shields, speed shoes, rings, dropped-ring recovery, and checkpoints are implemented.
+        Tails can fly. The stage's water level changes movement, with 30 seconds of air unless protected by a bubble shield.
+        Cyclone, Saruder, and Tulippon have experimental patrols and projectile attacks, using the original sprites.
+        Sonic can use elemental shield moves.
+        Swing ropes can be grabbed by either airborne player; press jump to release with the rope's momentum.
+        Eight rock piles now have solid collision and shared destruction using their original sprites.
+        Jump onto top-breakable piles, or roll into side-breakable piles at speed; Sonic's fire dash can also break sides.
+        In this experiment, piles with neither smash flag accept either attack. Character-restricted piles stay solid.
+        One custom rock variant and the tile-backed breakable barriers remain unsupported.
+        The fling ramp launches either grounded player approaching in its allowed direction at four pixels per tick or faster.
+        Lives are counted, but this test always respawns players rather than ending the game.
+        Tile surface grip now supports walls and ceilings with sufficient speed, but is still experimental physics.
+        No bosses or stage progression yet; several stage objects remain unsupported.
+        Referenced music and sound files are missing from this archive.
+        Online testing is opt-in, with local input prediction and buffered rendering between server snapshots.</p>
+      <p>Player 1: arrows + Z to jump. Player 2: WASD + J to jump. Down while moving rolls.
+        Hold down and tap jump to charge a spindash; release down to launch.
+        Tails: release and press jump again in midair to fly, then hold jump to climb. Flight lasts eight seconds.
+        Sonic: press jump again in midair with a lightning shield to double jump, a fire shield to dash, or a bubble shield to bounce.
+        Gamepads 1 and 2 are separate.</p>
       <p><button id="start" disabled>Start / resume</button> <button id="pause" disabled>Pause</button>
         <button id="restart" disabled>Restart</button> <a href="/">Back to Ring Link</a></p>
       <p id="status" role="status">Loading the local experimental pack...</p>
+      <fieldset id="online" disabled><legend>Experimental online test (optional)</legend>
+        <p>The server must enable ENABLE_SONIC3_EXPERIMENT=1 and use the same exported pack.
+          Online players each use arrows + Z or their first gamepad. The host controls start, pause, and restart.</p>
+        <button id="create-online">Create online room</button>
+        <input id="room-code" aria-label="Experimental room ID" placeholder="Room ID" maxlength="32" />
+        <button id="join-online">Join online room</button>
+        <button id="leave-online" disabled>Leave online</button>
+        <p id="online-status" role="status">Local two-player mode</p>
+      </fieldset>
       <div class="views"><section><h2>Sonic</h2><canvas id="p1" width="424" height="240"></canvas><p id="hud1"></p></section>
         <section><h2>Tails</h2><canvas id="p2" width="424" height="240"></canvas><p id="hud2"></p></section></div>
       <details><summary>Unsupported scene objects</summary><pre id="unsupported"></pre></details>
+      <details><summary>Missing referenced audio assets</summary><pre id="missing-assets"></pre></details>
     </main>
     <script type="module" src="/src/game/sonic3-experiment.ts"></script>
   </body>
