@@ -9,7 +9,9 @@ import {
   GameSim, captureState, encodeDelta, encodeSnapshot, decodeInput, decodeU32, isCharacterAvailable, makeRoomCode, KEYFRAME,
   type GameEvent, type GameId, type LobbyState, type LobbyPlayer, type ClientLobbyMessage, type StartInfo, type ScriptHost,
 } from "@ringlink/engine";
-import { availableGames, loadVfs } from "./gamedata.js";
+import { availableGames, createSonic3Game, loadSonic3Pack, loadVfs } from "./gamedata.js";
+import type { V5Gameplay } from "../../../packages/engine/src/v5/gameplay.js";
+import type { V5OnlineSnapshot } from "../../../packages/engine/src/v5/net.js";
 import { log } from "./log.js";
 import { stats } from "./stats.js";
 
@@ -35,6 +37,8 @@ export class CoopRoom extends Room {
   override maxClients = MAX_PLAYERS;
   private lobby!: LobbyState;
   private sim: GameSim | null = null;
+  /** The Sonic 3 (RSDKv5) world, when that game is running instead of the script-engine sim. */
+  private v5: V5Gameplay | null = null;
   private seats: (Seat | null)[] = [];
   private snapshots = new Map<number, Uint8Array>();
   private snapId = 0;
@@ -52,6 +56,7 @@ export class CoopRoom extends Room {
       code,
       game: options.game && games.includes(options.game) ? options.game : (games.includes("sonic1") ? "sonic1" : games[0] ?? "sonic1"),
       phase: "lobby",
+      games,
       hostId: "",
       players: [],
       maxPlayers: MAX_PLAYERS,
@@ -105,10 +110,15 @@ export class CoopRoom extends Room {
         seat.sessionId = again.sessionId;
         seat.queue.length = 0;
         seat.ackSnap = KEYFRAME;
+        if (this.v5) {
+          // the reconnecting client numbers its inputs from the start again
+          seat.lastQueuedSeq = -1;
+          seat.ackSeq = -1;
+        }
       }
       log("room", `${this.lobby.code}: ${player.name} reconnected`);
       this.broadcastLobby();
-      if (this.sim) again.send("start", this.startInfo(player));
+      if (this.sim || this.v5) again.send("start", this.startInfo(player));
     } catch {
       log("room", `${this.lobby.code}: ${player.name} did not come back`);
       this.removePlayer(client.sessionId);
@@ -156,11 +166,12 @@ export class CoopRoom extends Room {
         this.lobby.game = msg.setGame;
         this.lobby.startStage = 0;
         for (const p of this.lobby.players) {
-          if (!isCharacterAvailable(msg.setGame, p.character)) p.character = 0;
+          if (msg.setGame === "sonic3") p.character = Math.min(p.slot, 1);
+          else if (!isCharacterAvailable(msg.setGame, p.character)) p.character = 0;
         }
         for (const p of this.lobby.players) p.ready = false;
       }
-      if ("setCharacter" in msg && isCharacterAvailable(this.lobby.game, msg.setCharacter)) player.character = msg.setCharacter;
+      if ("setCharacter" in msg && this.lobby.game !== "sonic3" && isCharacterAvailable(this.lobby.game, msg.setCharacter)) player.character = msg.setCharacter;
       if ("ready" in msg) player.ready = !!msg.ready;
       if ("setStartStage" in msg && isHost && DEV_TOOLS) this.lobby.startStage = Math.max(0, Math.floor(Number(msg.setStartStage) || 0));
       if ("start" in msg && isHost) this.tryStart(client);
@@ -200,6 +211,7 @@ export class CoopRoom extends Room {
       characters: this.lobby.players.map((x) => x.character),
       startStage: this.lobby.startStage,
       snapshotRate: SNAPSHOT_RATE,
+      levelHash: this.lobby.game === "sonic3" ? loadSonic3Pack().hash : undefined,
     };
   }
 
@@ -238,10 +250,14 @@ export class CoopRoom extends Room {
     const slots = Math.max(...players.map((p) => p.slot)) + 1;
     const characters = Array.from({ length: slots }, (_, s) => players.find((p) => p.slot === s)?.character ?? 0);
     try {
-      const sim = new GameSim(loadVfs(this.lobby.game), host, { headless: true, players: slots });
-      sim.configurePlayers(characters);
-      sim.startStage(1, Math.min(this.lobby.startStage, sim.E.stageListCount[1] - 1));
-      this.sim = sim;
+      if (this.lobby.game === "sonic3") {
+        this.v5 = createSonic3Game();
+      } else {
+        const sim = new GameSim(loadVfs(this.lobby.game), host, { headless: true, players: slots });
+        sim.configurePlayers(characters);
+        sim.startStage(1, Math.min(this.lobby.startStage, sim.E.stageListCount[1] - 1));
+        this.sim = sim;
+      }
     } catch (e) {
       log("error", `${this.lobby.code}: could not start: ${(e as Error).stack}`);
       this.endGame("The server could not start the game");
@@ -293,8 +309,7 @@ export class CoopRoom extends Room {
   }
 
   private step(): void {
-    const sim = this.sim;
-    if (!sim) return;
+    if (!this.sim && !this.v5) return;
     const pads: number[] = [];
     for (const seat of this.seats) {
       if (!seat) {
@@ -311,6 +326,11 @@ export class CoopRoom extends Room {
       const connected = this.lobby.players.find((p) => p.id === seat.sessionId)?.connected ?? false;
       pads.push(connected ? seat.lastPad : 0);
     }
+    if (this.v5) {
+      this.stepSonic3(pads);
+      return;
+    }
+    const sim = this.sim!;
     let events: GameEvent[];
     const t0 = performance.now();
     try {
@@ -325,6 +345,30 @@ export class CoopRoom extends Room {
     this.serverTick++;
     for (const ev of events) this.onGameEvent(ev);
     if (this.sim && this.serverTick % Math.round(60 / SNAPSHOT_RATE) === 0) this.sendSnapshots(pads);
+  }
+
+  private stepSonic3(pads: number[]): void {
+    const world = this.v5!;
+    const t0 = performance.now();
+    try {
+      world.tick([pads[0] ?? 0, pads[1] ?? 0]);
+    } catch (e) {
+      log("error", `${this.lobby.code}: Sonic 3 simulation error: ${(e as Error).stack}`);
+      this.endGame("The game hit an error and was stopped");
+      return;
+    }
+    stats.tickMs = stats.tickMs * 0.98 + (performance.now() - t0) * 0.02;
+    stats.ticks++;
+    this.serverTick++;
+    if (this.serverTick % 3 !== 0) return;
+    const snapshot: V5OnlineSnapshot = {
+      state: world.capture(),
+      playing: true,
+      owner: this.lobby.hostId,
+      acknowledged: [0, 1].map((slot) => this.seats[slot]?.ackSeq ?? -1),
+      players: this.lobby.players.map((p) => ({ id: p.id, slot: p.slot })),
+    };
+    this.broadcast("world", snapshot);
   }
 
   private onGameEvent(ev: GameEvent): void {
@@ -370,6 +414,7 @@ export class CoopRoom extends Room {
   private endGame(message: string): void {
     this.stopLoop();
     this.sim = null;
+    this.v5 = null;
     this.seats = [];
     this.snapshots.clear();
     this.lobby.phase = "lobby";

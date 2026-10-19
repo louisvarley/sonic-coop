@@ -3,6 +3,7 @@
 import { Client, type Room } from "colyseus.js";
 import { CHARACTERS, isCharacterAvailable, type LobbyState, type StartInfo, type GameId } from "@ringlink/engine";
 import { GameRunner } from "./game/runner.js";
+import { Sonic3Runner } from "./game/sonic3-runner.js";
 import { Input } from "./input.js";
 import "./style.css";
 
@@ -13,11 +14,12 @@ const app = document.getElementById("app")!;
 
 let room: Room | null = null;
 let lobby: LobbyState | null = null;
-let runner: GameRunner | null = null;
+let runner: GameRunner | Sonic3Runner | null = null;
 let reconnectToken = "";
 let leaving = false;
 
-const GAME_NAMES: Record<GameId, string> = { sonic1: "Sonic the Hedgehog", sonic2: "Sonic the Hedgehog 2" };
+const GAME_NAMES: Record<GameId, string> = { sonic1: "Sonic the Hedgehog", sonic2: "Sonic the Hedgehog 2", sonic3: "Sonic the Hedgehog 3 (experimental)" };
+const GAME_SHORT: Record<GameId, string> = { sonic1: "Sonic 1", sonic2: "Sonic 2", sonic3: "Sonic 3" };
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string, string> = {}, ...children: (Node | string)[]): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -156,6 +158,7 @@ function enterRoom(r: Room): void {
   });
   r.onMessage("event", () => {});
   r.onMessage("snap", () => {});
+  r.onMessage("world", () => {});
   r.onMessage("pong", () => {});
   r.onError((code, message) => toast(`Server error ${code}: ${message}`, "error"));
   r.onLeave((code) => {
@@ -205,8 +208,10 @@ function renderLobby(): void {
   };
 
   const games = el("div", { class: "choices" });
-  for (const g of ["sonic1", "sonic2"] as GameId[]) {
-    const b = el("button", { class: `choice${l.game === g ? " selected" : ""}` }, el("strong", {}, g === "sonic1" ? "Sonic 1" : "Sonic 2"), el("small", {}, GAME_NAMES[g]));
+  const listed: GameId[] = ["sonic1", "sonic2"];
+  if (l.games?.includes("sonic3") || l.game === "sonic3") listed.push("sonic3");
+  for (const g of listed) {
+    const b = el("button", { class: `choice${l.game === g ? " selected" : ""}` }, el("strong", {}, GAME_SHORT[g]), el("small", {}, GAME_NAMES[g]));
     b.disabled = !isHost || l.phase !== "lobby";
     b.onclick = () => room!.send("lobby", { setGame: g });
     games.append(b);
@@ -215,6 +220,7 @@ function renderLobby(): void {
   const chars = el("div", { class: "choices" });
   for (const c of CHARACTERS.filter((character) => isCharacterAvailable(l.game, character.id))) {
     const b = el("button", { class: `choice char-${c.name.toLowerCase()}${me?.character === c.id ? " selected" : ""}` }, el("strong", {}, c.name));
+    b.disabled = l.game === "sonic3";
     b.onclick = () => room!.send("lobby", { setCharacter: c.id });
     chars.append(b);
   }
@@ -263,7 +269,7 @@ function renderLobby(): void {
       el("header", {}, el("h1", { class: "logo small" }, el("span", { class: "ring" }), "Ring Link"), el("div", { class: "code" }, el("small", {}, "Room code"), el("strong", {}, l.code)), copyBtn),
       l.message ? el("p", { class: "notice" }, l.message) : "",
       el("section", {}, el("h2", {}, "Game"), games),
-      el("section", {}, el("h2", {}, "Your character"), chars),
+      el("section", {}, el("h2", {}, "Your character"), chars, l.game === "sonic3" ? el("p", { class: "hint" }, "Sonic 3 is experimental: player 1 is Sonic and player 2 is Tails.") : ""),
       el("section", {}, el("h2", {}, "Players"), list),
       ...extras,
       el("div", { class: "row actions" }, readyBtn, startBtn, leaveBtn),
@@ -280,7 +286,7 @@ function startGame(info: StartInfo): void {
   runner?.stop();
   const root = el("main", { class: "game" });
   app.replaceChildren(root);
-  runner = new GameRunner(room, info, () => lobby!, input, {
+  const ui = {
     root,
     toast,
     onExit: () => {
@@ -290,7 +296,8 @@ function startGame(info: StartInfo): void {
       void room?.leave(true);
       showHome();
     },
-  });
+  };
+  runner = info.game === "sonic3" ? new Sonic3Runner(room, info, () => lobby!, input, ui) : new GameRunner(room, info, () => lobby!, input, ui);
   runner.start().catch((e) => {
     toast(errorText(e), "error");
     runner?.stop();

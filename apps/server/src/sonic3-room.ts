@@ -1,4 +1,4 @@
-// Opt-in experimental room. Sonic 3 is deliberately not added to the supported-game lobby.
+// Standalone room for the /sonic3.html test page. The normal lobby runs Sonic 3 inside CoopRoom (see room.ts).
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";

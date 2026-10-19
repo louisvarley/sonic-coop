@@ -10,7 +10,7 @@ export const PROTOCOL_VERSION = 1;
 export const TICK_RATE = 60;
 export const KEYFRAME = 0xffffffff;
 
-export type GameId = "sonic1" | "sonic2";
+export type GameId = "sonic1" | "sonic2" | "sonic3";
 
 export const CHARACTERS = [
   { id: 0, name: "Sonic" },
@@ -19,6 +19,7 @@ export const CHARACTERS = [
 ] as const;
 
 export function isCharacterAvailable(game: GameId, id: number): boolean {
+  // Sonic 3 seats are fixed: player 1 is Sonic, player 2 is Tails.
   return CHARACTERS.some((character) => character.id === id && (game === "sonic2" || id < 2));
 }
 
@@ -35,6 +36,8 @@ export interface LobbyPlayer {
 export interface LobbyState {
   code: string;
   game: GameId;
+  /** Games whose data is installed on the server. */
+  games?: GameId[];
   phase: "lobby" | "loading" | "playing";
   hostId: string;
   players: LobbyPlayer[];
@@ -52,6 +55,8 @@ export interface StartInfo {
   characters: number[];
   startStage: number;
   snapshotRate: number;
+  /** Sonic 3 only: MD5 of the server's level pack, so a stale client export is rejected. */
+  levelHash?: string;
 }
 
 export type ClientLobbyMessage =
