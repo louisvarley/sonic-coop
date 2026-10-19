@@ -44,6 +44,8 @@ export interface LobbyState {
   maxPlayers: number;
   /** Stage list position to start from (regular list); the first zone by default. */
   startStage: number;
+  /** The selected game's levels (index = startStage), for the level selector. */
+  stages?: { level: string; act: string }[];
   devTools: boolean;
   message?: string;
 }

@@ -9,7 +9,7 @@ import {
   GameSim, captureState, encodeDelta, encodeSnapshot, decodeInput, decodeU32, isCharacterAvailable, makeRoomCode, KEYFRAME,
   type GameEvent, type GameId, type LobbyState, type LobbyPlayer, type ClientLobbyMessage, type StartInfo, type ScriptHost,
 } from "@ringlink/engine";
-import { availableGames, createSonic3Game, loadSonic3Pack, loadVfs } from "./gamedata.js";
+import { availableGames, createSonic3Game, loadSonic3Pack, loadVfs, stageList } from "./gamedata.js";
 import type { V5Gameplay } from "../../../packages/engine/src/v5/gameplay.js";
 import type { V5OnlineSnapshot } from "../../../packages/engine/src/v5/net.js";
 import { log } from "./log.js";
@@ -153,6 +153,9 @@ export class CoopRoom extends Room {
   }
 
   private broadcastLobby(): void {
+    if (this.lobby.devTools) {
+      try { this.lobby.stages = stageList(this.lobby.game); } catch (e) { log("error", `stage list: ${(e as Error).message}`); }
+    }
     this.broadcast("lobby", this.lobby);
   }
 
@@ -173,7 +176,10 @@ export class CoopRoom extends Room {
       }
       if ("setCharacter" in msg && this.lobby.game !== "sonic3" && isCharacterAvailable(this.lobby.game, msg.setCharacter)) player.character = msg.setCharacter;
       if ("ready" in msg) player.ready = !!msg.ready;
-      if ("setStartStage" in msg && isHost && DEV_TOOLS) this.lobby.startStage = Math.max(0, Math.floor(Number(msg.setStartStage) || 0));
+      if ("setStartStage" in msg && isHost) {
+        const count = stageList(this.lobby.game).length;
+        this.lobby.startStage = Math.max(0, Math.min(Math.floor(Number(msg.setStartStage) || 0), count - 1));
+      }
       if ("start" in msg && isHost) this.tryStart(client);
     } else if ("endGame" in msg && isHost) {
       this.endGame("The host ended the game");

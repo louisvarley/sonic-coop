@@ -255,12 +255,18 @@ function renderLobby(): void {
     showHome();
   };
 
-  const extras: HTMLElement[] = [];
-  if (l.devTools && isHost) {
-    const stage = el("input", { type: "number", min: "0", value: String(l.startStage), class: "small" });
+  const stages = l.stages ?? [];
+  const current = stages[Math.min(l.startStage, stages.length - 1)];
+  const stageLabel = (s: { level: string; act: string }) => `${s.level} - ${s.act}`;
+  const stageSection: HTMLElement[] = [];
+  if (stages.length) {
+    const stage = el("select", {}, ...stages.map((s, i) => el("option", { value: String(i) }, stageLabel(s))));
+    stage.value = String(Math.max(0, stages.indexOf(current)));
     stage.onchange = () => room!.send("lobby", { setStartStage: Number(stage.value) });
-    extras.push(el("label", { class: "field dev" }, el("span", {}, "Dev: start at stage #"), stage));
+    stage.disabled = !isHost;
+    stageSection.push(el("section", {}, el("h2", {}, "Level"), isHost || !current ? stage : el("p", {}, stageLabel(current))));
   }
+  const extras: HTMLElement[] = [];
 
   app.replaceChildren(
     el(
@@ -269,6 +275,7 @@ function renderLobby(): void {
       el("header", {}, el("h1", { class: "logo small" }, el("span", { class: "ring" }), "Ring Link"), el("div", { class: "code" }, el("small", {}, "Room code"), el("strong", {}, l.code)), copyBtn),
       l.message ? el("p", { class: "notice" }, l.message) : "",
       el("section", {}, el("h2", {}, "Game"), games),
+      ...stageSection,
       el("section", {}, el("h2", {}, "Your character"), chars, l.game === "sonic3" ? el("p", { class: "hint" }, "Sonic 3 is experimental: player 1 is Sonic and player 2 is Tails.") : ""),
       el("section", {}, el("h2", {}, "Players"), list),
       ...extras,
