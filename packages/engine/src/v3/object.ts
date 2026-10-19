@@ -109,6 +109,7 @@ function runObject(E: Engine3, objectLoop: number, playerCount: number): void {
   if (hasCode(E, scriptInfo.subPlayerInteraction.scriptCodePtr)) {
     E.activePlayer = 0;
     while (E.activePlayer < playerCount) {
+      E.setCamera(E.activePlayer < E.camCount ? E.activePlayer : 0);
       if (E.playerList[E.activePlayer].objectInteractions)
         ProcessScript(E, scriptInfo.subPlayerInteraction.scriptCodePtr, scriptInfo.subPlayerInteraction.jumpTablePtr, C.SUB_PLAYERINTERACTION);
       ++E.activePlayer;

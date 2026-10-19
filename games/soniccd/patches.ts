@@ -103,6 +103,129 @@ end function
 
 export const patches: ScriptPatch[] = [
   {
+    file: "R1/Ramp3D.txt",
+    reason: "load the interacting player's ramp origin rather than the partner's last position",
+    find: "sub ObjectPlayerInteraction",
+    replace: `sub ObjectPlayerInteraction
+	if Stage.PlayerCount > 1
+		if Stage.ActivePlayer == 0
+			Player.XOriginPos = Object.Value2
+		else
+			Player.XOriginPos = Object.Value3
+		end if
+	end if`,
+  },
+  {
+    file: "R1/Ramp3D.txt",
+    reason: "retain separate ramp and drop origins for the two co-op players",
+    find: "\tend switch\nend sub\n\n\nsub ObjectStartup",
+    replace: `	end switch
+	if Stage.PlayerCount > 1
+		if Stage.ActivePlayer == 0
+			Object.Value2 = Player.XOriginPos
+		else
+			Object.Value3 = Player.XOriginPos
+		end if
+	end if
+end sub
+
+
+sub ObjectStartup`,
+  },
+  {
+    file: "Global/SignPost.txt",
+    reason: "let either co-op player activate the goal and retain that player for the finish sequence",
+    find: "sub ObjectMain\n\tswitch Object.State",
+    replace: `sub ObjectMain
+	if Stage.PlayerCount > 1
+		if Object.State == SIGNPOST_IDLE
+			Object.Value2 = 0
+			if Player.XPos <= Object.XPos
+				Stage.ActivePlayer = 1
+				TempValue0 = Object.YPos
+				TempValue0 += 0x600000
+				if Player.YPos < TempValue0
+					if Player.XPos > Object.XPos
+						Object.Value2 = 1
+					end if
+				end if
+			end if
+		end if
+		Stage.ActivePlayer = Object.Value2
+	end if
+	switch Object.State`,
+  },
+  {
+    file: "Global/SignPost.txt",
+    reason: "check the finishing player's entity after the sign stops spinning",
+    find: "\t\t\t\t\tif Object[0].Type == TypeName[Blank Object]",
+    replace: "\t\t\t\t\tArrayPos1 = Player.EntityNo\n\t\t\t\t\tif Object[ArrayPos1].Type == TypeName[Blank Object]",
+  },
+  {
+    file: "Global/SignPost.txt",
+    reason: "check the finishing player's entity while moving them offscreen",
+    find: "\t\tif Object[0].Type == TypeName[Blank Object]",
+    replace: "\t\tArrayPos1 = Player.EntityNo\n\t\tif Object[ArrayPos1].Type == TypeName[Blank Object]",
+  },
+  {
+    file: "R1/TubeSwitch.txt",
+    reason: "load each co-op player's tube contact latch and exit velocity",
+    find: "sub ObjectPlayerInteraction",
+    replace: `sub ObjectPlayerInteraction
+	if Stage.PlayerCount > 1
+		if Stage.ActivePlayer == 0
+			Object.OnObject = Object.Value3
+			Object.LaunchSpeed = Object.Value5
+		else
+			Object.OnObject = Object.Value4
+			Object.LaunchSpeed = Object.Value6
+		end if
+	end if`,
+  },
+  {
+    file: "R1/TubeSwitch.txt",
+    reason: "save tube contact and launch state without the other player clearing it",
+    find: "\t\tObject.OnObject = false\n\tend if\nend sub",
+    replace: `		Object.OnObject = false
+	end if
+	if Stage.PlayerCount > 1
+		if Stage.ActivePlayer == 0
+			Object.Value3 = Object.OnObject
+			Object.Value5 = Object.LaunchSpeed
+		else
+			Object.Value4 = Object.OnObject
+			Object.Value6 = Object.LaunchSpeed
+		end if
+	end if
+end sub`,
+  },
+  {
+    file: "R1/TubeSwitch.txt",
+    reason: "arm and release the angled tube exit separately for each co-op player",
+    find: `		case EXIT_ANGLE_TUBE
+			if Player.State == Player_State_TubeRoll
+				Object.PropertyValue = EXIT_BOOST_TUBE
+			end if`,
+    replace: `		case EXIT_ANGLE_TUBE
+			if Stage.PlayerCount > 1
+				GetBit(TempValue0, Object.Value7, Stage.ActivePlayer)
+				if TempValue0 == true
+					if Player.Gravity == GRAVITY_AIR
+						Player.YVelocity = -0xA8000
+						SetBit(Object.Value7, Stage.ActivePlayer, false)
+					end if
+				else
+					if Player.State == Player_State_TubeRoll
+						SetBit(Object.Value7, Stage.ActivePlayer, true)
+					end if
+				end if
+			else
+				if Player.State == Player_State_TubeRoll
+					Object.PropertyValue = EXIT_BOOST_TUBE
+				end if
+			end if`,
+  },
+  {
     file: "Players/PlayerObject.txt",
     reason: "declare the co-op player setup and respawn functions",
     find: "#function Player_Setup_Startup",

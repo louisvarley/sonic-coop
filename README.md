@@ -36,7 +36,7 @@ docker compose up -d --build
 Restarting the server reloads its cached game data. Refresh both players' browsers after updating the client.
 The client revalidates the manifest at each game start and versions pack downloads by extraction date, so a
 re-extracted pack does not reuse the browser's older cached scripts.
-The Sonic CD manifest at `/data/soniccd/manifest.json` should report `scripts.patches: 11` for the current co-op scripts.
+The Sonic CD manifest at `/data/soniccd/manifest.json` should report `scripts.patches: 19` for the current co-op scripts.
 
 The existing global Git/Docker exclusions for game-file extensions also remain in place as a safeguard for files
 accidentally left outside `game-files/`.
@@ -114,3 +114,5 @@ of the decompilation).
   are only spawned by the scripts' Origins-runtime code, which this project doesn't provide.
 - In co-op, death and drowning respawn that player at the most recently activated shared checkpoint, or the stage's
   start before a checkpoint is reached. Their camera resets there without restarting the partner's game.
+- Ramp camera limits and controls, and tube contact/exit state, are independent for each co-op player. Either player
+  can activate the goal sign and start the shared act-finish sequence.

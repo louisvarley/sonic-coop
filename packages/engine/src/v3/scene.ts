@@ -3,6 +3,7 @@
 // positions, the water line) are done here, so a headless engine stays in step with a drawing one.
 
 import type { Engine3 } from "./engine.js";
+import { CAM3_STRIDE } from "./engine.js";
 import type { Player3 } from "./entity.js";
 import * as C from "./consts.js";
 import { FileReader } from "../core/reader.js";
@@ -164,9 +165,11 @@ export function LoadStageFiles(E: Engine3): void {
   Init3DFloorBuffer(E, 0);
   E.loadedActKey = actKey(E);
   ProcessStartupObjects(E);
+  for (let c = 1; c < C.PLAYER_COUNT; c++) E.cams.copyWithin(c * CAM3_STRIDE, 0, CAM3_STRIDE);
   const p0 = E.playerList[0];
   for (let c = 0; c < C.PLAYER_COUNT; c++) {
     E.setCamera(c);
+    if (c > 0 && c < E.camCount) E.cameraTarget = c;
     const p = E.playerList[c < E.camCount ? c : 0];
     const px = (c < E.camCount ? p : p0).xpos >> 16, py = (c < E.camCount ? p : p0).ypos >> 16;
     E.xScrollA = px - E.SCREEN_CENTERX;
@@ -201,16 +204,12 @@ export function LoadActLayout(E: Engine3): void {
   const fg = E.stageLayouts[0];
   fg.xsize = f.u8();
   fg.ysize = f.u8();
-  E.newXBoundary1 = 0;
-  E.newYBoundary1 = 0;
-  E.newXBoundary2 = fg.xsize << 7;
-  E.newYBoundary2 = fg.ysize << 7;
   for (let c = 0; c < C.PLAYER_COUNT; c++) {
     E.setCamera(c);
-    E.xBoundary1 = 0;
-    E.yBoundary1 = 0;
-    E.xBoundary2 = fg.xsize << 7;
-    E.yBoundary2 = fg.ysize << 7;
+    E.xBoundary1 = E.newXBoundary1 = 0;
+    E.yBoundary1 = E.newYBoundary1 = 0;
+    E.xBoundary2 = E.newXBoundary2 = fg.xsize << 7;
+    E.yBoundary2 = E.newYBoundary2 = fg.ysize << 7;
   }
   E.setCamera(0);
   E.waterLevel = (fg.ysize << 7) + 128;
@@ -778,16 +777,6 @@ export function SetPlayerLockedScreenPosition(E: Engine3, player: Player3): void
 
 function updateCameras(E: Engine3): void {
   const n = Math.max(1, E.camCount);
-  // The stage scripts drive camera 0 only; the other players' cameras follow their player in the same style.
-  for (let c = 1; c < n; c++) {
-    E.setCamera(0);
-    const style = E.cameraStyle, lag = E.cameraLag, lagStyle = E.cameraLagStyle;
-    E.setCamera(c);
-    E.cameraTarget = c;
-    E.cameraStyle = style;
-    E.cameraLag = lag;
-    E.cameraLagStyle = lagStyle;
-  }
   for (let c = 0; c < n; c++) {
     E.setCamera(c);
     if (E.cameraTarget <= -1) continue;

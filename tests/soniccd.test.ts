@@ -349,8 +349,19 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
     await until(() => !!startA && !!startB);
     expect(startA!.characters[0]).toBe(1);
 
-    const gameA = new NetGame(roomA, loadVfs("soniccd"), nullHost, startA!, { headless: true });
-    const gameB = new NetGame(roomB, loadVfs("soniccd"), nullHost, startB!, { headless: false });
+    const soundsA: [number, number][] = [], soundsB: [number, number][] = [];
+    const gameA = new NetGame(roomA, loadVfs("soniccd"), {
+      ...nullHost, playSfx: (id) => {
+        if (!(gameA.sim instanceof GameSim3)) throw new Error("expected Sonic CD");
+        soundsA.push([id, gameA.sim.E.activePlayer]);
+      },
+    }, startA!, { headless: true });
+    const gameB = new NetGame(roomB, loadVfs("soniccd"), {
+      ...nullHost, playSfx: (id) => {
+        if (!(gameB.sim instanceof GameSim3)) throw new Error("expected Sonic CD");
+        soundsB.push([id, gameB.sim.E.activePlayer]);
+      },
+    }, startB!, { headless: false });
     expect(gameB.sim.viewCamera).toBe(1);
     const simB = gameB.sim;
     if (!(simB instanceof GameSim3)) throw new Error("Sonic CD did not create an RSDKv3 game");
@@ -371,7 +382,7 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
 
     for (let f = 0; f < 360; f++) {
       gameA.step(script(f));
-      gameB.step(f < 120 ? 0 : BTN.RIGHT);
+      gameB.step(f < 120 ? 0 : f === 300 ? BTN.RIGHT | BTN.C : BTN.RIGHT);
       await wait(1000 / 60);
     }
     for (let f = 0; f < 30; f++) {
@@ -382,6 +393,8 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
     await wait(300);
 
     expect(gameA.sim.E.playerListPos).toBe(gameA.sim.global("PLAYER_TAILS"));
+    expect(soundsA).toContainEqual([0, 0]);
+    expect(soundsB).toContainEqual([0, 1]);
     const Ea = gameA.sim.E as Engine3, Eb = gameB.sim.E as Engine3;
     expect(Eb.typeNames[Eb.objectEntityList[Eb.playerList[1].boundEntity].type]).toBe("PlayerObject");
     expect(player2Draws).toBeGreaterThan(0);

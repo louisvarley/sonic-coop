@@ -254,7 +254,7 @@ function getVar(E: Engine3, id: number, arrayVal: number): number {
   }
 }
 
-function setVar(E: Engine3, id: number, arrayVal: number, value: number): void {
+function setVar(E: Engine3, id: number, arrayVal: number, value: number, scriptSub: number): void {
   const ent = E.objectEntityList[arrayVal];
   const plr = E.playerList[E.activePlayer];
   const bound = () => E.objectEntityList[plr.boundEntity];
@@ -293,8 +293,8 @@ function setVar(E: Engine3, id: number, arrayVal: number, value: number): void {
     case VAR.PLAYERSTATE: bound().state = value; return;
     case VAR.PLAYERCONTROLMODE:
       plr.controlMode = value;
-      // scripts outside the players (title card, signposts, ...) steer player 1 only: the others follow
-      if (E.activePlayer === 0 && E.playerSlots > 1 && E.objectLoop !== 0 && E.objectLoop !== 1 && E.objectLoop !== 5 && E.objectLoop !== 6) {
+      // Shared controllers steer everyone; player interactions such as ramps must only steer their participant.
+      if (scriptSub === C.SUB_MAIN && E.activePlayer === 0 && E.playerSlots > 1 && E.objectLoop !== 0 && E.objectLoop !== 1 && E.objectLoop !== 5 && E.objectLoop !== 6) {
         for (let p = 1; p < E.playerSlots; p++) E.playerList[p].controlMode = value;
       }
       return;
@@ -393,6 +393,7 @@ function setVar(E: Engine3, id: number, arrayVal: number, value: number): void {
     case VAR.STAGEACTIVEPLAYER:
       E.activePlayer = value;
       if (E.activePlayer > E.activePlayerCount) E.activePlayer = 0;
+      if (scriptSub !== C.SUB_SETUP && E.activePlayer >= 0 && E.activePlayer < E.camCount) E.setCamera(E.activePlayer);
       return;
     case VAR.SCREENCAMERAENABLED: E.cameraEnabled = value; return;
     case VAR.SCREENCAMERATARGET: E.cameraTarget = value; return;
@@ -1335,7 +1336,7 @@ export function ProcessScript(E: Engine3, scriptCodeStart: number, jumpTableStar
       if (opcodeType === SCRIPTVAR_VAR) {
         const [arrayVal, p] = readArrayVal(E, scriptCodePtr);
         scriptCodePtr = p;
-        setVar(E, code[scriptCodePtr++], arrayVal, ops[i]);
+        setVar(E, code[scriptCodePtr++], arrayVal, ops[i], scriptSub);
       } else if (opcodeType === SCRIPTVAR_INTCONST) {
         scriptCodePtr++;
       } else if (opcodeType === SCRIPTVAR_STRCONST) {

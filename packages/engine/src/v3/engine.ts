@@ -20,7 +20,7 @@ export const MAX_PLAYERS3 = C.PLAYER_COUNT;
 // [name, kind]: i = int, b = bool (stored 0/1), u8 = byte, u16 = unsigned short
 type Kind = "i" | "b" | "u8" | "u16";
 const SCALARS: [string, Kind][] = [
-  ["stageMode", "i"], ["newXBoundary1", "i"], ["newYBoundary1", "i"], ["newXBoundary2", "i"], ["newYBoundary2", "i"],
+  ["stageMode", "i"],
   ["waterLevel", "i"], ["waterDrawPos", "i"], ["lastXSize", "i"], ["lastYSize", "i"],
   ["pauseEnabled", "b"], ["timeEnabled", "b"], ["debugMode", "b"], ["frameCounter", "i"],
   ["stageMilliseconds", "i"], ["stageSeconds", "i"], ["stageMinutes", "i"],
@@ -44,6 +44,7 @@ const CAM_SCALARS: [string, Kind][] = [
   ["xScrollOffset", "i"], ["yScrollOffset", "i"], ["yScrollA", "i"], ["yScrollB", "i"], ["xScrollA", "i"], ["xScrollB", "i"],
   ["yScrollMove", "i"], ["cameraShakeX", "i"], ["cameraShakeY", "i"], ["cameraLag", "i"], ["cameraLagStyle", "i"],
   ["xBoundary1", "i"], ["yBoundary1", "i"], ["xBoundary2", "i"], ["yBoundary2", "i"],
+  ["newXBoundary1", "i"], ["newYBoundary1", "i"], ["newXBoundary2", "i"], ["newYBoundary2", "i"],
 ];
 export const CAM3_STRIDE = 24;
 export const CAM3_INDEX: Record<string, number> = Object.fromEntries(CAM_SCALARS.map(([n], i) => [n, i]));

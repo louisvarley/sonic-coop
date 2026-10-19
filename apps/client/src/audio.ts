@@ -23,7 +23,8 @@ export class AudioHost implements ScriptHost {
   private music: { source: AudioBufferSourceNode; started: number; offset: number; track: number; buffer: AudioBuffer } | null = null;
   private requestedMusicTrack: number | null = null;
   private musicToken = 0;
-  private playingSfx = new Map<number, AudioBufferSourceNode>();
+  private playingSfx = new Map<number, { source: AudioBufferSourceNode; panner: StereoPannerNode }>();
+  private sfxRequests = new Map<number, { loop: boolean; pan: number }>();
   private settings = { music: 0.7, sfx: 0.8, muted: false };
   private scriptMusicVolume = 1;
 
@@ -90,7 +91,10 @@ export class AudioHost implements ScriptHost {
               this.onLog(`audio ${path}: ${e}`);
               return null;
             })
-        : Promise.resolve(null);
+        : Promise.resolve(null).then(() => {
+            this.onLog(`audio ${path}: missing from audio index`);
+            return null;
+          });
       this.buffers.set(path, p);
     }
     return p;
@@ -113,40 +117,61 @@ export class AudioHost implements ScriptHost {
   }
 
   playSfx(id: number, loop: number): void {
+    this.startSfx(id, !!loop, 0);
+  }
+
+  private startSfx(id: number, loop: boolean, pan: number): void {
     const path = this.sfxPaths[id];
-    if (!path) return;
+    if (!path) {
+      this.onLog(`audio: sound effect ${id} is not registered`);
+      return;
+    }
+    this.stopSfx(id);
+    const request = { loop, pan };
+    this.sfxRequests.set(id, request);
     void this.load(`Data/SoundFX/${path}`).then((buf) => {
-      if (!buf) return;
-      this.stopSfx(id);
+      if (this.sfxRequests.get(id) !== request) return;
+      if (!buf) {
+        this.sfxRequests.delete(id);
+        return;
+      }
       const src = this.ctx.createBufferSource();
+      const panner = this.ctx.createStereoPanner();
       src.buffer = buf;
-      src.loop = !!loop;
-      src.connect(this.sfxGain);
+      src.loop = request.loop;
+      panner.pan.value = Math.max(-1, Math.min(1, request.pan / 100));
+      src.connect(panner);
+      panner.connect(this.sfxGain);
       src.start();
-      this.playingSfx.set(id, src);
+      this.playingSfx.set(id, { source: src, panner });
       src.onended = () => {
-        if (this.playingSfx.get(id) === src) this.playingSfx.delete(id);
+        src.disconnect();
+        panner.disconnect();
+        if (this.playingSfx.get(id)?.source === src) {
+          this.playingSfx.delete(id);
+          this.sfxRequests.delete(id);
+        }
       };
     });
   }
 
   stopSfx(id: number): void {
+    this.sfxRequests.delete(id);
     const s = this.playingSfx.get(id);
     if (s) {
-      try {
-        s.stop();
-      } catch {
-        /* already stopped */
-      }
       this.playingSfx.delete(id);
+      s.source.stop();
     }
   }
 
   stopAllSfx(): void {
-    for (const id of [...this.playingSfx.keys()]) this.stopSfx(id);
+    for (const id of [...this.sfxRequests.keys()]) this.stopSfx(id);
   }
 
-  setSfxAttributes(): void {}
+  setSfxAttributes(id: number, loopCount: number, pan: number): void {
+    const loop = loopCount === -1 ? (this.sfxRequests.get(id)?.loop ?? false) : loopCount !== 0;
+    this.startSfx(id, loop, pan);
+  }
 
   // ---- music -----------------------------------------------------------------------------------------------------
 
