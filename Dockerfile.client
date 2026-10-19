@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Ring Link web front end: the built browser app, the game data (from a read-only volume) and a reverse proxy
+# Sonic Coop web front end: the built browser app, the game data (from a read-only volume) and a reverse proxy
 # to the game server, all on one port.
 
 FROM node:22-alpine AS build

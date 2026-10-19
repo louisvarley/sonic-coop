@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Ring Link game server: authoritative simulation + Colyseus rooms.
+# Sonic Coop game server: authoritative simulation + Colyseus rooms.
 
 FROM node:22-alpine AS build
 WORKDIR /app

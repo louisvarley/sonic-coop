@@ -153,9 +153,7 @@ export class CoopRoom extends Room {
   }
 
   private broadcastLobby(): void {
-    if (this.lobby.devTools) {
-      try { this.lobby.stages = stageList(this.lobby.game); } catch (e) { log("error", `stage list: ${(e as Error).message}`); }
-    }
+    try { this.lobby.stages = stageList(this.lobby.game); } catch (e) { log("error", `stage list: ${(e as Error).message}`); }
     this.broadcast("lobby", this.lobby);
   }
 

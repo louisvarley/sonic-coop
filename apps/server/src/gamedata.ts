@@ -38,6 +38,10 @@ function actLabel(id: string): string {
   return text || "Act 1";
 }
 
+function titleCase(text: string): string {
+  return text.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase());
+}
+
 /** Level and act for every start position the selected game offers. */
 export function stageList(game: GameId): { level: string; act: string }[] {
   let list = stageLists.get(game);
@@ -48,7 +52,15 @@ export function stageList(game: GameId): { level: string; act: string }[] {
       const host = { log: noop, playSfx: noop, stopSfx: noop, setSfxAttributes: noop, setMusicTrack: noop, playMusic: noop,
         stopMusic: noop, pauseMusic: noop, resumeMusic: noop, swapMusicTrack: noop, setMusicVolume: noop } as unknown as ScriptHost;
       const sim = new GameSim(loadVfs(game), host, { headless: true, players: 1 });
-      list = sim.E.stageList[1].map((s) => ({ level: s.name.trim(), act: actLabel(s.id) }));
+      list = [];
+      let level = "";
+      for (const s of sim.E.stageList[1]) {
+        const name = s.name.trim();
+        const m = /^(.*?)\s*(\d+)$/.exec(name);
+        if (m && m[1]) { level = titleCase(m[1]); list.push({ level, act: `Act ${m[2]}` }); }
+        else if (/^\d+$/.test(name) && level) list.push({ level, act: `Act ${name}` });
+        else { level = titleCase(name); list.push({ level, act: actLabel(s.id) }); }
+      }
     }
     stageLists.set(game, list);
   }

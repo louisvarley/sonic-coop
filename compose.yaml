@@ -1,4 +1,4 @@
-# Ring Link: docker compose up -d --build
+# Sonic Coop: docker compose up -d --build
 name: ringlink
 
 services:

@@ -17,4 +17,7 @@ fi
 if stale data/sonic3/experimental.pak; then
   npx tsx tools/export-rsdkv5.ts || echo "sonic 3 export failed"
 fi
+if stale data/ui/sonic1/Title/Title.png; then
+  npx tsx tools/extract-ui.ts --out data/ui || echo "ui sprite export failed"
+fi
 exit 0

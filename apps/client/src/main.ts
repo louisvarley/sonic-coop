@@ -1,10 +1,11 @@
-// Ring Link: the browser app (home, lobby, game).
+// Sonic Coop: the browser app (home, lobby, game).
 
 import { Client, type Room } from "colyseus.js";
 import { CHARACTERS, isCharacterAvailable, type LobbyState, type StartInfo, type GameId } from "@ringlink/engine";
 import { GameRunner } from "./game/runner.js";
 import { Sonic3Runner } from "./game/sonic3-runner.js";
 import { Input } from "./input.js";
+import "@fontsource/press-start-2p/latin-400.css";
 import "./style.css";
 
 const API = `${location.origin}/api`;
@@ -20,6 +21,23 @@ let leaving = false;
 
 const GAME_NAMES: Record<GameId, string> = { sonic1: "Sonic the Hedgehog", sonic2: "Sonic the Hedgehog 2", sonic3: "Sonic the Hedgehog 3 (experimental)" };
 const GAME_SHORT: Record<GameId, string> = { sonic1: "Sonic 1", sonic2: "Sonic 2", sonic3: "Sonic 3" };
+
+// Sprite art comes from PNGs that `npm run extract:ui` dumps out of the user's own game data; absent files just hide the art.
+function spr(game: "sonic1" | "sonic2", x: number, y: number, w: number, h: number, s: number): HTMLElement {
+  const e = document.createElement("span");
+  e.className = "spr";
+  e.style.cssText = `background-image:url(/data/ui/${game}/Title/Title.png);background-size:${512 * s}px ${512 * s}px;` +
+    `background-position:-${x * s}px -${y * s}px;width:${w * s}px;height:${h * s}px`;
+  return e;
+}
+const HEADS: Record<string, () => HTMLElement> = {
+  sonic: () => spr("sonic1", 2, 2, 66, 82, 0.9),
+  tails: () => spr("sonic1", 200, 150, 50, 56, 1.2),
+  knuckles: () => spr("sonic1", 410, 425, 102, 87, 0.9),
+};
+const probe = new Image();
+probe.onload = () => document.documentElement.classList.add("has-sprites");
+probe.src = "/data/ui/sonic1/Title/Title.png";
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string, string> = {}, ...children: (Node | string)[]): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -125,13 +143,13 @@ function showHome(message?: string): void {
     el(
       "main",
       { class: "home" },
-      el("h1", { class: "logo" }, el("span", { class: "ring" }), "Ring Link"),
-      el("p", { class: "tagline" }, "Sonic 1 and Sonic 2, together online."),
+      el("h1", { class: "logo" }, el("span", { class: "ring" }), spr("sonic1", 258, 93, 224, 136, 0.75), "Sonic Coop"),
+      el("p", { class: "tagline" }, "Sonic 1, 2 and 3, together online."),
       el("label", { class: "field" }, el("span", {}, "Name"), nameInput),
       el("div", { class: "card" }, el("h2", {}, "Host"), el("p", {}, "Start a lobby and send the invite link to a friend."), createBtn),
       el("div", { class: "card" }, el("h2", {}, "Join"), el("div", { class: "row" }, codeInput, joinBtn)),
       status,
-      el("footer", {}, "Uses your own Sonic 1 & 2 game data. Fan project, not affiliated with SEGA."),
+      el("footer", {}, "Uses your own Sonic game data. Fan project, not affiliated with SEGA."),
     ),
   );
   (invite ? codeInput : nameInput).focus();
@@ -211,7 +229,8 @@ function renderLobby(): void {
   const listed: GameId[] = ["sonic1", "sonic2"];
   if (l.games?.includes("sonic3") || l.game === "sonic3") listed.push("sonic3");
   for (const g of listed) {
-    const b = el("button", { class: `choice${l.game === g ? " selected" : ""}` }, el("strong", {}, GAME_SHORT[g]), el("small", {}, GAME_NAMES[g]));
+    const art = g === "sonic1" ? spr("sonic1", 258, 93, 224, 136, 0.5) : g === "sonic2" ? spr("sonic2", 258, 70, 240, 155, 0.45) : null;
+    const b = el("button", { class: `choice${l.game === g ? " selected" : ""}` }, ...(art ? [art] : []), el("strong", {}, GAME_SHORT[g]), el("small", {}, GAME_NAMES[g]));
     b.disabled = !isHost || l.phase !== "lobby";
     b.onclick = () => room!.send("lobby", { setGame: g });
     games.append(b);
@@ -219,7 +238,7 @@ function renderLobby(): void {
 
   const chars = el("div", { class: "choices" });
   for (const c of CHARACTERS.filter((character) => isCharacterAvailable(l.game, character.id))) {
-    const b = el("button", { class: `choice char-${c.name.toLowerCase()}${me?.character === c.id ? " selected" : ""}` }, el("strong", {}, c.name));
+    const b = el("button", { class: `choice char-${c.name.toLowerCase()}${me?.character === c.id ? " selected" : ""}` }, ...(HEADS[c.name.toLowerCase()] ? [HEADS[c.name.toLowerCase()]()] : []), el("strong", {}, c.name));
     b.disabled = l.game === "sonic3";
     b.onclick = () => room!.send("lobby", { setCharacter: c.id });
     chars.append(b);
@@ -272,7 +291,7 @@ function renderLobby(): void {
     el(
       "main",
       { class: "lobby" },
-      el("header", {}, el("h1", { class: "logo small" }, el("span", { class: "ring" }), "Ring Link"), el("div", { class: "code" }, el("small", {}, "Room code"), el("strong", {}, l.code)), copyBtn),
+      el("header", {}, el("h1", { class: "logo small" }, el("span", { class: "ring" }), "Sonic Coop"), el("div", { class: "code" }, el("small", {}, "Room code"), el("strong", {}, l.code)), copyBtn),
       l.message ? el("p", { class: "notice" }, l.message) : "",
       el("section", {}, el("h2", {}, "Game"), games),
       ...stageSection,

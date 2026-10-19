@@ -1,4 +1,4 @@
-// Ring Link game server: HTTP (health, stats) and the Colyseus WebSocket endpoint on one port.
+// Sonic Coop game server: HTTP (health, stats) and the Colyseus WebSocket endpoint on one port.
 
 import http from "node:http";
 import express from "express";
@@ -47,7 +47,7 @@ gameServer.define("coop", CoopRoom);
 if (process.env.ENABLE_SONIC3_EXPERIMENT === "1") gameServer.define("sonic3-experiment", Sonic3ExperimentRoom);
 
 gameServer.listen(PORT).then(() => {
-  log("server", `Ring Link server ${VERSION} listening on :${PORT} (data: ${DATA_DIR}, games: ${availableGames().join(", ") || "none"})`);
+  log("server", `Sonic Coop server ${VERSION} listening on :${PORT} (data: ${DATA_DIR}, games: ${availableGames().join(", ") || "none"})`);
 });
 
 // Colyseus handles SIGINT/SIGTERM itself: rooms are disposed and the process exits cleanly.
