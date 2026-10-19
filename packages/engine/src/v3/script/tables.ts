@@ -1,0 +1,96 @@
+// RetroScript v3 tables (Script.cpp): variable names, opcodes with their operand counts, and the common aliases.
+// Built with RETRO_USE_HAPTICS, as the decompilation is: the scripts' Use_Haptics blocks compile against these.
+
+export const VARIABLE_NAMES = [
+  "TempValue0", "TempValue1", "TempValue2", "TempValue3", "TempValue4", "TempValue5", "TempValue6", "TempValue7",
+  "CheckResult", "ArrayPos0", "ArrayPos1", "Global",
+  "Object.EntityNo", "Object.Type", "Object.PropertyValue", "Object.XPos", "Object.YPos", "Object.iXPos", "Object.iYPos",
+  "Object.State", "Object.Rotation", "Object.Scale", "Object.Priority", "Object.DrawOrder", "Object.Direction",
+  "Object.InkEffect", "Object.Alpha", "Object.Frame", "Object.Animation", "Object.PrevAnimation", "Object.AnimationSpeed",
+  "Object.AnimationTimer", "Object.Value0", "Object.Value1", "Object.Value2", "Object.Value3", "Object.Value4",
+  "Object.Value5", "Object.Value6", "Object.Value7", "Object.OutOfBounds",
+  "Player.State", "Player.ControlMode", "Player.ControlLock", "Player.CollisionMode", "Player.CollisionPlane",
+  "Player.XPos", "Player.YPos", "Player.iXPos", "Player.iYPos", "Player.ScreenXPos", "Player.ScreenYPos",
+  "Player.Speed", "Player.XVelocity", "Player.YVelocity", "Player.Gravity", "Player.Angle", "Player.Skidding",
+  "Player.Pushing", "Player.TrackScroll", "Player.Up", "Player.Down", "Player.Left", "Player.Right", "Player.JumpPress",
+  "Player.JumpHold", "Player.FollowPlayer1", "Player.LookPos", "Player.Water", "Player.TopSpeed", "Player.Acceleration",
+  "Player.Deceleration", "Player.AirAcceleration", "Player.AirDeceleration", "Player.GravityStrength",
+  "Player.JumpStrength", "Player.JumpCap", "Player.RollingAcceleration", "Player.RollingDeceleration",
+  "Player.EntityNo", "Player.CollisionLeft", "Player.CollisionTop", "Player.CollisionRight", "Player.CollisionBottom",
+  "Player.Flailing", "Player.Timer", "Player.TileCollisions", "Player.ObjectInteraction", "Player.Visible",
+  "Player.Rotation", "Player.Scale", "Player.Priority", "Player.DrawOrder", "Player.Direction", "Player.InkEffect",
+  "Player.Alpha", "Player.Frame", "Player.Animation", "Player.PrevAnimation", "Player.AnimationSpeed",
+  "Player.AnimationTimer", "Player.Value0", "Player.Value1", "Player.Value2", "Player.Value3", "Player.Value4",
+  "Player.Value5", "Player.Value6", "Player.Value7", "Player.Value8", "Player.Value9", "Player.Value10",
+  "Player.Value11", "Player.Value12", "Player.Value13", "Player.Value14", "Player.Value15", "Player.OutOfBounds",
+  "Stage.State", "Stage.ActiveList", "Stage.ListPos", "Stage.TimeEnabled", "Stage.MilliSeconds", "Stage.Seconds",
+  "Stage.Minutes", "Stage.ActNo", "Stage.PauseEnabled", "Stage.ListSize", "Stage.NewXBoundary1", "Stage.NewXBoundary2",
+  "Stage.NewYBoundary1", "Stage.NewYBoundary2", "Stage.XBoundary1", "Stage.XBoundary2", "Stage.YBoundary1",
+  "Stage.YBoundary2", "Stage.DeformationData0", "Stage.DeformationData1", "Stage.DeformationData2",
+  "Stage.DeformationData3", "Stage.WaterLevel", "Stage.ActiveLayer", "Stage.MidPoint", "Stage.PlayerListPos",
+  "Stage.ActivePlayer",
+  "Screen.CameraEnabled", "Screen.CameraTarget", "Screen.CameraStyle", "Screen.DrawListSize", "Screen.CenterX",
+  "Screen.CenterY", "Screen.XSize", "Screen.YSize", "Screen.XOffset", "Screen.YOffset", "Screen.ShakeX", "Screen.ShakeY",
+  "Screen.AdjustCameraY",
+  "TouchScreen.Down", "TouchScreen.XPos", "TouchScreen.YPos",
+  "Music.Volume", "Music.CurrentTrack",
+  "KeyDown.Up", "KeyDown.Down", "KeyDown.Left", "KeyDown.Right", "KeyDown.ButtonA", "KeyDown.ButtonB", "KeyDown.ButtonC",
+  "KeyDown.Start", "KeyPress.Up", "KeyPress.Down", "KeyPress.Left", "KeyPress.Right", "KeyPress.ButtonA",
+  "KeyPress.ButtonB", "KeyPress.ButtonC", "KeyPress.Start",
+  "Menu1.Selection", "Menu2.Selection",
+  "TileLayer.XSize", "TileLayer.YSize", "TileLayer.Type", "TileLayer.Angle", "TileLayer.XPos", "TileLayer.YPos",
+  "TileLayer.ZPos", "TileLayer.ParallaxFactor", "TileLayer.ScrollSpeed", "TileLayer.ScrollPos",
+  "TileLayer.DeformationOffset", "TileLayer.DeformationOffsetW",
+  "HParallax.ParallaxFactor", "HParallax.ScrollSpeed", "HParallax.ScrollPos",
+  "VParallax.ParallaxFactor", "VParallax.ScrollSpeed", "VParallax.ScrollPos",
+  "3DScene.NoVertices", "3DScene.NoFaces",
+  "VertexBuffer.x", "VertexBuffer.y", "VertexBuffer.z", "VertexBuffer.u", "VertexBuffer.v",
+  "FaceBuffer.a", "FaceBuffer.b", "FaceBuffer.c", "FaceBuffer.d", "FaceBuffer.Flag", "FaceBuffer.Color",
+  "3DScene.ProjectionX", "3DScene.ProjectionY",
+  "Engine.State", "Stage.DebugMode", "Engine.Message", "SaveRAM", "Engine.Language", "Object.SpriteSheet",
+  "Engine.OnlineActive", "Engine.FrameSkipTimer", "Engine.FrameSkipSetting", "Engine.SFXVolume", "Engine.BGMVolume",
+  "Engine.PlatformID", "Engine.TrialMode", "KeyPress.AnyStart", "Engine.HapticsEnabled",
+];
+
+export const FUNCTIONS: [string, number][] = [
+  ["End", 0], ["Equal", 2], ["Add", 2], ["Sub", 2], ["Inc", 1], ["Dec", 1], ["Mul", 2], ["Div", 2], ["ShR", 2], ["ShL", 2],
+  ["And", 2], ["Or", 2], ["Xor", 2], ["Mod", 2], ["FlipSign", 1], ["CheckEqual", 2], ["CheckGreater", 2], ["CheckLower", 2],
+  ["CheckNotEqual", 2], ["IfEqual", 3], ["IfGreater", 3], ["IfGreaterOrEqual", 3], ["IfLower", 3], ["IfLowerOrEqual", 3],
+  ["IfNotEqual", 3], ["else", 0], ["endif", 0], ["WEqual", 3], ["WGreater", 3], ["WGreaterOrEqual", 3], ["WLower", 3],
+  ["WLowerOrEqual", 3], ["WNotEqual", 3], ["loop", 0], ["switch", 2], ["break", 0], ["endswitch", 0], ["Rand", 2],
+  ["Sin", 2], ["Cos", 2], ["Sin256", 2], ["Cos256", 2], ["SinChange", 5], ["CosChange", 5], ["ATan2", 3],
+  ["Interpolate", 4], ["InterpolateXY", 7], ["LoadSpriteSheet", 1], ["RemoveSpriteSheet", 1], ["DrawSprite", 1],
+  ["DrawSpriteXY", 3], ["DrawSpriteScreenXY", 3], ["DrawTintRect", 4], ["DrawNumbers", 7], ["DrawActName", 7],
+  ["DrawMenu", 3], ["SpriteFrame", 6], ["EditFrame", 7], ["LoadPalette", 5], ["RotatePalette", 3], ["SetScreenFade", 4],
+  ["SetActivePalette", 3], ["SetPaletteFade", 7], ["CopyPalette", 2], ["ClearScreen", 1], ["DrawSpriteFX", 4],
+  ["DrawSpriteScreenFX", 4], ["LoadAnimation", 1], ["SetupMenu", 4], ["AddMenuEntry", 3], ["EditMenuEntry", 4],
+  ["LoadStage", 0], ["DrawRect", 8], ["ResetObjectEntity", 5], ["PlayerObjectCollision", 5], ["CreateTempObject", 4],
+  ["BindPlayerToObject", 2], ["PlayerTileCollision", 0], ["ProcessPlayerControl", 0], ["ProcessAnimation", 0],
+  ["DrawObjectAnimation", 0], ["DrawPlayerAnimation", 0], ["SetMusicTrack", 3], ["PlayMusic", 1], ["StopMusic", 0],
+  ["PlaySfx", 2], ["StopSfx", 1], ["SetSfxAttributes", 3], ["ObjectTileCollision", 4], ["ObjectTileGrip", 4],
+  ["LoadVideo", 1], ["NextVideoFrame", 0], ["PlayStageSfx", 2], ["StopStageSfx", 1], ["Not", 1], ["Draw3DScene", 0],
+  ["SetIdentityMatrix", 1], ["MatrixMultiply", 2], ["MatrixTranslateXYZ", 4], ["MatrixScaleXYZ", 4], ["MatrixRotateX", 2],
+  ["MatrixRotateY", 2], ["MatrixRotateZ", 2], ["MatrixRotateXYZ", 4], ["TransformVertices", 3], ["CallFunction", 1],
+  ["EndFunction", 0], ["SetLayerDeformation", 6], ["CheckTouchRect", 4], ["GetTileLayerEntry", 4],
+  ["SetTileLayerEntry", 4], ["GetBit", 3], ["SetBit", 3], ["PauseMusic", 0], ["ResumeMusic", 0], ["ClearDrawList", 1],
+  ["AddDrawListEntityRef", 2], ["GetDrawListEntityRef", 3], ["SetDrawListEntityRef", 3], ["Get16x16TileInfo", 4],
+  ["Copy16x16Tile", 2], ["Set16x16TileInfo", 4], ["GetAnimationByName", 2], ["ReadSaveRAM", 0], ["WriteSaveRAM", 0],
+  ["LoadTextFont", 1], ["LoadTextFile", 3], ["DrawText", 7], ["GetTextInfo", 5], ["GetVersionNumber", 2],
+  ["SetAchievement", 2], ["SetLeaderboard", 2], ["LoadOnlineMenu", 1], ["EngineCallback", 1], ["HapticEffect", 4],
+];
+
+export const COMMON_ALIASES: [string, string][] = [
+  ["true", "1"], ["false", "0"], ["FX_SCALE", "0"], ["FX_ROTATE", "1"], ["FX_ROTOZOOM", "2"], ["FX_INK", "3"],
+  ["PRESENTATION_STAGE", "0"], ["REGULAR_STAGE", "1"], ["BONUS_STAGE", "2"], ["SPECIAL_STAGE", "3"], ["MENU_1", "0"],
+  ["MENU_2", "1"], ["C_TOUCH", "0"], ["C_BOX", "1"], ["C_BOX2", "2"], ["C_PLATFORM", "3"], ["MAT_WORLD", "0"],
+  ["MAT_VIEW", "1"], ["MAT_TEMP", "2"], ["FX_FLIP", "5"], ["FACING_LEFT", "1"], ["FACING_RIGHT", "0"],
+  ["STAGE_PAUSED", "2"], ["STAGE_RUNNING", "1"], ["RESET_GAME", "2"], ["RETRO_WIN", "0"], ["RETRO_OSX", "1"],
+  ["RETRO_XBOX_360", "2"], ["RETRO_PS3", "3"], ["RETRO_iOS", "4"], ["RETRO_ANDROID", "5"], ["RETRO_WP7", "6"],
+];
+export const COMMONALIAS_COUNT = 0x20;
+export const ALIAS_COUNT = COMMONALIAS_COUNT + 0x60;
+
+export const SCRIPT_EVALUATION_TOKENS = ["=", "+=", "-=", "++", "--", "*=", "/=", ">>=", "<<=", "&=", "|=", "^=", "%=", "==", ">", ">=", "<", "<=", "!="];
+
+/** `#platform:` tokens the decompilation's engine compiles in (Standard platform, software renderer, haptics, standalone). */
+export const PLATFORM_TOKENS = ["Standard", "SW_Rendering", "Use_Haptics", "Use_Standalone", "Use_Decomp"];

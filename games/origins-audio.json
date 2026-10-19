@@ -1,0 +1,3725 @@
+{
+ "source": "https://github.com/RSDKModding/RSDK-Modding-Wiki/raw/master/docs/Games/SonicOrigins/Documentation/Audio.md",
+ "packs": {
+  "STH1_music": {
+   "keycode": "6005974353133017519",
+   "cues": {
+    "88_1up": [
+     {
+      "name": "Global/1Up.wav"
+     }
+    ],
+    "8A_TitleScreen": [
+     {
+      "name": "Titlescreen.ogg"
+     }
+    ],
+    "8B_Ending": [
+     {
+      "name": "Ending.ogg"
+     }
+    ],
+    "8E_ActComplete": [
+     {
+      "name": "ActComplete.ogg"
+     }
+    ],
+    "8F_GameOver": [
+     {
+      "name": "GameOver.ogg"
+     }
+    ],
+    "90_Continue": [
+     {
+      "name": "Continue.ogg"
+     }
+    ],
+    "91_Credits": [
+     {
+      "name": "Credits.ogg"
+     }
+    ],
+    "81_z1_GreenHill": [
+     {
+      "name": "GreenHill.ogg"
+     },
+     {
+      "name": "GreenHill_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "82_z4_Labyrinth": [
+     {
+      "name": "Labyrinth.ogg"
+     },
+     {
+      "name": "Labyrinth_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "83_z2_Marble": [
+     {
+      "name": "Marble.ogg"
+     },
+     {
+      "name": "Marble_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "84_z5_StarLight": [
+     {
+      "name": "Starlight.ogg"
+     },
+     {
+      "name": "Starlight_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "85_z3_SpringYard": [
+     {
+      "name": "SpringYard.ogg"
+     },
+     {
+      "name": "SpringYard_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "86_z6_ScrapBrain": [
+     {
+      "name": "ScrapBrain.ogg"
+     },
+     {
+      "name": "ScrapBrain_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "87_Invincibility": [
+     {
+      "name": "Invincibility.ogg"
+     },
+     {
+      "name": "Invincibility_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "89_SpecialStage": [
+     {
+      "name": "Specialstage.ogg"
+     },
+     {
+      "name": "SpecialStage.ogg"
+     }
+    ],
+    "8C_Boss": [
+     {
+      "name": "Boss.ogg"
+     }
+    ],
+    "8D_Final": [
+     {
+      "name": "Final.ogg"
+     }
+    ],
+    "92_Drowning": [
+     {
+      "name": "Drowning.ogg"
+     }
+    ],
+    "93_ChaosEmerald": [
+     {
+      "name": "Stage/Emerald.wav"
+     }
+    ]
+   }
+  },
+  "SCD_music": {
+   "keycode": "15760211266427465005",
+   "cues": {
+    "DA03_R1A_J": [
+     {
+      "name": "JP/R1A.ogg"
+     }
+    ],
+    "DA04_R1C_J": [
+     {
+      "name": "JP/R1C.ogg"
+     }
+    ],
+    "DA05_R1D_J": [
+     {
+      "name": "JP/R1D.ogg"
+     }
+    ],
+    "DA06_R3A_J": [
+     {
+      "name": "JP/R3A.ogg"
+     }
+    ],
+    "DA07_R3C_J": [
+     {
+      "name": "JP/R3C.ogg"
+     }
+    ],
+    "DA08_R3D_J": [
+     {
+      "name": "JP/R3D.ogg"
+     }
+    ],
+    "DA09_R4A_J": [
+     {
+      "name": "JP/R4A.ogg"
+     }
+    ],
+    "DA10_R4C_J": [
+     {
+      "name": "JP/R4C.ogg"
+     }
+    ],
+    "DA11_R4D_J": [
+     {
+      "name": "JP/R4D.ogg"
+     }
+    ],
+    "DA12_R5A_J": [
+     {
+      "name": "JP/R5A.ogg"
+     }
+    ],
+    "DA13_R5C_J": [
+     {
+      "name": "JP/R5C.ogg"
+     }
+    ],
+    "DA14_R5D_J": [
+     {
+      "name": "JP/R5D.ogg"
+     }
+    ],
+    "DA15_R6A_J": [
+     {
+      "name": "JP/R6A.ogg"
+     }
+    ],
+    "DA16_R6C_J": [
+     {
+      "name": "JP/R6C.ogg"
+     }
+    ],
+    "DA17_R6D_J": [
+     {
+      "name": "JP/R6D.ogg"
+     }
+    ],
+    "DA18_R7A_J": [
+     {
+      "name": "JP/R7A.ogg"
+     }
+    ],
+    "DA19_R7C_J": [
+     {
+      "name": "JP/R7C.ogg"
+     }
+    ],
+    "DA20_R7D_J": [
+     {
+      "name": "JP/R7D.ogg"
+     }
+    ],
+    "DA21_R8A_J": [
+     {
+      "name": "JP/R8A.ogg"
+     }
+    ],
+    "DA22_R8C_J": [
+     {
+      "name": "JP/R8C.ogg"
+     }
+    ],
+    "DA23_R8D_J": [
+     {
+      "name": "JP/R8D.ogg"
+     }
+    ],
+    "DA24_Boss_J": [
+     {
+      "name": "JP/Boss.ogg"
+     }
+    ],
+    "DA25_FinalBoss_J": [
+     {
+      "name": "JP/FinalBoss.ogg"
+     }
+    ],
+    "DA32_SpecialStage_J": [
+     {
+      "name": "JP/SpecialStage.ogg"
+     }
+    ],
+    "DA33_DAGarden_J": [
+     {
+      "name": "JP/DAGarden.ogg"
+     }
+    ],
+    "PCM10_R1B": [
+     {
+      "name": "R1B.ogg"
+     }
+    ],
+    "PCM11_R3B": [
+     {
+      "name": "R3B.ogg"
+     }
+    ],
+    "PCM12_R4B": [
+     {
+      "name": "R4B.ogg"
+     }
+    ],
+    "PCM13_R5B": [
+     {
+      "name": "R5B.ogg"
+     }
+    ],
+    "PCM14_R6B": [
+     {
+      "name": "R6B.ogg"
+     }
+    ],
+    "PCM15_R7B": [
+     {
+      "name": "R7B.ogg"
+     }
+    ],
+    "PCM16_R8B": [
+     {
+      "name": "R8B.ogg"
+     }
+    ],
+    "DA03_R1A_E": [
+     {
+      "name": "US/R1A.ogg"
+     }
+    ],
+    "DA04_R1C_E": [
+     {
+      "name": "US/R1C.ogg"
+     }
+    ],
+    "DA05_R1D_E": [
+     {
+      "name": "US/R1D.ogg"
+     }
+    ],
+    "DA06_R3A_E": [
+     {
+      "name": "US/R3A.ogg"
+     }
+    ],
+    "DA07_R3C_E": [
+     {
+      "name": "US/R3C.ogg"
+     }
+    ],
+    "DA08_R3D_E": [
+     {
+      "name": "US/R3D.ogg"
+     }
+    ],
+    "DA09_R4A_E": [
+     {
+      "name": "US/R4A.ogg"
+     }
+    ],
+    "DA10_R4C_E": [
+     {
+      "name": "US/R4C.ogg"
+     }
+    ],
+    "DA11_R4D_E": [
+     {
+      "name": "US/R4D.ogg"
+     }
+    ],
+    "DA12_R5A_E": [
+     {
+      "name": "US/R5A.ogg"
+     }
+    ],
+    "DA13_R5C_E": [
+     {
+      "name": "US/R5C.ogg"
+     }
+    ],
+    "DA14_R5D_E": [
+     {
+      "name": "US/R5D.ogg"
+     }
+    ],
+    "DA15_R6A_E": [
+     {
+      "name": "US/R6A.ogg"
+     }
+    ],
+    "DA16_R6C_E": [
+     {
+      "name": "US/R6C.ogg"
+     }
+    ],
+    "DA17_R6D_E": [
+     {
+      "name": "US/R6D.ogg"
+     }
+    ],
+    "DA18_R7A_E": [
+     {
+      "name": "US/R7A.ogg"
+     }
+    ],
+    "DA19_R7C_E": [
+     {
+      "name": "US/R7C.ogg"
+     }
+    ],
+    "DA20_R7D_E": [
+     {
+      "name": "US/R7D.ogg"
+     }
+    ],
+    "DA21_R8A_E": [
+     {
+      "name": "US/R8A.ogg"
+     }
+    ],
+    "DA22_R8C_E": [
+     {
+      "name": "US/R8C.ogg"
+     }
+    ],
+    "DA23_R8D_E": [
+     {
+      "name": "US/R8D.ogg"
+     }
+    ],
+    "DA24_Boss_E": [
+     {
+      "name": "US/Boss.ogg"
+     }
+    ],
+    "DA25_FinalBoss_E": [
+     {
+      "name": "US/FinalBoss.ogg"
+     }
+    ],
+    "DA32_SpecialStage_E": [
+     {
+      "name": "US/SpecialStage.ogg"
+     }
+    ],
+    "DA26_TitleScreen_J": [
+     {
+      "name": "JP/TitleScreen.ogg"
+     }
+    ],
+    "DA28_ZoneComplete_J": [
+     {
+      "name": "JP/ZoneComplete.ogg"
+     }
+    ],
+    "DA29_SpeedShoes_J": [
+     {
+      "name": "JP/SpeedShoes.ogg"
+     }
+    ],
+    "DA30_Invincibility_J": [
+     {
+      "name": "JP/Invincibility.ogg"
+     }
+    ],
+    "DA31_GameOver_J": [
+     {
+      "name": "JP/GameOver.ogg"
+     }
+    ],
+    "DA26_TitleScreen_E": [
+     {
+      "name": "US/TitleScreen.ogg"
+     }
+    ],
+    "DA27_TitleScreen_E": [
+     {
+      "name": "US/TitleScreen.ogg"
+     }
+    ],
+    "DA28_ZoneComplete_E": [
+     {
+      "name": "US/ZoneComplete.ogg"
+     }
+    ],
+    "DA29_SpeedShoes_E": [
+     {
+      "name": "US/SpeedShoes.ogg"
+     }
+    ],
+    "DA30_Invincibility_E": [
+     {
+      "name": "US/Invincibility.ogg"
+     }
+    ],
+    "DA31_GameOver_E": [
+     {
+      "name": "US/GameOver.ogg"
+     }
+    ],
+    "DA33_DAGarden_E": [
+     {
+      "name": "US/DAGarden.ogg"
+     }
+    ],
+    "RSDK_SCD_J---TimeAttack": [
+     {
+      "name": "JP/TimeAttack.ogg"
+     }
+    ]
+   }
+  },
+  "STH2_music": {
+   "keycode": "7014663803770805356",
+   "cues": {
+    "02_EmeraldHill": [
+     {
+      "name": "EmeraldHill.ogg"
+     },
+     {
+      "name": "EmeraldHill_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "03_MysticCave2": [
+     {
+      "name": "MysticCave2.ogg"
+     },
+     {
+      "name": "MysticCave2_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "04_OilOcean": [
+     {
+      "name": "OilOcean.ogg"
+     },
+     {
+      "name": "OilOcean_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "05_Metropolis": [
+     {
+      "name": "Metropolis.ogg"
+     },
+     {
+      "name": "Metropolis_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "06_HillTop": [
+     {
+      "name": "HillTop.ogg"
+     },
+     {
+      "name": "HillTop_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "07_AquaticRuin": [
+     {
+      "name": "AquaticRuin.ogg"
+     },
+     {
+      "name": "AquaticRuin_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "08_CasinoNight2": [
+     {
+      "name": "CasinoNight2.ogg"
+     },
+     {
+      "name": "CasinoNight2_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "09_CasinoNight": [
+     {
+      "name": "CasinoNight.ogg"
+     },
+     {
+      "name": "CasinoNight_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "0A_DeathEgg": [
+     {
+      "name": "DeathEgg.ogg"
+     }
+    ],
+    "0B_MysticCave": [
+     {
+      "name": "MysticCave.ogg"
+     },
+     {
+      "name": "MysticCave_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "0C_EmeraldHill2": [
+     {
+      "name": "EmeraldHill2.ogg"
+     },
+     {
+      "name": "EmeraldHill2_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "0D_SkyChase": [
+     {
+      "name": "SkyChase.ogg"
+     }
+    ],
+    "0E_ChemicalPlant": [
+     {
+      "name": "ChemicalPlant.ogg"
+     },
+     {
+      "name": "ChemicalPlant_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "0F_WingFortress": [
+     {
+      "name": "WingFortress.ogg"
+     },
+     {
+      "name": "WingFortress_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "11_Options": [
+     {
+      "name": "Options.ogg"
+     }
+    ],
+    "12_SpecialStage": [
+     {
+      "name": "SpecialStage.ogg"
+     }
+    ],
+    "13_Boss": [
+     {
+      "name": "Boss.ogg"
+     }
+    ],
+    "14_FinalBoss": [
+     {
+      "name": "FinalBoss.ogg"
+     }
+    ],
+    "16_Super": [
+     {
+      "name": "Super.ogg"
+     }
+    ],
+    "17_Invincibility": [
+     {
+      "name": "Invincibility.ogg"
+     },
+     {
+      "name": "Invincibility_F.ogg",
+      "speed": 1.2
+     }
+    ],
+    "01_Results": [
+     {
+      "name": "Results.ogg"
+     }
+    ],
+    "10_Extra": [
+     {
+      "name": "Extra.ogg"
+     }
+    ],
+    "15_Ending": [
+     {
+      "name": "Ending.ogg"
+     }
+    ],
+    "19_TitleScreen": [
+     {
+      "name": "Titlescreen.ogg"
+     },
+     {
+      "name": "TitleScreen.ogg"
+     }
+    ],
+    "1A_ActComplete": [
+     {
+      "name": "ActComplete.ogg"
+     }
+    ],
+    "1B_GameOver": [
+     {
+      "name": "GameOver.ogg"
+     }
+    ],
+    "1C_Continue": [
+     {
+      "name": "Continue.ogg"
+     }
+    ],
+    "1E_Credits": [
+     {
+      "name": "Credits.ogg"
+     }
+    ]
+   }
+  },
+  "Music03_S3K": {
+   "keycode": "7536411022915609276",
+   "cues": {
+    "3K01_Angel_Island1": [
+     {
+      "name": "3K/AngelIsland1.ogg"
+     },
+     {
+      "name": "3K/F/AngelIsland1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K02_Angel_Island2": [
+     {
+      "name": "3K/AngelIsland2.ogg"
+     },
+     {
+      "name": "3K/F/AngelIsland2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K03_Hydro_City1": [
+     {
+      "name": "3K/Hydrocity1.ogg"
+     },
+     {
+      "name": "3K/F/Hydrocity1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K04_Hydro_City2": [
+     {
+      "name": "3K/Hydrocity2.ogg"
+     },
+     {
+      "name": "3K/F/Hydrocity2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K05_Marble_Garden1": [
+     {
+      "name": "3K/MarbleGarden1.ogg"
+     },
+     {
+      "name": "3K/F/MarbleGarden1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K06_Marble_Garden2": [
+     {
+      "name": "3K/MarbleGarden2.ogg"
+     },
+     {
+      "name": "3K/F/MarbleGarden2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K09_Flying_Battery1": [
+     {
+      "name": "3K/FlyingBattery1.ogg"
+     },
+     {
+      "name": "3K/F/FlyingBattery1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K0A_Flying_Battery2": [
+     {
+      "name": "3K/FlyingBattery2.ogg"
+     },
+     {
+      "name": "3K/F/FlyingBattery2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K0F_Mushroom_Hill1": [
+     {
+      "name": "3K/MushroomHill1.ogg"
+     },
+     {
+      "name": "3K/F/MushroomHill1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K10_Mushroom_Hill2": [
+     {
+      "name": "3K/MushroomHill2.ogg"
+     },
+     {
+      "name": "3K/F/MushroomHill2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K11_Sandopolis1": [
+     {
+      "name": "3K/Sandopolis1.ogg"
+     },
+     {
+      "name": "3K/F/Sandopolis1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K12_Sandopolis2": [
+     {
+      "name": "3K/Sandopolis2.ogg"
+     },
+     {
+      "name": "3K/F/Sandopolis2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K13_Lava_Reef": [
+     {
+      "name": "3K/LavaReef1.ogg"
+     },
+     {
+      "name": "3K/F/LavaReef1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K14_Hidden_Palace": [
+     {
+      "name": "3K/LavaReef2.ogg"
+     },
+     {
+      "name": "3K/F/LavaReef2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K15_Sky_Sanctuary": [
+     {
+      "name": "3K/SkySanctuary.ogg"
+     },
+     {
+      "name": "3K/F/SkySanctuary.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K16_Death_Egg1": [
+     {
+      "name": "3K/DeathEgg1.ogg"
+     },
+     {
+      "name": "3K/F/DeathEgg1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K17_Death_Egg2": [
+     {
+      "name": "3K/DeathEgg2.ogg"
+     },
+     {
+      "name": "3K/F/DeathEgg2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K18_Boss1": [
+     {
+      "name": "3K/MiniBossK.ogg"
+     },
+     {
+      "name": "3K/F/Miniboss.ogg",
+      "speed": 1.2
+     },
+     {
+      "name": "3K/F/MiniBossK.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K19_Boss2": [
+     {
+      "name": "3K/Boss.ogg"
+     },
+     {
+      "name": "3K/F/Boss.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K1A_Last_Boss": [
+     {
+      "name": "3K/Doomsday.ogg"
+     },
+     {
+      "name": "3K/TheDoomsday.ogg"
+     },
+     {
+      "name": "3K/F/Doomsday.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K1B_Bonus_Stage_Glowing_Spheres": [
+     {
+      "name": "3K/SphereBonus.ogg"
+     }
+    ],
+    "3K1C_Special_Stage": [
+     {
+      "name": "3K/SpecialStage.ogg"
+     },
+     {
+      "name": "3K/SpecialStageS0.ogg",
+      "speed": 1.05
+     },
+     {
+      "name": "3K/SpecialStageS1.ogg",
+      "speed": 1.1
+     },
+     {
+      "name": "3K/SpecialStageS2.ogg",
+      "speed": 1.15
+     },
+     {
+      "name": "3K/SpecialStageS3.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K1D_Bonus_Stage_Slot_Machine": [
+     {
+      "name": "3K/SlotBonus.ogg"
+     }
+    ],
+    "3K1E_Bonus_Stage_Gumball_Machine": [
+     {
+      "name": "3K/GachaBonus.ogg"
+     }
+    ],
+    "3K20_2Pvs_Azure_Lake": [
+     {
+      "name": "3K/AzureLake.ogg"
+     },
+     {
+      "name": "3K/F/AzureLake.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K21_2Pvs_Balloon_Park": [
+     {
+      "name": "3K/BalloonPark.ogg"
+     },
+     {
+      "name": "3K/F/BalloonPark.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K22_2Pvs_Desert_Palace": [
+     {
+      "name": "3K/DesertPalace.ogg"
+     },
+     {
+      "name": "3K/F/DesertPalace.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K23_2Pvs_Chrome_Gadget": [
+     {
+      "name": "3K/ChromeGadget.ogg"
+     },
+     {
+      "name": "3K/F/ChromeGadget.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K24_2Pvs_Endless_Mine": [
+     {
+      "name": "3K/EndlessMine.ogg"
+     },
+     {
+      "name": "3K/F/EndlessMine.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K27_Game_Over": [
+     {
+      "name": "3K/GameOver.ogg"
+     }
+    ],
+    "3K28_Continue": [
+     {
+      "name": "3K/Continue.ogg"
+     }
+    ],
+    "3K29_Stage_Clear": [
+     {
+      "name": "3K/ActClear.ogg"
+     }
+    ],
+    "3K2F_Menu_Data_Select": [
+     {
+      "name": "3K/Options.ogg"
+     }
+    ],
+    "3K31_Timer": [
+     {
+      "name": "3K/Drowning.ogg"
+     }
+    ],
+    "3KF0_Title_STH3": [
+     {
+      "name": "3K/TitleScreen3.ogg"
+     }
+    ],
+    "3KF1_1up_STH3": [
+     {
+      "name": "3K/Medallion.ogg"
+     }
+    ],
+    "3KF2_Invincible_STH3": [
+     {
+      "name": "3K/Invincibility3.ogg"
+     },
+     {
+      "name": "3K/F/Invincibility3.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3KF7_Blue_Spheres": [
+     {
+      "name": "3K/Results.ogg"
+     }
+    ],
+    "3K1F-31_Knuckles_SK": [
+     {
+      "name": "3K/Knuckles3.ogg"
+     },
+     {
+      "name": "3K/KnucklesK.ogg"
+     },
+     {
+      "name": "3K/F/Knuckles3.ogg",
+      "speed": 1.2
+     },
+     {
+      "name": "3K/F/KnucklesK.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K25_Title_SK": [
+     {
+      "name": "3K/TitleScreenK.ogg"
+     }
+    ],
+    "3K2A_1up_SK": [
+     {
+      "name": "3K/1Up3.ogg"
+     }
+    ],
+    "3K2C_Invincible_SK": [
+     {
+      "name": "3K/InvincibilityK.ogg"
+     },
+     {
+      "name": "3K/F/InvincibilityK.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K30_Final_Eggman": [
+     {
+      "name": "3K/FinalBoss.ogg"
+     },
+     {
+      "name": "3K/F/FinalBoss.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K32_All_Clear_SK": [
+     {
+      "name": "3K/Victory.ogg"
+     }
+    ],
+    "3K26_Credits_SK": [
+     {
+      "name": "3K/Credits.ogg"
+     }
+    ],
+    "3KF4_New_Super_Sonic": [
+     {
+      "name": "3K/Super.ogg"
+     }
+    ],
+    "3K07_Carnival_Night1": [
+     {
+      "name": "3K/CarnivalNight1.ogg"
+     },
+     {
+      "name": "3K/F/CarnivalNight1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K08_Carnival_Night2": [
+     {
+      "name": "3K/CarnivalNight2.ogg"
+     },
+     {
+      "name": "3K/F/CarnivalNight2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K0B_Ice_Cap1": [
+     {
+      "name": "3K/IceCap1.ogg"
+     },
+     {
+      "name": "3K/F/IceCap1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K0C_Ice_Cap2": [
+     {
+      "name": "3K/IceCap2.ogg"
+     },
+     {
+      "name": "3K/F/IceCap2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K0D_Launch_Base1": [
+     {
+      "name": "3K/LaunchBase1.ogg"
+     },
+     {
+      "name": "3K/F/LaunchBase1.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K0E_Launch_Base2": [
+     {
+      "name": "3K/LaunchBase2.ogg"
+     },
+     {
+      "name": "3K/F/LaunchBase2.ogg",
+      "speed": 1.2
+     }
+    ],
+    "3K2D_2Pvs_Menu_SK": [
+     {
+      "name": "3K/Competition.ogg"
+     }
+    ],
+    "3KF5_Unused_Song": [
+     {
+      "name": "3K/Perfect.ogg"
+     }
+    ],
+    "3KF6_Unused_Ending": [
+     {
+      "name": "3K/Ending.ogg"
+     }
+    ],
+    "RSDK-3---Medallion": [
+     {
+      "name": "3K/Medallion.ogg"
+     }
+    ]
+   }
+  },
+  "HITE_sfx": {
+   "keycode": "1441441318033510872",
+   "cues": {
+    "SFX_07_SEGA": [
+     {
+      "name": "Stage/Sega.wav"
+     }
+    ]
+   }
+  },
+  "STH1_sfx": {
+   "keycode": "11064953427723590053",
+   "cues": {
+    "SFX_A0_Jump": [
+     {
+      "name": "Global/Jump.wav"
+     }
+    ],
+    "SFX_A1_LampPost": [
+     {
+      "name": "Global/LampPost.wav"
+     }
+    ],
+    "SFX_A4_Skidding": [
+     {
+      "name": "Global/Skidding.wav"
+     }
+    ],
+    "SFX_A6_Spike": [
+     {
+      "name": "Global/Spike.wav"
+     }
+    ],
+    "SFX_A7_PushBlock": [
+     {
+      "name": "Stage/PushBlock.wav"
+     }
+    ],
+    "SFX_A8_Exit_SS": [
+     {
+      "name": "Stage/Exit_SS.wav"
+     }
+    ],
+    "SFX_AC_BossHit": [
+     {
+      "name": "Stage/BossHit.wav"
+     }
+    ],
+    "SFX_AD_Breathing": [
+     {
+      "name": "Stage/Breathing.wav"
+     }
+    ],
+    "SFX_AE_SmallFireball": [
+     {
+      "name": "Stage/SmallFireball.wav"
+     }
+    ],
+    "SFX_AF_BlueShield": [
+     {
+      "name": "Global/BlueShield.wav"
+     }
+    ],
+    "SFX_B0_Buzzsaw": [
+     {
+      "name": "Stage/Buzzsaw.wav"
+     }
+    ],
+    "SFX_B1_ElectricArc": [
+     {
+      "name": "Stage/ElectricArc.wav"
+     }
+    ],
+    "SFX_B2_Drowning": [
+     {
+      "name": "Stage/Drowning.wav"
+     }
+    ],
+    "SFX_B3_FlameThrower": [
+     {
+      "name": "Stage/FlameThrower.wav"
+     }
+    ],
+    "SFX_B4_Bumper": [
+     {
+      "name": "Stage/Bumper.wav"
+     }
+    ],
+    "SFX_B5_Ring": [
+     {
+      "name": "Global/Ring.wav"
+     }
+    ],
+    "SFX_CE_Ring": [
+     {
+      "name": "Global/Ring.wav"
+     }
+    ],
+    "SFX_B6_SpikesMove": [
+     {
+      "name": "Global/SpikesMove.wav"
+     }
+    ],
+    "SFX_B7_LargeWall": [
+     {
+      "name": "Stage/LargeWall.wav"
+     }
+    ],
+    "SFX_B9_LedgeBreak2": [
+     {
+      "name": "Stage/LedgeBreak2.wav"
+     }
+    ],
+    "SFX_BA_GemBlockSS": [
+     {
+      "name": "Stage/GemBlockSS.wav"
+     }
+    ],
+    "SFX_BB_FlappingDoor": [
+     {
+      "name": "Stage/FlappingDoor.wav"
+     }
+    ],
+    "SFX_BC_Release": [
+     {
+      "name": "Global/Release.wav"
+     }
+    ],
+    "SFX_BD_Crusher": [
+     {
+      "name": "Stage/Crusher.wav"
+     }
+    ],
+    "SFX_BE_Rolling": [
+     {
+      "name": "Global/Rolling.wav"
+     }
+    ],
+    "SFX_BF_Continue": [
+     {
+      "name": "Stage/Continue.wav"
+     }
+    ],
+    "SFX_C0_BatbrainFly": [
+     {
+      "name": "Stage/BatbrainFly.wav"
+     }
+    ],
+    "SFX_C2_DrownAlert": [
+     {
+      "name": "Stage/DrownAlert.wav"
+     }
+    ],
+    "SFX_C3_SpecialRing": [
+     {
+      "name": "Global/SpecialRing.wav"
+     }
+    ],
+    "SFX_C4_Explosion": [
+     {
+      "name": "Global/Explosion.wav"
+     }
+    ],
+    "SFX_C5_ScoreTotal": [
+     {
+      "name": "Global/ScoreTotal.wav"
+     }
+    ],
+    "SFX_C6_LoseRings": [
+     {
+      "name": "Global/LoseRings.wav"
+     }
+    ],
+    "SFX_C7_ChainPull": [
+     {
+      "name": "Stage/ChainPull.wav"
+     }
+    ],
+    "SFX_C8_FireBurn": [
+     {
+      "name": "Stage/FireBurn.wav"
+     }
+    ],
+    "SFX_C9_BonusPoints": [
+     {
+      "name": "Global/BonusPoints.wav"
+     }
+    ],
+    "SFX_CA_SpecialWarp": [
+     {
+      "name": "Global/SpecialWarp.wav"
+     }
+    ],
+    "SFX_CB_BlockBreak": [
+     {
+      "name": "Stage/BlockBreak.wav"
+     }
+    ],
+    "SFX_CC_Spring": [
+     {
+      "name": "Global/Spring.wav"
+     }
+    ],
+    "SFX_CD_ScoreAdd": [
+     {
+      "name": "Global/ScoreAdd.wav"
+     }
+    ],
+    "SFX_CF_SignPost": [
+     {
+      "name": "Global/SignPost.wav"
+     }
+    ],
+    "SFX_A9_RotateSS": [
+     {
+      "name": "Stage/RotateSS.wav"
+     }
+    ],
+    "SFX_AA_WaterSplash": [
+     {
+      "name": "Stage/WaterSplash.wav"
+     }
+    ],
+    "SFX_C1_Destroy": [
+     {
+      "name": "Global/Destroy.wav"
+     }
+    ],
+    "RSDK-1---LedgeBreak": [
+     {
+      "name": "Stage/LedgeBreak.wav"
+     }
+    ],
+    "RSDK-1---ButtonPress": [
+     {
+      "name": "Stage/ButtonPress.wav"
+     }
+    ],
+    "RSDK-1---Transform": [
+     {
+      "name": "Global/Transform.wav"
+     }
+    ],
+    "RSDK-1---Charge": [
+     {
+      "name": "Global/Charge.wav"
+     }
+    ],
+    "RSDK-1---Hurt": [
+     {
+      "name": "Global/Hurt.wav"
+     }
+    ],
+    "S011_S3E_FireShield": [
+     {
+      "name": "Global/FireShield.wav"
+     }
+    ],
+    "S012_S3F_BubbleShield": [
+     {
+      "name": "Global/BubbleShield.wav"
+     }
+    ],
+    "S014_S41_LightningShield": [
+     {
+      "name": "Global/LightningShield.wav"
+     }
+    ],
+    "S015_S42_InstaShield": [
+     {
+      "name": "Global/InstaShield.wav"
+     }
+    ],
+    "S016_S43_FireDash": [
+     {
+      "name": "Global/FireDash.wav"
+     }
+    ],
+    "S017_S44_BubbleBounce": [
+     {
+      "name": "Global/BubbleBounce.wav"
+     }
+    ],
+    "S018_S45_LightningJump": [
+     {
+      "name": "Global/LightningJump.wav"
+     }
+    ],
+    "RSDK-1---Catch": [
+     {
+      "name": "Global/Catch.wav"
+     }
+    ],
+    "RSDK-1---Landing": [
+     {
+      "name": "Global/Landing.wav"
+     }
+    ],
+    "RSDK-1---Event": [
+     {
+      "name": "Global/Event.wav"
+     }
+    ],
+    "RSDK-1---Sliding": [
+     {
+      "name": "Global/Sliding.wav"
+     }
+    ],
+    "RSDK-1---Flying": [
+     {
+      "name": "Global/Flying.wav"
+     }
+    ],
+    "RSDK-1---Tired": [
+     {
+      "name": "Global/Tired.wav"
+     }
+    ],
+    "SFX_Plus_AM1_Hammer-Jump": [
+     {
+      "name": "Global/HammerJump.wav"
+     }
+    ],
+    "SFX_Plus_AM2_Hammer-Attack": [
+     {
+      "name": "Global/HammerDash.wav"
+     }
+    ],
+    "SFX_Plus_AM3_Hammer-Hit": [
+     {
+      "name": "Global/HammerHit.wav"
+     }
+    ],
+    "SFX_Add00_DropDash": [
+     {
+      "name": "Global/DropDash.wav"
+     }
+    ],
+    "RSDK-1---BackButton": [
+     {
+      "name": "Global/BackButton.wav"
+     }
+    ],
+    "RSDK-1---MenuButton": [
+     {
+      "name": "Global/MenuButton.wav"
+     }
+    ],
+    "RSDK-1---Resume": [
+     {
+      "name": "Global/Resume.wav"
+     }
+    ],
+    "RSDK-1---Select": [
+     {
+      "name": "Global/Select.wav"
+     }
+    ],
+    "RSDK-1---Waterfall": [
+     {
+      "name": "Stage/Waterfall.wav"
+     }
+    ],
+    "RSDK-1---Waterfall2": [
+     {
+      "name": "Stage/Waterfall2.wav"
+     }
+    ]
+   }
+  },
+  "SCD_sfx": {
+   "keycode": "13112347560991493607",
+   "cues": {
+    "SFX_Plus_KN3_Grab": [
+     {
+      "name": "Global/Grab.wav"
+     }
+    ],
+    "SFX_Plus_KN2_Land": [
+     {
+      "name": "Global/GlideDropLand.wav"
+     }
+    ],
+    "RSDK-CD---Event": [
+     {
+      "name": "Stage/Event.wav"
+     }
+    ],
+    "SFX_Plus_KN1_Slide": [
+     {
+      "name": "Global/Slide.wav"
+     }
+    ],
+    "RSDK-CD---Flying": [
+     {
+      "name": "Global/Flying.wav"
+     }
+    ],
+    "RSDK-CD---Tired": [
+     {
+      "name": "Global/Tired.wav"
+     }
+    ],
+    "SFX_SCD_F59_BombCarrier": [
+     {
+      "name": "Stage/BombCarrier.wav"
+     }
+    ],
+    "SFX_SCD_F00_Skidding": [
+     {
+      "name": "Global/Skidding.wav"
+     }
+    ],
+    "SFX_SCD_F01_Release": [
+     {
+      "name": "Global/Release.wav"
+     }
+    ],
+    "SFX_SCD_F02_Jump": [
+     {
+      "name": "Global/Jump.wav"
+     }
+    ],
+    "SFX_SCD_F03_Hurt": [
+     {
+      "name": "Global/Hurt.wav"
+     }
+    ],
+    "SFX_SCD_F04_LoseRings": [
+     {
+      "name": "Global/LoseRings.wav"
+     }
+    ],
+    "SFX_SCD_F05_Ring": [
+     {
+      "name": "Global/Ring.wav"
+     }
+    ],
+    "SFX_SCD_F24_Ring": [
+     {
+      "name": "Global/Ring.wav"
+     }
+    ],
+    "SFX_SCD_F25_Ring": [
+     {
+      "name": "Global/Ring.wav"
+     }
+    ],
+    "SFX_SCD_F06_Destroy": [
+     {
+      "name": "Global/Destroy.wav"
+     }
+    ],
+    "SFX_SCD_F07_BlueShield": [
+     {
+      "name": "Global/BlueShield.wav"
+     }
+    ],
+    "SFX_SCD_F08_Spring": [
+     {
+      "name": "Global/Spring.wav"
+     }
+    ],
+    "SFX_SCD_F10_ScoreTotal": [
+     {
+      "name": "Global/ScoreTotal.wav"
+     }
+    ],
+    "SFX_SCD_F11_Charge": [
+     {
+      "name": "Global/Charge.wav"
+     }
+    ],
+    "SFX_SCD_F13_SignPost": [
+     {
+      "name": "Global/SignPost.wav"
+     }
+    ],
+    "SFX_SCD_F14_Explosion": [
+     {
+      "name": "Global/Explosion.wav"
+     }
+    ],
+    "SFX_SCD_F15_ChuteExit": [
+     {
+      "name": "Stage/ChuteExit.wav"
+     }
+    ],
+    "SFX_SCD_F16_Shot": [
+     {
+      "name": "Stage/Shot.wav"
+     }
+    ],
+    "SFX_SCD_F18_WaterSplash": [
+     {
+      "name": "Stage/WaterSplash.wav"
+     }
+    ],
+    "SFX_SCD_F19_Crumble": [
+     {
+      "name": "Stage/Crumble.wav"
+     }
+    ],
+    "SFX_SCD_F20_Door": [
+     {
+      "name": "Stage/Door.wav"
+     }
+    ],
+    "SFX_SCD_F23_Jab": [
+     {
+      "name": "Stage/Jab.wav"
+     }
+    ],
+    "SFX_SCD_F28_BossHit": [
+     {
+      "name": "Stage/BossHit.wav"
+     }
+    ],
+    "SFX_SCD_F29_Breathing": [
+     {
+      "name": "Stage/Breathing.wav"
+     }
+    ],
+    "SFX_SCD_F30_LampPost": [
+     {
+      "name": "Global/LampPost.wav"
+     }
+    ],
+    "SFX_SCD_F31_SpecialRing": [
+     {
+      "name": "Global/SpecialRing.wav"
+     }
+    ],
+    "SFX_SCD_F33_Buzzsaw": [
+     {
+      "name": "Stage/Buzzsaw.wav"
+     }
+    ],
+    "SFX_SCD_F34_Electricity": [
+     {
+      "name": "Stage/Electricity.wav"
+     }
+    ],
+    "SFX_SCD_F35_LargeBooster": [
+     {
+      "name": "Stage/LargeBooster.wav"
+     }
+    ],
+    "SFX_SCD_F36_Impact1": [
+     {
+      "name": "Stage/Impact1.wav"
+     }
+    ],
+    "SFX_SCD_F37_Bumper2": [
+     {
+      "name": "Stage/Bumper2.wav"
+     }
+    ],
+    "SFX_SCD_F38_Drowning": [
+     {
+      "name": "Stage/Drowning.wav"
+     }
+    ],
+    "SFX_SCD_F39_Spikes": [
+     {
+      "name": "Stage/Spikes.wav"
+     }
+    ],
+    "SFX_SCD_F40_Fan": [
+     {
+      "name": "Stage/Fan.wav"
+     }
+    ],
+    "SFX_SCD_F41_Blades": [
+     {
+      "name": "Stage/Blades.wav"
+     }
+    ],
+    "SFX_SCD_F42_WingRotate": [
+     {
+      "name": "Stage/WingRotate.wav"
+     }
+    ],
+    "SFX_SCD_F43_DoorClose": [
+     {
+      "name": "Stage/DoorClose.wav"
+     }
+    ],
+    "SFX_SCD_F44_TimeUFO": [
+     {
+      "name": "Stage/TimeUFO.wav"
+     }
+    ],
+    "SFX_SCD_F46_MiniBumper": [
+     {
+      "name": "Stage/MiniBumper.wav"
+     }
+    ],
+    "SFX_SCD_F47_Switch": [
+     {
+      "name": "Stage/Switch.wav"
+     }
+    ],
+    "SFX_SCD_F49_AirAlert": [
+     {
+      "name": "Stage/AirAlert.wav"
+     }
+    ],
+    "SFX_SCD_F50_Catch": [
+     {
+      "name": "Stage/Catch.wav"
+     }
+    ],
+    "SFX_SCD_F51_SmallBooster": [
+     {
+      "name": "Stage/SmallBooster.wav"
+     }
+    ],
+    "SFX_SCD_F52_SmallBooster": [
+     {
+      "name": "Stage/SmallBooster.wav"
+     }
+    ],
+    "SFX_SCD_F53_ShrinkLaser": [
+     {
+      "name": "Stage/ShrinkLaser.wav"
+     }
+    ],
+    "SFX_SCD_F56_SpecialWarp": [
+     {
+      "name": "Global/SpecialWarp.wav"
+     }
+    ],
+    "SFX_SCD_F57_MSCharge": [
+     {
+      "name": "Stage/MSCharge.wav"
+     }
+    ],
+    "SFX_SCD_F58_MSJet": [
+     {
+      "name": "Stage/MSJet.wav"
+     }
+    ],
+    "SFX_SCD_F62_Launcher": [
+     {
+      "name": "Stage/Launcher.wav"
+     }
+    ],
+    "SFX_SCD_F64_MSElectric": [
+     {
+      "name": "Stage/MSElectric.wav"
+     }
+    ],
+    "SFX_SCD_F65_MSElectric": [
+     {
+      "name": "Stage/MSElectric.wav"
+     }
+    ],
+    "SFX_SCD_F71_ScoreChute": [
+     {
+      "name": "Stage/ScoreChute.wav"
+     }
+    ],
+    "SFX_SCD_F72_TimeWarp": [
+     {
+      "name": "Global/TimeWarp.wav"
+     }
+    ],
+    "SFX_SCD_F73_Achievement": [
+     {
+      "name": "Global/Achievement.wav"
+     }
+    ],
+    "SFX_SCD_P04_1Up": [
+     {
+      "name": "Global/1Up.wav"
+     }
+    ],
+    "SFX_SCD_F74_BounceFloor": [
+     {
+      "name": "Stage/BounceFloor.wav"
+     }
+    ],
+    "SFX_SCD_F79_DrownAlert": [
+     {
+      "name": "Stage/DrownAlert.wav"
+     }
+    ],
+    "SFX_SCD_P00_Future": [
+     {
+      "name": "Global/Future.wav"
+     }
+    ],
+    "SFX_SCD_P01_Past": [
+     {
+      "name": "Global/Past.wav"
+     }
+    ],
+    "SFX_SCD_P08_MechStep": [
+     {
+      "name": "Stage/MechStep.wav"
+     }
+    ],
+    "SFX_SCD_P09_Bumper": [
+     {
+      "name": "Stage/Bumper.wav"
+     }
+    ],
+    "SFX_Plus_AM1_Hammer-Jump": [
+     {
+      "name": "Global/HammerJump.wav"
+     }
+    ],
+    "SFX_Plus_AM2_Hammer-Attack": [
+     {
+      "name": "Global/HammerDash.wav"
+     }
+    ],
+    "SFX_Plus_AM3_Hammer-Hit": [
+     {
+      "name": "Global/HammerHit.wav"
+     }
+    ],
+    "SFX_Add00_DropDash": [
+     {
+      "name": "Global/DropDash.wav"
+     }
+    ],
+    "SFX_RSDK_SCD_BackButton": [
+     {
+      "name": "Stage/BackButton.wav"
+     }
+    ],
+    "RSDK-CD---Bomb": [
+     {
+      "name": "Stage/Bomb.wav"
+     }
+    ],
+    "RSDK-CD---Flipper": [
+     {
+      "name": "Stage/Flipper.wav"
+     }
+    ],
+    "RSDK-CD---GlassSmash": [
+     {
+      "name": "Stage/GlassSmash.wav"
+     }
+    ],
+    "RSDK-CD---GrittyGround": [
+     {
+      "name": "Stage/GrittyGround.wav"
+     }
+    ],
+    "RSDK-CD---HLaser": [
+     {
+      "name": "Stage/HLaser.wav"
+     }
+    ],
+    "SFX_RSDK_SCD_MenuButton": [
+     {
+      "name": "Global/MenuButton.wav"
+     }
+    ],
+    "RSDK-CD---ScoreAdd": [
+     {
+      "name": "Global/ScoreAdd.wav"
+     }
+    ],
+    "SFX_RSDK_SCD_Select": [
+     {
+      "name": "Global/Select.wav"
+     }
+    ],
+    "RSDK-CD---Shot2": [
+     {
+      "name": "Stage/Shot2.wav"
+     }
+    ]
+   }
+  },
+  "STH2_sfx": {
+   "keycode": "1290919142773486504",
+   "cues": {
+    "RSDK-2---Exit_SS": [
+     {
+      "name": "Stage/Exit_SS.wav"
+     }
+    ],
+    "SFX_STH2_35_Ring": [
+     {
+      "name": "Global/Ring.ogg"
+     }
+    ],
+    "SFX_STH2_4E_Ring": [
+     {
+      "name": "Global/Ring.ogg"
+     }
+    ],
+    "SFX_STH2_20_Jump": [
+     {
+      "name": "Global/Jump.ogg"
+     }
+    ],
+    "SFX_STH2_21_StarPost": [
+     {
+      "name": "Global/StarPost.ogg"
+     }
+    ],
+    "SFX_STH2_22_SpikesMove": [
+     {
+      "name": "Global/SpikesMove.ogg"
+     }
+    ],
+    "SFX_STH2_23_Hurt": [
+     {
+      "name": "Global/Hurt.ogg"
+     }
+    ],
+    "SFX_STH2_24_Skidding": [
+     {
+      "name": "Global/Skidding.ogg"
+     }
+    ],
+    "SFX_STH2_28_Beep": [
+     {
+      "name": "Stage/Beep.wav"
+     }
+    ],
+    "SFX_STH2_2A_WaterSplash": [
+     {
+      "name": "Stage/WaterSplash.wav"
+     }
+    ],
+    "SFX_STH2_2B_Swish": [
+     {
+      "name": "Stage/Swish.wav"
+     }
+    ],
+    "SFX_STH2_2C_BossHit": [
+     {
+      "name": "Stage/BossHit.wav"
+     }
+    ],
+    "SFX_STH2_2D_Breathing": [
+     {
+      "name": "Stage/Breathing.wav"
+     }
+    ],
+    "SFX_STH2_2E_SmallFireball": [
+     {
+      "name": "Stage/SmallFireball.wav"
+     }
+    ],
+    "SFX_STH2_33_FlameThrower": [
+     {
+      "name": "Stage/FlameThrower.wav"
+     }
+    ],
+    "SFX_STH2_34_Bumper": [
+     {
+      "name": "Stage/Bumper.wav"
+     }
+    ],
+    "SFX_STH2_39_BlockBreak": [
+     {
+      "name": "Stage/BlockBreak.wav"
+     }
+    ],
+    "SFX_STH2_3B_FlappingDoor": [
+     {
+      "name": "Stage/FlappingDoor.wav"
+     }
+    ],
+    "SFX_STH2_3D_Crusher": [
+     {
+      "name": "Stage/Crusher.wav"
+     }
+    ],
+    "SFX_STH2_3F_Continue": [
+     {
+      "name": "Global/Continue.ogg"
+     }
+    ],
+    "SFX_STH2_41_Destroy": [
+     {
+      "name": "Global/Destroy.ogg"
+     }
+    ],
+    "SFX_STH2_44_Explosion": [
+     {
+      "name": "Global/Explosion.ogg"
+     }
+    ],
+    "SFX_STH2_48_FireDash": [
+     {
+      "name": "Global/FireDash.ogg"
+     }
+    ],
+    "SFX_STH2_49_BonusPoints": [
+     {
+      "name": "Global/BonusPoints.ogg"
+     }
+    ],
+    "SFX_STH2_4A_SpecialWarp": [
+     {
+      "name": "Global/SpecialWarp.ogg"
+     }
+    ],
+    "SFX_STH2_50_BossSpark": [
+     {
+      "name": "Stage/BossSpark.wav"
+     }
+    ],
+    "SFX_STH2_51_Catch": [
+     {
+      "name": "Global/Catch.ogg"
+     }
+    ],
+    "SFX_STH2_54_GasPop": [
+     {
+      "name": "Stage/GasPop.wav"
+     }
+    ],
+    "SFX_STH2_57_PlatCollide": [
+     {
+      "name": "Stage/PlatCollide.wav"
+     }
+    ],
+    "SFX_STH2_58_TargetBumper": [
+     {
+      "name": "Stage/TargetBumper.wav"
+     }
+    ],
+    "SFX_STH2_59_CNZBumper": [
+     {
+      "name": "Stage/CNZBumper.wav"
+     }
+    ],
+    "SFX_STH2_5A_ChemJump": [
+     {
+      "name": "Stage/ChemJump.wav"
+     }
+    ],
+    "SFX_STH2_5B_Sliding": [
+     {
+      "name": "Global/Sliding.ogg"
+     }
+    ],
+    "SFX_STH2_5C_Thruster": [
+     {
+      "name": "Stage/Thruster.wav"
+     }
+    ],
+    "SFX_STH2_5D_ArrowHit": [
+     {
+      "name": "Stage/ArrowHit.wav"
+     }
+    ],
+    "SFX_STH2_5E_Helicopter": [
+     {
+      "name": "Stage/Helicopter.wav"
+     }
+    ],
+    "SFX_STH2_5F_Transform": [
+     {
+      "name": "Global/Transform.ogg"
+     }
+    ],
+    "SFX_STH2_61_Rumble": [
+     {
+      "name": "Stage/Rumble.wav"
+     }
+    ],
+    "SFX_STH2_62_Plunger": [
+     {
+      "name": "Stage/Plunger.wav"
+     }
+    ],
+    "SFX_STH2_63_Flipper": [
+     {
+      "name": "Stage/Flipper.wav"
+     }
+    ],
+    "SFX_STH2_64_LiftTick": [
+     {
+      "name": "Stage/LiftTick.wav"
+     }
+    ],
+    "SFX_STH2_65_Rustle": [
+     {
+      "name": "Stage/Rustle.wav"
+     }
+    ],
+    "SFX_STH2_66_ChemSplash": [
+     {
+      "name": "Stage/ChemSplash.wav"
+     }
+    ],
+    "SFX_STH2_67_DropBridge": [
+     {
+      "name": "Stage/DropBridge.wav"
+     }
+    ],
+    "SFX_STH2_68_Landing": [
+     {
+      "name": "Global/Landing.ogg"
+     }
+    ],
+    "SFX_STH2_69_DropBridge2": [
+     {
+      "name": "Stage/DropBridge2.wav"
+     }
+    ],
+    "SFX_STH2_6B_InstaShield": [
+     {
+      "name": "Stage/LaserSkim.wav"
+     }
+    ],
+    "SFX_STH2_6C_Teleport": [
+     {
+      "name": "Global/Teleport.ogg"
+     }
+    ],
+    "SFX_STH2_6D_Fail": [
+     {
+      "name": "Stage/Fail.wav"
+     }
+    ],
+    "SFX_STH2_6E_Saw": [
+     {
+      "name": "Stage/Saw.wav"
+     }
+    ],
+    "SFX_STH2_6F_MediumLaser": [
+     {
+      "name": "Stage/MediumLaser.wav"
+     }
+    ],
+    "SFX_STH2_70_OilSlide": [
+     {
+      "name": "Stage/OilSlide.wav"
+     }
+    ],
+    "SFX_STH2_26_Spike": [
+     {
+      "name": "Global/Spike.ogg"
+     }
+    ],
+    "SFX_STH2_27_Twinkle": [
+     {
+      "name": "Stage/Twinkle.wav"
+     }
+    ],
+    "SFX_STH2_2F_BlueShield": [
+     {
+      "name": "Global/BlueShield.ogg"
+     }
+    ],
+    "SFX_STH2_30_Buzzsaw": [
+     {
+      "name": "Stage/Buzzsaw.wav"
+     }
+    ],
+    "SFX_STH2_31_Electricity": [
+     {
+      "name": "Stage/Electricity.wav"
+     }
+    ],
+    "SFX_STH2_32_Drowning": [
+     {
+      "name": "Stage/Drowning.wav"
+     }
+    ],
+    "SFX_STH2_36_Spear": [
+     {
+      "name": "Stage/Spear.wav"
+     }
+    ],
+    "SFX_STH2_37_LargeWall": [
+     {
+      "name": "Stage/LargeWall.wav"
+     }
+    ],
+    "SFX_STH2_3C_Release": [
+     {
+      "name": "Global/Release.ogg"
+     }
+    ],
+    "SFX_STH2_3E_Rolling": [
+     {
+      "name": "Global/Rolling.ogg"
+     }
+    ],
+    "SFX_STH2_40_SlotMachine": [
+     {
+      "name": "Stage/SlotMachine.wav"
+     }
+    ],
+    "SFX_STH2_42_DrownAlert": [
+     {
+      "name": "Stage/DrownAlert.wav"
+     }
+    ],
+    "SFX_STH2_43_SpecialRing": [
+     {
+      "name": "Global/SpecialRing.ogg"
+     }
+    ],
+    "SFX_STH2_45_ScoreTotal": [
+     {
+      "name": "Global/ScoreTotal.ogg"
+     }
+    ],
+    "SFX_STH2_46_LoseRings": [
+     {
+      "name": "Global/LoseRings.ogg"
+     }
+    ],
+    "SFX_STH2_4B_LedgeBreak": [
+     {
+      "name": "Stage/LedgeBreak.wav"
+     }
+    ],
+    "SFX_STH2_4C_Spring": [
+     {
+      "name": "Global/Spring.ogg"
+     }
+    ],
+    "SFX_STH2_4D_ButtonPress": [
+     {
+      "name": "Stage/ButtonPress.wav"
+     },
+     {
+      "name": "Global/ScoreAdd.ogg"
+     }
+    ],
+    "SFX_STH2_4F_SignPost": [
+     {
+      "name": "Global/SignPost.ogg"
+     }
+    ],
+    "SFX_STH2_53_SignPost2p": [
+     {
+      "name": "Global/SignPost2p.ogg"
+     }
+    ],
+    "SFX_STH2_55_Clank": [
+     {
+      "name": "Stage/Clank.wav"
+     }
+    ],
+    "SFX_STH2_56_Elevator": [
+     {
+      "name": "Stage/Elevator.wav"
+     }
+    ],
+    "SFX_STH2_60_Charge": [
+     {
+      "name": "Global/Charge.ogg"
+     }
+    ],
+    "SFX_STH2_6A_SmallLaser": [
+     {
+      "name": "Stage/SmallLaser.wav"
+     }
+    ],
+    "S011_S3E_FireShield": [
+     {
+      "name": "Global/FireShield.ogg"
+     }
+    ],
+    "S012_S3F_BubbleShield": [
+     {
+      "name": "Global/BubbleShield.ogg"
+     }
+    ],
+    "S014_S41_LightningShield": [
+     {
+      "name": "Global/LightningShield.ogg"
+     }
+    ],
+    "S015_S42_InstaShield": [
+     {
+      "name": "Global/InstaShield.ogg"
+     }
+    ],
+    "S016_S43_FireDash": [
+     {
+      "name": "Global/FireDash.ogg"
+     }
+    ],
+    "S017_S44_BubbleBounce": [
+     {
+      "name": "Global/BubbleBounce.ogg"
+     }
+    ],
+    "S018_S45_LightningJump": [
+     {
+      "name": "Global/LightningJump.ogg"
+     }
+    ],
+    "RSDK-2---Explosion3": [
+     {
+      "name": "Stage/Explosion3.wav"
+     }
+    ],
+    "RSDK-2---LaserCharge": [
+     {
+      "name": "Stage/LaserCharge.wav"
+     }
+    ],
+    "RSDK-2---LargeLaser": [
+     {
+      "name": "Stage/LargeLaser.wav"
+     }
+    ],
+    "RSDK-2---HullClose": [
+     {
+      "name": "Stage/HullClose.wav"
+     }
+    ],
+    "RSDK-2---Explosion2": [
+     {
+      "name": "Stage/Explosion2.wav"
+     }
+    ],
+    "RSDK-2---Flying": [
+     {
+      "name": "Global/Flying.ogg"
+     }
+    ],
+    "RSDK-2---Tired": [
+     {
+      "name": "Global/Tired.ogg"
+     }
+    ],
+    "SFX_Plus_AM1_Hammer-Jump": [
+     {
+      "name": "Global/HammerJump.wav"
+     }
+    ],
+    "SFX_Plus_AM2_Hammer-Attack": [
+     {
+      "name": "Global/HammerDash.wav"
+     }
+    ],
+    "SFX_Plus_AM3_Hammer-Hit": [
+     {
+      "name": "Global/HammerHit.wav"
+     }
+    ],
+    "SFX_Add00_DropDash": [
+     {
+      "name": "Global/DropDash.wav"
+     }
+    ],
+    "RSDK-2---BackButton": [
+     {
+      "name": "Global/BackButton.ogg"
+     }
+    ],
+    "RSDK-2---MenuButton": [
+     {
+      "name": "Global/MenuButton.ogg"
+     }
+    ],
+    "RSDK-2---Resume": [
+     {
+      "name": "Global/Resume.ogg"
+     }
+    ],
+    "RSDK-2---Select": [
+     {
+      "name": "Global/Select.ogg"
+     }
+    ],
+    "RSDK-2---Waterfall": [
+     {
+      "name": "Stage/Waterfall.wav"
+     }
+    ],
+    "RSDK-2---Waterfall2": [
+     {
+      "name": "Stage/Waterfall2.wav"
+     }
+    ],
+    "RSDK-2---Horn1": [
+     {
+      "name": "Stage/Horn1.wav"
+     }
+    ],
+    "RSDK-2---Horn2": [
+     {
+      "name": "Stage/Horn2.wav"
+     }
+    ],
+    "RSDK-2---Horn3": [
+     {
+      "name": "Stage/Horn3.wav"
+     }
+    ],
+    "RSDK-2---Horn4": [
+     {
+      "name": "Stage/Horn4.wav"
+     }
+    ],
+    "RSDK-2---HornSweep": [
+     {
+      "name": "Stage/HornSweep.wav"
+     }
+    ],
+    "RSDK-2---Impact1": [
+     {
+      "name": "Stage/Impact1.wav"
+     }
+    ],
+    "RSDK-2---Impact2": [
+     {
+      "name": "Stage/Impact2.wav"
+     }
+    ],
+    "RSDK-2---Launch": [
+     {
+      "name": "Stage/Launch.wav"
+     }
+    ],
+    "RSDK-2---LoudHorn": [
+     {
+      "name": "Stage/LoudHorn.wav"
+     }
+    ],
+    "RSDK-2---MachineMove": [
+     {
+      "name": "Stage/MachineMove.wav"
+     }
+    ],
+    "RSDK-2---OctusShot": [
+     {
+      "name": "Stage/OctusShot.wav"
+     }
+    ],
+    "RSDK-2---Rev": [
+     {
+      "name": "Stage/Rev.wav"
+     }
+    ],
+    "RSDK-2---WaterGeyser": [
+     {
+      "name": "Stage/WaterGeyser.wav"
+     }
+    ]
+   }
+  },
+  "STH3_sfx": {
+   "keycode": "17938273131493627783",
+   "cues": {
+    "RSDK-3-Global---Spring": [
+     {
+      "name": "Global/Spring.wav"
+     }
+    ],
+    "RSDK-3-Special---Emerald": [
+     {
+      "name": "Special/Emerald.wav"
+     }
+    ],
+    "RSDK-3-Global---Transform": [
+     {
+      "name": "Global/Transform.wav"
+     }
+    ],
+    "S001_S34_Ring": [
+     {
+      "name": "Global/Ring.wav"
+     }
+    ],
+    "S002_S35_Hurt": [
+     {
+      "name": "Global/Hurt.wav"
+     }
+    ],
+    "S003_S36_Skidding": [
+     {
+      "name": "Global/Skidding.wav"
+     }
+    ],
+    "S004_S37_Spike": [
+     {
+      "name": "Global/Spike.wav"
+     }
+    ],
+    "S005_S38_Breathe": [
+     {
+      "name": "Stage/Breathe.wav"
+     }
+    ],
+    "S006_S39_Splash": [
+     {
+      "name": "Stage/Splash.wav"
+     }
+    ],
+    "S007_S3A_BlueShield": [
+     {
+      "name": "Global/BlueShield.wav"
+     }
+    ],
+    "S008_S3B_Drown": [
+     {
+      "name": "Stage/Drown.wav"
+     }
+    ],
+    "S009_S3C_Roll": [
+     {
+      "name": "Global/Roll.wav"
+     }
+    ],
+    "S010_S3D_Destroy": [
+     {
+      "name": "Global/Destroy.wav"
+     }
+    ],
+    "S011_S3E_FireShield": [
+     {
+      "name": "Global/FireShield.wav"
+     }
+    ],
+    "S012_S3F_BubbleShield": [
+     {
+      "name": "Global/BubbleShield.wav"
+     }
+    ],
+    "S014_S41_LightningShield": [
+     {
+      "name": "Global/LightningShield.wav"
+     }
+    ],
+    "S015_S42_InstaShield": [
+     {
+      "name": "Global/InstaShield.wav"
+     }
+    ],
+    "S016_S43_FireDash": [
+     {
+      "name": "Global/FireDash.wav"
+     }
+    ],
+    "S017_S44_BubbleBounce": [
+     {
+      "name": "Global/BubbleBounce.wav"
+     }
+    ],
+    "S018_S45_LightningJump": [
+     {
+      "name": "Global/LightningJump.wav"
+     }
+    ],
+    "S019_S46_Recovery": [
+     {
+      "name": "Global/Recovery.wav"
+     }
+    ],
+    "S020_S47_SandPillar": [
+     {
+      "name": "3K_SPZ/SandPillar.wav"
+     }
+    ],
+    "S021_S48_Huff": [
+     {
+      "name": "Stage/Huff.wav"
+     }
+    ],
+    "S022_S49_Impact5": [
+     {
+      "name": "Stage/Impact5.wav"
+     }
+    ],
+    "S023_S4A_Grab": [
+     {
+      "name": "Global/Grab.wav"
+     }
+    ],
+    "S023_S4A_Grab_1": [
+     {
+      "name": "Global/Grab.wav"
+     }
+    ],
+    "S024_S4B_Splash3": [
+     {
+      "name": "Stage/Splash3.wav"
+     }
+    ],
+    "S025_S4C_Land": [
+     {
+      "name": "Global/Land.wav"
+     }
+    ],
+    "S025_S4C_Land_1": [
+     {
+      "name": "Global/Land.wav"
+     }
+    ],
+    "S026_S4D_Shot": [
+     {
+      "name": "Stage/Shot.wav"
+     }
+    ],
+    "S027_S4E_Explosion3": [
+     {
+      "name": "Stage/Explosion3.wav"
+     }
+    ],
+    "S028_S4F_SmallFlame": [
+     {
+      "name": "Stage/SmallFlame.wav"
+     }
+    ],
+    "S029_S50_MachineActivate": [
+     {
+      "name": "Stage/MachineActivate.wav"
+     }
+    ],
+    "S030_S51_Drop": [
+     {
+      "name": "Stage/Drop.wav"
+     }
+    ],
+    "S031_S52_SpikesMove3": [
+     {
+      "name": "Global/SpikesMove3.wav"
+     }
+    ],
+    "S032_S53_Charge": [
+     {
+      "name": "Stage/Charge.wav"
+     }
+    ],
+    "S033_S54_BigLaser": [
+     {
+      "name": "Stage/BigLaser.wav"
+     }
+    ],
+    "S034_S55_PlatformTrack": [
+     {
+      "name": "3K_SPZ/PlatformTrack.wav"
+     }
+    ],
+    "S036_S57_WaterGush": [
+     {
+      "name": "3K_HCZ/WaterGush.wav"
+     }
+    ],
+    "S037_S58_Clack2": [
+     {
+      "name": "Stage/Clack2.wav"
+     }
+    ],
+    "S038_S59_LedgeBreak3": [
+     {
+      "name": "Stage/LedgeBreak3.wav"
+     }
+    ],
+    "S039_S5A_": [
+     {
+      "name": "Stage/Rev.wav"
+     }
+    ],
+    "S040_S5B_Button": [
+     {
+      "name": "Stage/Button.wav"
+     }
+    ],
+    "S041_S5C_MechaSpark": [
+     {
+      "name": "3K_SSZ/MechaSpark.wav"
+     }
+    ],
+    "S042_S5D_Impact3": [
+     {
+      "name": "Stage/Impact3.wav"
+     }
+    ],
+    "S043_S5E_LaserFire": [
+     {
+      "name": "Stage/LaserFire.wav"
+     }
+    ],
+    "S044_S5F_Impact4": [
+     {
+      "name": "Stage/Impact4.wav"
+     }
+    ],
+    "S045_S60_FlyAway": [
+     {
+      "name": "3K_MGZ/FlyAway.wav"
+     }
+    ],
+    "S046_S61_ThunkThunk": [
+     {
+      "name": "Stage/ThunkThunk.wav"
+     }
+    ],
+    "S047_S62_Jump": [
+     {
+      "name": "Global/Jump.wav"
+     }
+    ],
+    "S048_S63_StarPost": [
+     {
+      "name": "Global/StarPost.wav"
+     }
+    ],
+    "S049_S64_PulleyGrab": [
+     {
+      "name": "3K_MGZ/PulleyGrab.wav"
+     }
+    ],
+    "S050_S65_BlueSphere": [
+     {
+      "name": "Special/BlueSphere.wav"
+     }
+    ],
+    "S051_S66_SSJettison": [
+     {
+      "name": "Special/SSJettison.wav"
+     }
+    ],
+    "S052_S67_Push": [
+     {
+      "name": "Global/Push.wav"
+     }
+    ],
+    "S053_S68_Event": [
+     {
+      "name": "Special/Event.wav"
+     }
+    ],
+    "S054_S69_Push": [
+     {
+      "name": "Stage/Push.wav"
+     }
+    ],
+    "S055_S6A_SSExit": [
+     {
+      "name": "Special/SSExit.wav"
+     }
+    ],
+    "S056_S6B_SSRotate": [
+     {
+      "name": "Special/SSRotate.wav"
+     }
+    ],
+    "S057_S6C_Splash": [
+     {
+      "name": "Stage/Splash2.wav"
+     }
+    ],
+    "S058_S6D_Clack4": [
+     {
+      "name": "Stage/Clack4.wav"
+     }
+    ],
+    "S059_S6E_BossHit": [
+     {
+      "name": "Stage/BossHit.wav"
+     }
+    ],
+    "S060_S6F_RumbleShort_RumbleEnd": [
+     {
+      "name": "Stage/RumbleShort.wav"
+     }
+    ],
+    "S061_S70_Fireball": [
+     {
+      "name": "Stage/Fireball.wav"
+     }
+    ],
+    "S063_S72_Rotate": [
+     {
+      "name": "Stage/Rotate.wav"
+     }
+    ],
+    "S064_S73_Elevator": [
+     {
+      "name": "Stage/Elevator.wav"
+     }
+    ],
+    "S065_S74_Repel": [
+     {
+      "name": "Stage/Repel.wav"
+     }
+    ],
+    "S066_S75_PlatformInflate": [
+     {
+      "name": "3K_CNZ/PlatformInflate.wav"
+     }
+    ],
+    "S067_S76_TrapDoor": [
+     {
+      "name": "3K_CNZ/TrapDoor.wav"
+     }
+    ],
+    "S068_S77_BalloonPop": [
+     {
+      "name": "Stage/BalloonPop.wav"
+     }
+    ],
+    "S069_S78_Zap": [
+     {
+      "name": "Stage/Zap.wav"
+     }
+    ],
+    "S070_S79_Sparks": [
+     {
+      "name": "3K_CNZ/Sparks.wav"
+     }
+    ],
+    "S071_S7A_Emerge": [
+     {
+      "name": "3K_LRZ/Emerge.wav"
+     }
+    ],
+    "S072_S7B_Bumper3": [
+     {
+      "name": "Stage/Bumper3.wav"
+     }
+    ],
+    "S073_S7C_Chain": [
+     {
+      "name": "Stage/Chain.wav"
+     }
+    ],
+    "S075_S7E_Slide": [
+     {
+      "name": "Global/Slide.wav"
+     }
+    ],
+    "S075_S7E_Slide_1": [
+     {
+      "name": "Global/Slide.wav"
+     }
+    ],
+    "S076_S7F_FrostBlower": [
+     {
+      "name": "3K_ICZ/FrostBlower.wav"
+     }
+    ],
+    "S077_S80_Freeze": [
+     {
+      "name": "3K_ICZ/Freeze.wav"
+     }
+    ],
+    "S078_S81_CannonFire": [
+     {
+      "name": "Stage/CannonFire.wav"
+     }
+    ],
+    "S079_S82_Puff": [
+     {
+      "name": "Stage/Puff.wav"
+     }
+    ],
+    "S080_S83_BridgeExplode": [
+     {
+      "name": "Stage/BridgeExplode.wav"
+     }
+    ],
+    "S083_S86_Alarm": [
+     {
+      "name": "3K_LBZ/Alarm.wav"
+     }
+    ],
+    "S084_S87_Bounce": [
+     {
+      "name": "Stage/Bounce.wav"
+     }
+    ],
+    "S085_S88_Hoist": [
+     {
+      "name": "3K_MHZ/Hoist.wav"
+     }
+    ],
+    "S086_S89_Blip": [
+     {
+      "name": "3K_MHZ/Blip.wav"
+     }
+    ],
+    "S087_S8A_Vanish": [
+     {
+      "name": "Stage/Vanish.wav"
+     }
+    ],
+    "S088_S8B_Chop": [
+     {
+      "name": "3K_MHZ/Chop.wav"
+     }
+    ],
+    "S089_S8C_Strain": [
+     {
+      "name": "Stage/Strain.wav"
+     }
+    ],
+    "S091_S8E_WheelSpin": [
+     {
+      "name": "3K_MGZ/WheelSpin.wav"
+     }
+    ],
+    "S092_S8F_Open": [
+     {
+      "name": "Stage/Open.wav"
+     }
+    ],
+    "S093_S90_DoorReturn": [
+     {
+      "name": "3K_SPZ/DoorReturn.wav"
+     }
+    ],
+    "S094_S91_HullClose": [
+     {
+      "name": "Stage/HullClose.wav"
+     }
+    ],
+    "S095_S92_Hyudoro": [
+     {
+      "name": "3K_SPZ/Hyudoro.wav"
+     }
+    ],
+    "S096_S93_Assemble": [
+     {
+      "name": "Stage/Assemble.wav"
+     }
+    ],
+    "S097_S94_Shift": [
+     {
+      "name": "Stage/Shift.wav"
+     }
+    ],
+    "S098_S95_Rise": [
+     {
+      "name": "3K_LRZ/Rise.wav"
+     }
+    ],
+    "S099_S96_Impact2": [
+     {
+      "name": "Stage/Impact2.wav"
+     }
+    ],
+    "S100_S97_Mist": [
+     {
+      "name": "3K_LRZ/Mist.wav"
+     }
+    ],
+    "S101_S98_Shoot": [
+     {
+      "name": "Stage/Shoot.wav"
+     }
+    ],
+    "S103_S9A_Clack3": [
+     {
+      "name": "Stage/Clack3.wav"
+     }
+    ],
+    "S104_S9B_Impact6": [
+     {
+      "name": "Stage/Impact6.wav"
+     }
+    ],
+    "S105_S9C_SuperEmerald": [
+     {
+      "name": "Stage/SuperEmerald.wav"
+     }
+    ],
+    "S106_S9D_Targeting1": [
+     {
+      "name": "Stage/Targeting1.wav"
+     }
+    ],
+    "S107_S9E_Whack": [
+     {
+      "name": "Stage/Whack.wav"
+     }
+    ],
+    "S108_S9F_Transform2": [
+     {
+      "name": "Global/Transform2.wav"
+     }
+    ],
+    "S109_SA0_RocketJet": [
+     {
+      "name": "Stage/RocketJet.wav"
+     }
+    ],
+    "S111_SA2_Launch": [
+     {
+      "name": "Stage/Launch.wav"
+     }
+    ],
+    "S112_SA3_Extend": [
+     {
+      "name": "Stage/Extend.wav"
+     }
+    ],
+    "S113_SA4_PowerUp": [
+     {
+      "name": "Stage/PowerUp.wav"
+     }
+    ],
+    "S115_SA6_Kshink": [
+     {
+      "name": "Stage/Kshink.wav"
+     }
+    ],
+    "S117_SA8_LaserSweep": [
+     {
+      "name": "Stage/LaserSweep.wav"
+     }
+    ],
+    "S118_SA9_Warning": [
+     {
+      "name": "Stage/Warning.wav"
+     }
+    ],
+    "S119_SAA_Bumper": [
+     {
+      "name": "Stage/Bumper.wav"
+     }
+    ],
+    "S120_SAB_Charge": [
+     {
+      "name": "Global/Charge.wav"
+     }
+    ],
+    "S121_SAC_Continue": [
+     {
+      "name": "Special/Continue.wav"
+     }
+    ],
+    "S122_SAD_Beep4": [
+     {
+      "name": "Stage/Beep4.wav"
+     }
+    ],
+    "S123_SAE_Flipper": [
+     {
+      "name": "Stage/Flipper.wav"
+     }
+    ],
+    "S124_SAF_SpecialWarp": [
+     {
+      "name": "Global/SpecialWarp.wav"
+     }
+    ],
+    "S125_SB0_ScoreTotal": [
+     {
+      "name": "Global/ScoreTotal.wav"
+     }
+    ],
+    "S126_SB1_Spring3": [
+     {
+      "name": "Global/Spring3.wav"
+     }
+    ],
+    "S127_SB2_Fail": [
+     {
+      "name": "Global/Fail.wav"
+     }
+    ],
+    "S128_SB3_SpecialRing": [
+     {
+      "name": "Global/SpecialRing.wav"
+     }
+    ],
+    "S129_SB4_Explosion2": [
+     {
+      "name": "Stage/Explosion2.wav"
+     }
+    ],
+    "S131_SB6_Release": [
+     {
+      "name": "Global/Release.wav"
+     }
+    ],
+    "S132_SB7_SlotMachine": [
+     {
+      "name": "Stage/SlotMachine.wav"
+     }
+    ],
+    "S133_SB8_Twinkle": [
+     {
+      "name": "Global/Twinkle.wav"
+     }
+    ],
+    "S134_SB9_LoseRings": [
+     {
+      "name": "Global/LoseRings.wav"
+     }
+    ],
+    "S135_SBA_Flying": [
+     {
+      "name": "Global/Flying.wav"
+     }
+    ],
+    "S136_SBB_Tired": [
+     {
+      "name": "Global/Tired.wav"
+     }
+    ],
+    "S137_SBC_Waterfall": [
+     {
+      "name": "Stage/Waterfall.wav"
+     }
+    ],
+    "S138_SBD_Airship": [
+     {
+      "name": "Stage/Airship.wav"
+     }
+    ],
+    "S139_SBE_Siren": [
+     {
+      "name": "Stage/Siren.wav"
+     }
+    ],
+    "S140_SBF_Wash": [
+     {
+      "name": "3K_HCZ/Wash.wav"
+     }
+    ],
+    "S141_SC0_LargeFan": [
+     {
+      "name": "3K_HCZ/LargeFan.wav"
+     }
+    ],
+    "S142_SC1_SmallFan": [
+     {
+      "name": "3K_HCZ/SmallFan.wav"
+     }
+    ],
+    "S143_SC2_Flame2": [
+     {
+      "name": "Stage/Flame2.wav"
+     }
+    ],
+    "S144_SC3_Hover3": [
+     {
+      "name": "Stage/Hover3.wav"
+     }
+    ],
+    "S145_SC4_Laser": [
+     {
+      "name": "3K_DEZ/Laser.wav"
+     }
+    ],
+    "S146_SC5_LaserReleasewav": [
+     {
+      "name": "3K_DEZ/LaserRelease.wav"
+     }
+    ],
+    "S147_SC6_Hover_Hover2": [
+     {
+      "name": "Stage/Hover.wav"
+     },
+     {
+      "name": "Stage/Hover2.wav"
+     }
+    ],
+    "S148_SC7_CannonTurn": [
+     {
+      "name": "3K_CNZ/CannonTurn.wav"
+     }
+    ],
+    "S149_SC8_SnowSlide": [
+     {
+      "name": "3K_ICZ/SnowSlide.wav"
+     }
+    ],
+    "S150_SC9_Flail": [
+     {
+      "name": "Stage/Flail.wav"
+     }
+    ],
+    "S151_SCA_Brip": [
+     {
+      "name": "Stage/Brip.wav"
+     }
+    ],
+    "S152_SCB_Rumble": [
+     {
+      "name": "Stage/Rumble.wav"
+     }
+    ],
+    "S153_SCC_Drill_DrillEnd_DrillShort": [
+     {
+      "name": "Stage/Drill.wav"
+     },
+     {
+      "name": "Stage/DrillWarble.wav"
+     }
+    ],
+    "S154_SCD_TakeOff": [
+     {
+      "name": "Stage/TakeOff.wav"
+     }
+    ],
+    "S155_SCE_AirFlow": [
+     {
+      "name": "Stage/Airflow.wav"
+     }
+    ],
+    "S157_SD0_EggMobile": [
+     {
+      "name": "Stage/EggMobile.wav"
+     }
+    ],
+    "S159_SD2_Unravel": [
+     {
+      "name": "Stage/Unravel.wav"
+     }
+    ],
+    "S160_SD3_DeathEggRise": [
+     {
+      "name": "3K_SSZ/DeathEggRise.wav"
+     }
+    ],
+    "S161_SD4_Engine": [
+     {
+      "name": "3K_DEZ/Engine.wav"
+     }
+    ],
+    "S162_SD5_Lava": [
+     {
+      "name": "Stage/Lava.wav"
+     }
+    ],
+    "S164_SD7_Pulley": [
+     {
+      "name": "Stage/Pulley.wav"
+     }
+    ],
+    "S166_SD9_Magnet": [
+     {
+      "name": "Stage/Magnet.wav"
+     }
+    ],
+    "S167_SDA_Gust": [
+     {
+      "name": "3K_MHZ/Gust.wav"
+     }
+    ],
+    "S168_SDB_Skim": [
+     {
+      "name": "3K_HCZ/Skim.wav"
+     }
+    ],
+    "SFX_Plus_AM4_Hammer-Throw": [
+     {
+      "name": "Global/HammerThrow.wav"
+     }
+    ],
+    "SFX_Plus_AM1_Hammer-Jump": [
+     {
+      "name": "Global/HammerJump.wav"
+     }
+    ],
+    "SFX_Plus_AM2_Hammer-Attack": [
+     {
+      "name": "Global/HammerDash.wav"
+     }
+    ],
+    "SFX_Plus_AM3_Hammer-Hit": [
+     {
+      "name": "Global/HammerHit.wav"
+     }
+    ],
+    "SFX_Add00_DropDash": [
+     {
+      "name": "Global/DropDash.wav"
+     }
+    ],
+    "RSDK-3---Clack": [
+     {
+      "name": "Stage/Clack.wav"
+     }
+    ],
+    "RSDK-3---DrillEnd": [
+     {
+      "name": "Stage/DrillEnd.wav"
+     }
+    ],
+    "RSDK-3---LRZ-Shatter": [
+     {
+      "name": "3K_LRZ/Shatter.wav"
+     }
+    ],
+    "RSDK-3---Swing": [
+     {
+      "name": "Stage/Swing.wav"
+     }
+    ],
+    "RSDK-3-CNZ---CannonTurn1": [
+     {
+      "name": "3K_CNZ/CannonTurn1.wav"
+     }
+    ],
+    "RSDK-3-CNZ---CannonTurn2": [
+     {
+      "name": "3K_CNZ/CannonTurn2.wav"
+     }
+    ],
+    "RSDK-3-CNZ---CannonTurnOG": [
+     {
+      "name": "3K_CNZ/CannonTurnOG.wav"
+     }
+    ],
+    "RSDK-3-Global---ChargeOld": [
+     {
+      "name": "Global/ChargeOld.wav"
+     }
+    ],
+    "RSDK-3-Global---HyperRing": [
+     {
+      "name": "Global/HyperRing.wav"
+     }
+    ],
+    "RSDK-3-Global---MenuAccept": [
+     {
+      "name": "Global/MenuAccept.wav"
+     }
+    ],
+    "RSDK-3-Global---MenuBleep": [
+     {
+      "name": "Global/MenuBleep.wav"
+     }
+    ],
+    "RSDK-3-Global---MenuWoosh": [
+     {
+      "name": "Global/MenuWoosh.wav"
+     }
+    ],
+    "RSDK-3-Global---PeelCharge": [
+     {
+      "name": "Global/PeelCharge.wav"
+     }
+    ],
+    "RSDK-3-Global---PeelRelease": [
+     {
+      "name": "Global/PeelRelease.wav"
+     }
+    ],
+    "RSDK-3-Global---ScoreAdd": [
+     {
+      "name": "Global/ScoreAdd.wav"
+     }
+    ],
+    "RSDK-3-Global---SignPost": [
+     {
+      "name": "Global/SignPost.wav"
+     }
+    ],
+    "RSDK-3-Global---SignPost2p": [
+     {
+      "name": "Global/SignPost2p.wav"
+     }
+    ],
+    "RSDK-3-Global---SpikesMove": [
+     {
+      "name": "Global/SpikesMove.wav"
+     }
+    ],
+    "RSDK-3-Global---Swap": [
+     {
+      "name": "Global/Swap.wav"
+     }
+    ],
+    "RSDK-3-Global---SwapFail": [
+     {
+      "name": "Global/SwapFail.wav"
+     }
+    ],
+    "RSDK-3-Global---Teleport": [
+     {
+      "name": "Global/Teleport.wav"
+     }
+    ],
+    "RSDK-3-Global---Warp": [
+     {
+      "name": "Global/Warp.wav"
+     }
+    ],
+    "RSDK-3-HCZ---Whirlpool": [
+     {
+      "name": "3K_HCZ/Whirlpool.wav"
+     }
+    ],
+    "RSDK-3-ICZ---PenPenSlide": [
+     {
+      "name": "3K_ICZ/PenPenSlide.wav"
+     }
+    ],
+    "RSDK-3-LRZ---Turbine": [
+     {
+      "name": "3K_LRZ/Turbine.wav"
+     }
+    ],
+    "RSDK-3-Special---GrittyGround": [
+     {
+      "name": "Special/GrittyGround.wav"
+     }
+    ],
+    "RSDK-3-Stage---Beep": [
+     {
+      "name": "Stage/Beep2.wav"
+     }
+    ],
+    "RSDK-3-Stage---Beep2": [
+     {
+      "name": "Stage/Beep3.wav"
+     }
+    ],
+    "RSDK-3-Stage---Bloop": [
+     {
+      "name": "Stage/Bloop.wav"
+     }
+    ],
+    "RSDK-3-Stage---Bumper2": [
+     {
+      "name": "Stage/Bumper2.wav"
+     }
+    ],
+    "RSDK-3-Stage---Button2": [
+     {
+      "name": "Stage/Button2.wav"
+     }
+    ],
+    "RSDK-3-Stage---BuzzSaw": [
+     {
+      "name": "Stage/BuzzSaw.wav"
+     }
+    ],
+    "RSDK-3-Stage---Chopper": [
+     {
+      "name": "Stage/Chopper.wav"
+     }
+    ],
+    "RSDK-3-Stage---Clacker": [
+     {
+      "name": "Stage/Clacker.wav"
+     }
+    ],
+    "RSDK-3-Stage---Clang": [
+     {
+      "name": "Stage/Clang.wav"
+     }
+    ],
+    "RSDK-3-Stage---Clang2": [
+     {
+      "name": "Stage/Clang2.wav"
+     }
+    ],
+    "RSDK-3-Stage---Click": [
+     {
+      "name": "Stage/Click.wav"
+     }
+    ],
+    "RSDK-3-Stage---Click2": [
+     {
+      "name": "Stage/Click2.wav"
+     }
+    ],
+    "RSDK-3-Stage---DBridgeOpen": [
+     {
+      "name": "Stage/DBridgeOpen.wav"
+     }
+    ],
+    "RSDK-3-Stage---DBridgeStop": [
+     {
+      "name": "Stage/DBridgeStop.wav"
+     }
+    ],
+    "RSDK-3-Stage---DrillShort": [
+     {
+      "name": "Stage/DrillShort.wav"
+     }
+    ],
+    "RSDK-3-Stage---DrownAlert": [
+     {
+      "name": "Stage/DrownAlert.wav"
+     }
+    ],
+    "RSDK-3-Stage---ElecCharge": [
+     {
+      "name": "Stage/ElecCharge.wav"
+     }
+    ],
+    "RSDK-3-Stage---ElecPulse": [
+     {
+      "name": "Stage/ElecPulse.wav"
+     }
+    ],
+    "RSDK-3-Stage---Electrify": [
+     {
+      "name": "Stage/Electrify.wav"
+     }
+    ],
+    "RSDK-3-Stage---Electrify2": [
+     {
+      "name": "Stage/Electrify2.wav"
+     }
+    ],
+    "RSDK-3-Stage---Explosion": [
+     {
+      "name": "Stage/Explosion.wav"
+     }
+    ],
+    "RSDK-3-Stage---Explosion4": [
+     {
+      "name": "Stage/Explosion4.wav"
+     }
+    ],
+    "RSDK-3-Stage---Fall": [
+     {
+      "name": "Stage/Fall.wav"
+     }
+    ],
+    "RSDK-3-Stage---FallL": [
+     {
+      "name": "Stage/FallL.wav"
+     }
+    ],
+    "RSDK-3-Stage---FallR": [
+     {
+      "name": "Stage/FallR.wav"
+     }
+    ],
+    "RSDK-3-Stage---Flame": [
+     {
+      "name": "Stage/Flame.wav"
+     }
+    ],
+    "RSDK-3-Stage---Flap": [
+     {
+      "name": "Stage/Flap.wav"
+     }
+    ],
+    "RSDK-3-Stage---Flip": [
+     {
+      "name": "Stage/Flip.wav"
+     }
+    ],
+    "RSDK-3-Stage---GasPop": [
+     {
+      "name": "Stage/GasPop.wav"
+     }
+    ],
+    "RSDK-3-Stage---GoodFuture": [
+     {
+      "name": "Stage/GoodFuture.wav"
+     }
+    ],
+    "RSDK-3-Stage---HangPointRise": [
+     {
+      "name": "Stage/HangPointRise.wav"
+     }
+    ],
+    "RSDK-3-Stage---Hover4": [
+     {
+      "name": "Stage/Hover4.wav"
+     }
+    ],
+    "RSDK-3-Stage---Jump2": [
+     {
+      "name": "Stage/Jump2.wav"
+     }
+    ],
+    "RSDK-3-Stage---Landing": [
+     {
+      "name": "Stage/Landing.wav"
+     }
+    ],
+    "RSDK-3-Stage---LargeWall": [
+     {
+      "name": "Stage/LargeWall.wav"
+     }
+    ],
+    "RSDK-3-Stage---LedgeBreak": [
+     {
+      "name": "Stage/LedgeBreak.wav"
+     }
+    ],
+    "RSDK-3-Stage---LedgeBreak2": [
+     {
+      "name": "Stage/LedgeBreak2.wav"
+     }
+    ],
+    "RSDK-3-Stage---LightSlide": [
+     {
+      "name": "Stage/LightSlide.wav"
+     }
+    ],
+    "RSDK-3-Stage---PimPom": [
+     {
+      "name": "Stage/PimPom.wav"
+     }
+    ],
+    "RSDK-3-Stage---Pon": [
+     {
+      "name": "Stage/Pon.wav"
+     }
+    ],
+    "RSDK-3-Stage---Retract": [
+     {
+      "name": "Stage/Retract.wav"
+     }
+    ],
+    "RSDK-3-Stage---RumbleEnd": [
+     {
+      "name": "Stage/RumbleEnd.wav"
+     }
+    ],
+    "RSDK-3-Stage---Sega": [
+     {
+      "name": "Stage/Sega.wav"
+     }
+    ],
+    "RSDK-3-Stage---Sharp": [
+     {
+      "name": "Stage/Sharp.wav"
+     }
+    ],
+    "RSDK-3-Stage---SpeedBooster": [
+     {
+      "name": "Stage/SpeedBooster.wav"
+     }
+    ],
+    "RSDK-3-Stage---Tilt": [
+     {
+      "name": "Stage/Tilt.wav"
+     }
+    ],
+    "RSDK-3-Stage---TubeSpin": [
+     {
+      "name": "Stage/TubeSpin.wav"
+     }
+    ],
+    "RSDK-3-Stage---TubeTravel": [
+     {
+      "name": "Stage/TubeTravel.wav"
+     }
+    ],
+    "RSDK-3-Stage---Wall": [
+     {
+      "name": "Stage/Wall.wav"
+     }
+    ],
+    "RSDK-3-Stage---Waterfall2": [
+     {
+      "name": "Stage/Waterfall2.wav"
+     }
+    ],
+    "RSDK-3-Stage---WaterfallLoop": [
+     {
+      "name": "Stage/WaterfallLoop.wav"
+     }
+    ],
+    "RSDK-3-Stage---Wind": [
+     {
+      "name": "Stage/Wind.wav"
+     }
+    ],
+    "RSDK-3-Tube---Exit": [
+     {
+      "name": "Tube/Exit.wav"
+     }
+    ],
+    "RSDK-3-Tube---Spin": [
+     {
+      "name": "Tube/Spin.wav"
+     }
+    ],
+    "RSDK-3-Tube---Travel": [
+     {
+      "name": "Tube/Travel.wav"
+     }
+    ]
+   }
+  }
+ }
+}
