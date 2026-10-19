@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "extract": "tsx tools/extract.ts",
+    "detect": "tsx tools/rsdk-detect.ts",
     "inspect:sonic3": "tsx tools/inspect-rsdkv5.ts",
     "preview:sonic3": "tsx tools/preview-rsdkv5.ts",
     "simulate:sonic3": "tsx tools/simulate-rsdkv5.ts",

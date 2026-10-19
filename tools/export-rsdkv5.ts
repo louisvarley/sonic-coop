@@ -14,6 +14,8 @@ import { rsdkPathKey } from "../packages/engine/src/core/md5.js";
 import { readV5Level, type V5Sprite } from "../packages/engine/src/v5/level.js";
 import type { V5Object } from "../packages/engine/src/v5/gameplay.js";
 
+import { detectRsdkPacks, findPack } from "./rsdk-detect.js";
+
 export function exportV5AngelIsland(archive: RsdkV5Archive): Uint8Array {
   const game = readRsdkV5GameConfig(archive.read("Data/Game/GameConfig.bin"));
   const stage = loadRsdkV5Stage(archive, game, "Data/Stages/3K_AIZ1/Scene1.bin");
@@ -247,8 +249,11 @@ export function exportV5AngelIsland(archive: RsdkV5Archive): Uint8Array {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    const [source = "Sonic3ku.rsdk", out = path.join("data", "sonic3", "experimental.pak"), ...extra] = process.argv.slice(2);
+    const [given, out = path.join("data", "sonic3", "experimental.pak"), ...extra] = process.argv.slice(2);
     if (extra.length) throw new Error("usage: npm run export:sonic3 -- [archive] [output pack]");
+    const dir = process.env.RSDK_DIR ?? ".";
+    const source = given ?? findPack(detectRsdkPacks(dir), "sonic3")?.file;
+    if (!source) { console.warn(`no Sonic 3 .rsdk found in ${path.resolve(dir)}; skipping`); process.exit(0); }
     const bytes = exportV5AngelIsland(new RsdkV5Archive(fs.readFileSync(source)));
     fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
     fs.writeFileSync(out, bytes);

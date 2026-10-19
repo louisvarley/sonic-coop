@@ -1,8 +1,9 @@
 // Offline asset extraction. Run once (and again whenever a game's script patches change):
 //
-//   npm run extract -- [--source ../sonic] [--out data]
+//   npm run extract -- [--source <folder>] [--out data]     (source defaults to $RSDK_DIR, else the current folder)
 //
-// For each game it reads the user's own <game>-Data.rsdk from the read-only source folder, decrypts it, and writes:
+// Every *.rsdk in the source folder is identified by its contents (see rsdk-detect.ts), whatever it is called.
+// For each supported game it decrypts the user's own pack and writes:
 //   data/<game>/core.pak        everything the simulation and renderer need (stages, sprites, animations, scripts)
 //   data/<game>/audio/<key>.*   music and sound effects, fetched lazily by the browser
 //   data/<game>/manifest.json   what was extracted and from where
@@ -17,13 +18,14 @@ import { readRsdkIndex, decryptRsdkFile } from "./rsdk.js";
 import { writePak, type PakEntry } from "../packages/engine/src/core/pak.js";
 import { rsdkPathKey } from "../packages/engine/src/core/md5.js";
 import { applyPatches, type ScriptPatch } from "./patch.js";
+import { detectRsdkPacks, findPack } from "./rsdk-detect.js";
 
 const SCRIPTS_REPO = "https://github.com/RSDKModding/RSDKv4-Script-Decompilation";
 export const SCRIPTS_COMMIT = "67156e451d22e2f148ef9f2c91517dfa5103333a";
 
 const GAMES = [
-  { id: "sonic1", pack: "sonic1-Data.rsdk", scriptsDir: "Sonic 1/Scripts" },
-  { id: "sonic2", pack: "sonic2-Data.rsdk", scriptsDir: "Sonic 2/Scripts" },
+  { id: "sonic1", scriptsDir: "Sonic 1/Scripts" },
+  { id: "sonic2", scriptsDir: "Sonic 2/Scripts" },
 ] as const;
 
 function arg(name: string, def: string): string {
@@ -32,7 +34,7 @@ function arg(name: string, def: string): string {
 }
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const source = path.resolve(root, arg("source", "../sonic"));
+const source = path.resolve(root, arg("source", process.env.RSDK_DIR ?? "."));
 const out = path.resolve(root, arg("out", "data"));
 
 function fetchScripts(): string {
@@ -70,12 +72,15 @@ function kindOf(d: Uint8Array): "ogg" | "wav" | "png" | "other" {
 
 async function main() {
   const scriptsRoot = fetchScripts();
+  const detected = detectRsdkPacks(source);
+  for (const pack of detected) console.log(`found ${path.basename(pack.file)}: ${pack.game} (${pack.format})`);
   for (const game of GAMES) {
-    const packPath = path.join(source, game.pack);
-    if (!fs.existsSync(packPath)) {
-      console.warn(`skipping ${game.id}: ${packPath} not found`);
+    const found = findPack(detected, game.id);
+    if (!found) {
+      console.warn(`skipping ${game.id}: no ${game.id} .rsdk file found in ${source}`);
       continue;
     }
+    const packPath = found.file;
     const pack = new Uint8Array(fs.readFileSync(packPath));
     const index = readRsdkIndex(pack);
     const gameOut = path.join(out, game.id);
@@ -122,7 +127,7 @@ async function main() {
     fs.writeFileSync(path.join(gameOut, "core.pak"), writePak(entries));
     const manifest = {
       game: game.id,
-      source: game.pack,
+      source: path.basename(packPath),
       files: index.length,
       coreBytes: stats.core + scriptBytes,
       audioBytes: stats.audio,

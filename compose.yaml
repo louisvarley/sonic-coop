@@ -24,6 +24,19 @@ services:
       - "2567"
     stop_grace_period: 15s
 
+  # One-shot: finds every .rsdk in this folder (any file name), identifies it by content and extracts it into ./data.
+  #   docker compose run --rm extract
+  extract:
+    profiles: ["tools"]
+    image: node:22-bookworm
+    working_dir: /app
+    environment:
+      RSDK_DIR: /app
+    volumes:
+      - .:/app
+      - extract_node_modules:/app/node_modules
+    command: sh -c "npm ci --no-audit --no-fund && npx tsx tools/rsdk-detect.ts /app && npx tsx tools/extract.ts --out data && npx tsx tools/export-rsdkv5.ts"
+
   client:
     build:
       context: .
@@ -41,3 +54,6 @@ services:
     depends_on:
       server:
         condition: service_healthy
+
+volumes:
+  extract_node_modules:
