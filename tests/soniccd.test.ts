@@ -10,6 +10,7 @@ import { Client, type Room } from "colyseus.js";
 import { hasData, loadVfs, root } from "./helpers.js";
 import { GameSim3 } from "../packages/engine/src/v3/game.js";
 import type { Engine3 } from "../packages/engine/src/v3/engine.js";
+import { P2_ENTITY } from "../packages/engine/src/v3/object.js";
 import { SoftwareRenderer3 } from "../packages/engine/src/v3/render.js";
 import { captureState, stateHash, encodeDelta, applyDelta } from "../packages/engine/src/state.js";
 import { NetGame } from "../apps/client/src/net/netgame.js";
@@ -126,8 +127,27 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
       expect(sim.E.playerList[1].xpos).toBeGreaterThan(x1 + (100 << 16));
       expect(Array.from(sim.E.playerChars.slice(0, 2))).toEqual(chars.map((c) => c));
       expect(sim.E.playerList[0].animationFile).not.toBe(sim.E.playerList[1].animationFile);
+      sim.E.setCamera(0);
+      const player1CameraX = sim.E.xScrollOffset;
+      sim.E.setCamera(1);
+      expect(sim.E.cameraTarget).toBe(1);
+      expect(sim.E.xScrollOffset).toBeGreaterThan(player1CameraX);
+      sim.E.setCamera(0);
     });
   }
+
+  it("keeps player 2's camera when their character body is unavailable", () => {
+    const sim = newCD2([0, 1]);
+    sim.tick([0, 0]);
+    sim.viewCamera = 1;
+    sim.E.objectEntityList[P2_ENTITY].type = 0;
+    let renderedCamera = -1;
+    const renderer = new SoftwareRenderer3(424);
+    renderer.overlay = (E) => { renderedCamera = E.curCam; };
+    sim.E.draw = renderer;
+    sim.tick([0, 0]);
+    expect(renderedCamera).toBe(1);
+  });
 
   it("two players are deterministic and rejoin from a snapshot", () => {
     const a = newCD2([0, 1]);
@@ -229,6 +249,11 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
         expect(sy).toBeGreaterThan(0);
         expect(sy).toBeLessThan(240);
       }
+      E.setCamera(0);
+      const player1CameraX = E.xScrollOffset;
+      E.setCamera(1);
+      expect(E.cameraTarget).toBe(1);
+      expect(E.xScrollOffset).not.toBe(player1CameraX);
       E.setCamera(0);
     }
     await roomB.leave();

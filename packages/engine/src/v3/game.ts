@@ -14,7 +14,6 @@ import { ClearGraphicsData } from "./sprite.js";
 import { ClearAnimationData } from "./animation.js";
 import { SetActivePalette, LoadPalette } from "./palette.js";
 import { captureState, restoreState } from "../state.js";
-import { P2_ENTITY } from "./object.js";
 
 export class GameSim3 {
   readonly E: Engine3;
@@ -141,9 +140,7 @@ export class GameSim3 {
     switch (E.gameMode) {
       case C.ENGINE_MAINGAME:
         if (E.teleportCooldown > 0) E.teleportCooldown--;
-        // Data extracted before the 2-player patches has no body for player 2: spectate player 1 rather than an empty corner.
-        const view = this.viewCamera > 0 && E.objectEntityList[P2_ENTITY].type === 0 ? 0 : this.viewCamera;
-        ProcessStage(E, view);
+        ProcessStage(E, this.viewCamera);
         break;
       case C.ENGINE_ENTER_HIRESMODE:
       case C.ENGINE_EXIT_HIRESMODE:
