@@ -6,12 +6,17 @@
 
 import type { Engine } from "./engine.js";
 
+/** Any engine that registers its simulation state as typed arrays (the v4 and v3 engines). */
+export interface StateHolder {
+  readonly state: { name: string; arr: Int32Array | Uint16Array | Uint8Array | Int8Array | Uint32Array }[];
+}
+
 export interface StateLayout {
   size: number;
   parts: { name: string; offset: number; bytes: number }[];
 }
 
-export function stateLayout(E: Engine): StateLayout {
+export function stateLayout(E: StateHolder): StateLayout {
   let offset = 0;
   const parts = E.state.map(({ name, arr }) => {
     const p = { name, offset, bytes: arr.byteLength };
@@ -23,7 +28,7 @@ export function stateLayout(E: Engine): StateLayout {
 }
 
 /** Copy the engine state into `out` (allocated if missing). */
-export function captureState(E: Engine, out?: Uint8Array): Uint8Array {
+export function captureState(E: StateHolder, out?: Uint8Array): Uint8Array {
   const layout = (E as unknown as { _layout?: StateLayout })._layout ?? ((E as unknown as { _layout: StateLayout })._layout = stateLayout(E));
   const buf = out ?? new Uint8Array(layout.size);
   let o = 0;
@@ -34,7 +39,7 @@ export function captureState(E: Engine, out?: Uint8Array): Uint8Array {
   return buf;
 }
 
-export function restoreState(E: Engine, buf: Uint8Array): void {
+export function restoreState(E: StateHolder, buf: Uint8Array): void {
   let o = 0;
   for (const { arr } of E.state) {
     new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength).set(buf.subarray(o, o + arr.byteLength));

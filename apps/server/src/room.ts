@@ -6,8 +6,8 @@
 
 import { Room, type Client } from "@colyseus/core";
 import {
-  GameSim, captureState, encodeDelta, encodeSnapshot, decodeInput, decodeU32, isCharacterAvailable, makeRoomCode, KEYFRAME,
-  type GameEvent, type GameId, type LobbyState, type LobbyPlayer, type ClientLobbyMessage, type StartInfo, type ScriptHost,
+  createGameSim, captureState, encodeDelta, encodeSnapshot, decodeInput, decodeU32, isCharacterAvailable, makeRoomCode, KEYFRAME,
+  type AnyGameSim, type GameEvent, type GameId, type LobbyState, type LobbyPlayer, type ClientLobbyMessage, type StartInfo, type ScriptHost,
 } from "@ringlink/engine";
 import { availableGames, createSonic3Game, loadSonic3Pack, loadVfs, stageList } from "./gamedata.js";
 import type { V5Gameplay } from "../../../packages/engine/src/v5/gameplay.js";
@@ -36,7 +36,7 @@ interface Seat {
 export class CoopRoom extends Room {
   override maxClients = MAX_PLAYERS;
   private lobby!: LobbyState;
-  private sim: GameSim | null = null;
+  private sim: AnyGameSim | null = null;
   /** The Sonic 3 (RSDKv5) world, when that game is running instead of the script-engine sim. */
   private v5: V5Gameplay | null = null;
   private seats: (Seat | null)[] = [];
@@ -257,9 +257,9 @@ export class CoopRoom extends Room {
       if (this.lobby.game === "sonic3") {
         this.v5 = createSonic3Game();
       } else {
-        const sim = new GameSim(loadVfs(this.lobby.game), host, { headless: true, players: slots });
+        const sim = createGameSim(this.lobby.game, loadVfs(this.lobby.game), host, { headless: true, players: slots });
         sim.configurePlayers(characters);
-        sim.startStage(1, Math.min(this.lobby.startStage, sim.E.stageListCount[1] - 1));
+        sim.startStage(1, this.startListPos(sim));
         this.sim = sim;
       }
     } catch (e) {
@@ -275,6 +275,17 @@ export class CoopRoom extends Room {
     this.lobby.phase = "playing";
     this.broadcastLobby();
     this.startLoop();
+  }
+
+  /** The regular stage list position of the lobby's chosen level. */
+  private startListPos(sim: AnyGameSim): number {
+    let pos = this.lobby.startStage;
+    try {
+      pos = stageList(this.lobby.game)[pos]?.listPos ?? pos;
+    } catch {
+      /* no stage list: use the index */
+    }
+    return Math.max(0, Math.min(pos, sim.E.stageListCount[1] - 1));
   }
 
   private onInput(client: Client, bytes: Uint8Array): void {
@@ -409,7 +420,10 @@ export class CoopRoom extends Room {
   private onDev(client: Client, msg: { setStage?: number; restart?: boolean; teleport?: boolean }): void {
     if (!DEV_TOOLS || !this.sim) return;
     const sim = this.sim;
-    if (typeof msg.setStage === "number") sim.startStage(1, Math.max(0, Math.min(msg.setStage, sim.E.stageListCount[1] - 1)));
+    if (typeof msg.setStage === "number") {
+      const pos = stageList(this.lobby.game)[msg.setStage]?.listPos ?? msg.setStage;
+      sim.startStage(1, Math.max(0, Math.min(pos, sim.E.stageListCount[1] - 1)));
+    }
     if (msg.restart) sim.startStage(sim.E.activeStageList, sim.E.stageListPosition);
     if (msg.teleport) sim.emergencyTeleport();
     log("dev", `${this.lobby.code}: ${client.sessionId} ${JSON.stringify(msg)}`);

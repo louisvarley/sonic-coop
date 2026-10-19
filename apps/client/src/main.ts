@@ -19,8 +19,8 @@ let runner: GameRunner | Sonic3Runner | null = null;
 let reconnectToken = "";
 let leaving = false;
 
-const GAME_NAMES: Record<GameId, string> = { sonic1: "Sonic the Hedgehog", sonic2: "Sonic the Hedgehog 2", sonic3: "Sonic the Hedgehog 3 (experimental)" };
-const GAME_SHORT: Record<GameId, string> = { sonic1: "Sonic 1", sonic2: "Sonic 2", sonic3: "Sonic 3" };
+const GAME_NAMES: Record<GameId, string> = { sonic1: "Sonic the Hedgehog", sonic2: "Sonic the Hedgehog 2", sonic3: "Sonic the Hedgehog 3 (experimental)", soniccd: "Sonic the Hedgehog CD" };
+const GAME_SHORT: Record<GameId, string> = { sonic1: "Sonic 1", sonic2: "Sonic 2", sonic3: "Sonic 3", soniccd: "Sonic CD" };
 
 // Sprite art comes from PNGs that `npm run extract:ui` dumps out of the user's own game data; absent files just hide the art.
 function spr(game: "sonic1" | "sonic2", x: number, y: number, w: number, h: number, s: number): HTMLElement {
@@ -227,6 +227,7 @@ function renderLobby(): void {
 
   const games = el("div", { class: "choices" });
   const listed: GameId[] = ["sonic1", "sonic2"];
+  if (l.games?.includes("soniccd") || l.game === "soniccd") listed.push("soniccd");
   if (l.games?.includes("sonic3") || l.game === "sonic3") listed.push("sonic3");
   for (const g of listed) {
     const art = g === "sonic1" ? spr("sonic1", 258, 93, 224, 136, 0.5) : g === "sonic2" ? spr("sonic2", 258, 70, 240, 155, 0.45) : null;
@@ -295,7 +296,11 @@ function renderLobby(): void {
       l.message ? el("p", { class: "notice" }, l.message) : "",
       el("section", {}, el("h2", {}, "Game"), games),
       ...stageSection,
-      el("section", {}, el("h2", {}, "Your character"), chars, l.game === "sonic3" ? el("p", { class: "hint" }, "Sonic 3 is experimental: player 1 is Sonic and player 2 is Tails.") : ""),
+      el("section", {}, el("h2", {}, "Your character"), chars, l.game === "sonic3"
+        ? el("p", { class: "hint" }, "Sonic 3 is experimental: player 1 is Sonic and player 2 is Tails.")
+        : l.game === "soniccd"
+          ? el("p", { class: "hint" }, "Sonic CD is single-player: player 1 plays and everyone else watches.")
+          : ""),
       el("section", {}, el("h2", {}, "Players"), list),
       ...extras,
       el("div", { class: "row actions" }, readyBtn, startBtn, leaveBtn),

@@ -1,11 +1,15 @@
 export { Engine, MAX_PLAYERS, CAM_STRIDE, CAM_INDEX } from "./engine.js";
 export { GameSim, type GameEvent, type GameOptions } from "./game.js";
+export { GameSim3 } from "./v3/game.js";
+export { Engine3, CAM3_STRIDE, CAM3_INDEX } from "./v3/engine.js";
+export { createGameSim, type AnyGameSim } from "./sim.js";
 export { Vfs, writePak } from "./core/pak.js";
 export { rsdkPathKey } from "./core/md5.js";
 export { nullHost, type ScriptHost } from "./host.js";
 export { BTN } from "./input.js";
 export * from "./state.js";
 export { SoftwareRenderer, RGB565_TO_ABGR } from "./render/drawing.js";
+export { SoftwareRenderer3 } from "./v3/render.js";
 export * from "./net/protocol.js";
 export { V5CollisionWorld, type V5CollisionMask, type V5CollisionLayer, type V5CollisionHit, type V5Surface } from "./v5/collision.js";
 export { V5Movement, type V5MovementState, type V5PlayerState } from "./v5/movement.js";
