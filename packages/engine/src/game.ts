@@ -172,7 +172,9 @@ export class GameSim {
             break;
           }
         }
-        ProcessStage(E, this.viewCamera);
+        // Sky Chase, Wing Fortress and Death Egg have no second player body; spectate player 1 there.
+        const body = E.objectEntityList[this.viewCamera];
+        ProcessStage(E, body && E.typeNames[body.type] === "BlankObject" ? 0 : this.viewCamera);
         break;
       case ENGINE_INITPAUSE:
         // The single-player pause menu is a native object in the original; in online co-op the world keeps running.

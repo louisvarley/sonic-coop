@@ -149,7 +149,7 @@ function showHome(message?: string): void {
       "main",
       { class: "home" },
       el("h1", { class: "logo" }, el("span", { class: "ring" }), spr("sonic1", 258, 93, 224, 136, 0.75), "Sonic Coop"),
-      el("p", { class: "tagline" }, "Sonic 1, 2 and 3, together online."),
+      el("p", { class: "tagline" }, "Sonic 1, 2, 3 and CD, together online."),
       el("label", { class: "field" }, el("span", {}, "Name"), nameInput),
       el("div", { class: "card" }, el("h2", {}, "Host"), el("p", {}, "Start a lobby and send the invite link to a friend."), createBtn),
       el("div", { class: "card" }, el("h2", {}, "Join"), el("div", { class: "row" }, codeInput, joinBtn)),
@@ -304,7 +304,7 @@ function renderLobby(): void {
       el("section", {}, el("h2", {}, "Your character"), chars, l.game === "sonic3"
         ? el("p", { class: "hint" }, "Sonic 3 is experimental: player 1 is Sonic and player 2 is Tails.")
         : l.game === "soniccd"
-          ? el("p", { class: "hint" }, "Sonic CD is single-player: player 1 plays and everyone else watches.")
+          ? el("p", { class: "hint" }, "Sonic CD supports co-op: each player controls their own character.")
           : ""),
       el("section", {}, el("h2", {}, "Players"), list),
       ...extras,

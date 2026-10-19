@@ -25,7 +25,7 @@ used. App packages (`.apk`, `.ipa`, `.xapk`) can be copied in whole: the data pa
 | ------------------ | -------------------------- | -------------------------------------- | ----------------------------------------------------------- |
 | Sonic 1            | Playable                   | Data pack (audio included)             | `Sonic1u.rsdk` + `STH1_music.acb`, `STH1_music.awb`, `STH1_sfx.acb` |
 | Sonic 2            | Playable                   | Data pack (audio included)             | `Sonic2u.rsdk` + `STH2_music.acb`, `STH2_music.awb`, `STH2_sfx.acb`, `STH1_music.acb`, `STH1_music.awb` |
-| Sonic CD           | Playable (Origins pack)    | Detected, not extracted yet            | `SonicCDu.rsdk` + `SCD_music.acb`, `SCD_music.awb`, `SCD_sfx.acb` |
+| Sonic CD           | Playable co-op             | Detected, not extracted yet            | `SonicCDu.rsdk` + `SCD_music.acb`, `SCD_music.awb`, `SCD_sfx.acb` |
 | Sonic 3 & Knuckles | Experimental (see below)   | –                                      | `Sonic3ku.rsdk` (+ `Music03_S3K.acb`, `Music03_S3K.awb`, `STH3_sfx.acb`) |
 
 Optional for Origins: `HITE_sfx.acb`, the SEGA logo chime shared by Sonic 1, 2 and CD.
@@ -85,5 +85,5 @@ matches the original engine frame for frame on every stage (checked with `tools/
 of the decompilation).
 
 - Use the Origins pack. The 2011 mobile and Steam packs are recognised but their file encryption is not implemented.
-- Sonic CD is single-player: player 1 plays Sonic or Tails and anyone else in the room watches. Knuckles and Amy are
-  only spawned by the scripts' Origins-runtime code, which this project doesn't provide.
+- Sonic CD supports two-player online co-op: each player controls Sonic or Tails in the same world. Knuckles and Amy
+  are only spawned by the scripts' Origins-runtime code, which this project doesn't provide.

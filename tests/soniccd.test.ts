@@ -220,6 +220,17 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
       expect(xa).toBeGreaterThan(100);
       expect(Math.abs(xa - xb)).toBeLessThan(8);
     }
+    for (const E of [Ea, Eb]) {
+      for (const c of [0, 1]) {
+        E.setCamera(c);
+        const sx = (E.playerList[c].xpos >> 16) - E.xScrollOffset, sy = (E.playerList[c].ypos >> 16) - E.yScrollOffset;
+        expect(sx).toBeGreaterThan(0);
+        expect(sx).toBeLessThan(424);
+        expect(sy).toBeGreaterThan(0);
+        expect(sy).toBeLessThan(240);
+      }
+      E.setCamera(0);
+    }
     await roomB.leave();
     await roomA.leave();
   });
