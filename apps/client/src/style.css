@@ -52,10 +52,6 @@ h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: v
   animation: ring-spin 1.4s steps(6) infinite; }
 @keyframes ring-spin { 0% { transform: scaleX(1); } 50% { transform: scaleX(0.25); } 100% { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .logo .ring { animation: none; } }
-.spr { display: none; flex: none; background-repeat: no-repeat; image-rendering: pixelated; }
-.has-sprites .spr { display: block; }
-.has-sprites .logo .ring { display: none; }
-.has-sprites .choice .spr { align-self: center; margin-bottom: 4px; }
 .tagline { color: var(--text); margin: -6px 0 6px; text-shadow: 2px 2px 0 var(--ink); }
 
 /* panels */

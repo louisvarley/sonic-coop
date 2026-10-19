@@ -10,7 +10,6 @@ import { Client, type Room } from "colyseus.js";
 import { hasData, loadVfs, root } from "./helpers.js";
 import { GameSim3 } from "../packages/engine/src/v3/game.js";
 import type { Engine3 } from "../packages/engine/src/v3/engine.js";
-import { P2_ENTITY } from "../packages/engine/src/v3/object.js";
 import { SoftwareRenderer3 } from "../packages/engine/src/v3/render.js";
 import { captureState, stateHash, encodeDelta, applyDelta } from "../packages/engine/src/state.js";
 import { NetGame } from "../apps/client/src/net/netgame.js";
@@ -127,6 +126,8 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
       expect(sim.E.playerList[1].xpos).toBeGreaterThan(x1 + (100 << 16));
       expect(Array.from(sim.E.playerChars.slice(0, 2))).toEqual(chars.map((c) => c));
       expect(sim.E.playerList[0].animationFile).not.toBe(sim.E.playerList[1].animationFile);
+      expect(sim.E.typeNames[sim.E.objectEntityList[sim.E.playerList[1].boundEntity].type]).toBe("PlayerObject");
+      expect(sim.E.playerList[1].visible).toBe(1);
       sim.E.setCamera(0);
       const player1CameraX = sim.E.xScrollOffset;
       sim.E.setCamera(1);
@@ -136,17 +137,24 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
     });
   }
 
-  it("keeps player 2's camera when their character body is unavailable", () => {
-    const sim = newCD2([0, 1]);
-    sim.tick([0, 0]);
-    sim.viewCamera = 1;
-    sim.E.objectEntityList[P2_ENTITY].type = 0;
-    let renderedCamera = -1;
+  it("draws player 2's character in player 2's view", () => {
+    const sim = new GameSim3(loadVfs("soniccd"), nullHost, { headless: false, players: 2 });
+    sim.configurePlayers([0, 1]);
+    sim.startStage(1, 0);
     const renderer = new SoftwareRenderer3(424);
-    renderer.overlay = (E) => { renderedCamera = E.curCam; };
+    const playerDraws: { slot: number; x: number; y: number }[] = [];
+    const drawAnimation = renderer.DrawObjectAnimation.bind(renderer);
+    renderer.DrawObjectAnimation = (E, script, entity, x, y) => {
+      if (entity.slot === 5) playerDraws.push({ slot: entity.slot, x, y });
+      drawAnimation(E, script, entity, x, y);
+    };
     sim.E.draw = renderer;
-    sim.tick([0, 0]);
-    expect(renderedCamera).toBe(1);
+    sim.viewCamera = 1;
+    for (let f = 0; f < 260; f++) sim.tick([0, f < 60 ? 0 : BTN.RIGHT]);
+    const player2 = sim.E.playerList[1];
+    expect(sim.E.typeNames[sim.E.objectEntityList[player2.boundEntity].type]).toBe("PlayerObject");
+    expect(playerDraws.length).toBeGreaterThan(0);
+    expect(playerDraws[playerDraws.length - 1]).toMatchObject({ slot: 5, x: player2.screenXPos, y: player2.screenYPos });
   });
 
   it("two players are deterministic and rejoin from a snapshot", () => {
@@ -211,8 +219,18 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
     expect(startA!.characters[0]).toBe(1);
 
     const gameA = new NetGame(roomA, loadVfs("soniccd"), nullHost, startA!, { headless: true });
-    const gameB = new NetGame(roomB, loadVfs("soniccd"), nullHost, startB!, { headless: true });
+    const gameB = new NetGame(roomB, loadVfs("soniccd"), nullHost, startB!, { headless: false });
     expect(gameB.sim.viewCamera).toBe(1);
+    const simB = gameB.sim;
+    if (!(simB instanceof GameSim3)) throw new Error("Sonic CD did not create an RSDKv3 game");
+    const rendererB = new SoftwareRenderer3(424);
+    let player2Draws = 0;
+    const drawAnimation = rendererB.DrawObjectAnimation.bind(rendererB);
+    rendererB.DrawObjectAnimation = (E, scriptInfo, entity, x, y) => {
+      if (entity.slot === simB.E.playerList[1].boundEntity) player2Draws++;
+      drawAnimation(E, scriptInfo, entity, x, y);
+    };
+    simB.E.draw = rendererB;
     for (const [room, game] of [[roomA, gameA], [roomB, gameB]] as const) {
       room.onMessage("snap", (bytes: Uint8Array) => game.onSnapshot(bytes));
       room.onMessage("event", () => {});
@@ -234,6 +252,8 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
 
     expect(gameA.sim.E.playerListPos).toBe(gameA.sim.global("PLAYER_TAILS"));
     const Ea = gameA.sim.E as Engine3, Eb = gameB.sim.E as Engine3;
+    expect(Eb.typeNames[Eb.objectEntityList[Eb.playerList[1].boundEntity].type]).toBe("PlayerObject");
+    expect(player2Draws).toBeGreaterThan(0);
     expect(Array.from(Ea.playerChars.slice(0, 2))).toEqual(startA!.characters.map((c) => (gameA.sim as GameSim3).playerListPosOf(c)));
     for (const p of [0, 1]) {
       const xa = Ea.playerList[p].xpos >> 16, xb = Eb.playerList[p].xpos >> 16;
