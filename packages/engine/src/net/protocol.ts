@@ -19,8 +19,7 @@ export const CHARACTERS = [
 ] as const;
 
 export function isCharacterAvailable(game: GameId, id: number): boolean {
-  // Sonic 3 seats are fixed: player 1 is Sonic, player 2 is Tails. Sonic CD's standalone scripts know Sonic and Tails
-  // (Knuckles and Amy exist only in its Origins-platform code, which needs the Origins runtime).
+  // Sonic 3 seats are fixed: player 1 is Sonic, player 2 is Tails. Sonic CD's scripts only implement Sonic and Tails.
   return CHARACTERS.some((character) => character.id === id && (game === "sonic2" || id < 2));
 }
 

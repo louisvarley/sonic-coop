@@ -105,6 +105,43 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
     applyDelta(rebuilt, encodeDelta(base, next));
     expect(rebuilt).toEqual(next);
   });
+
+  const newCD2 = (chars: number[]) => {
+    const sim = new GameSim3(loadVfs("soniccd"), nullHost, { headless: true, players: 2 });
+    sim.configurePlayers(chars);
+    sim.startStage(1, 0);
+    return sim;
+  };
+
+  for (const [name, chars] of [["Sonic and Tails", [0, 1]], ["Tails and Sonic", [1, 0]]] as const) {
+    it(`two players (${name}) are driven by their own pads`, () => {
+      const sim = newCD2([...chars]);
+      for (let f = 0; f < 60; f++) sim.tick([0, 0]);
+      expect(sim.E.compiler.errors).toEqual([]);
+      const [x0, x1] = [sim.E.playerList[0].xpos, sim.E.playerList[1].xpos];
+      for (let f = 0; f < 200; f++) sim.tick([BTN.RIGHT, 0]);
+      expect(sim.E.playerList[0].xpos).toBeGreaterThan(x0 + (100 << 16));
+      expect(sim.E.playerList[1].xpos).toBe(x1);
+      for (let f = 0; f < 200; f++) sim.tick([0, BTN.RIGHT]);
+      expect(sim.E.playerList[1].xpos).toBeGreaterThan(x1 + (100 << 16));
+      expect(Array.from(sim.E.playerChars.slice(0, 2))).toEqual(chars.map((c) => c));
+      expect(sim.E.playerList[0].animationFile).not.toBe(sim.E.playerList[1].animationFile);
+    });
+  }
+
+  it("two players are deterministic and rejoin from a snapshot", () => {
+    const a = newCD2([0, 1]);
+    const pad = (f: number) => [script(f), f % 120 < 60 ? BTN.RIGHT : BTN.LEFT];
+    for (let f = 0; f < 300; f++) a.tick(pad(f));
+    const b = new GameSim3(loadVfs("soniccd"), nullHost, { headless: true, players: 2 });
+    b.configurePlayers([0, 1]);
+    expect(b.applyState(captureState(a.E))).toBe(true);
+    for (let f = 300; f < 600; f++) {
+      a.tick(pad(f));
+      b.tick(pad(f));
+    }
+    expect(stateHash(captureState(b.E))).toBe(stateHash(captureState(a.E)));
+  });
 });
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -133,7 +170,7 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
     await server.gracefullyShutdown(false);
   });
 
-  it("player 1 plays Tails and player 2 watches the same world", async () => {
+  it("player 1 and player 2 both play in the same world", async () => {
     const roomA: Room = await new Client(endpoint).create("coop", { name: "Host" });
     let lobby: LobbyState | null = null;
     roomA.onMessage("lobby", (l: LobbyState) => (lobby = l));
@@ -155,7 +192,7 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
 
     const gameA = new NetGame(roomA, loadVfs("soniccd"), nullHost, startA!, { headless: true });
     const gameB = new NetGame(roomB, loadVfs("soniccd"), nullHost, startB!, { headless: true });
-    expect(gameB.sim.viewCamera).toBe(0);
+    expect(gameB.sim.viewCamera).toBe(1);
     for (const [room, game] of [[roomA, gameA], [roomB, gameB]] as const) {
       room.onMessage("snap", (bytes: Uint8Array) => game.onSnapshot(bytes));
       room.onMessage("event", () => {});
@@ -165,7 +202,7 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
 
     for (let f = 0; f < 360; f++) {
       gameA.step(script(f));
-      gameB.step(BTN.LEFT); // ignored: the spectator drives nothing
+      gameB.step(f < 120 ? 0 : BTN.RIGHT);
       await wait(1000 / 60);
     }
     for (let f = 0; f < 30; f++) {
@@ -177,9 +214,12 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD online", () => {
 
     expect(gameA.sim.E.playerListPos).toBe(gameA.sim.global("PLAYER_TAILS"));
     const Ea = gameA.sim.E as Engine3, Eb = gameB.sim.E as Engine3;
-    const xa = Ea.playerList[0].xpos >> 16, xb = Eb.playerList[0].xpos >> 16;
-    expect(xa).toBeGreaterThan(300);
-    expect(Math.abs(xa - xb)).toBeLessThan(8);
+    expect(Array.from(Ea.playerChars.slice(0, 2))).toEqual(startA!.characters.map((c) => (gameA.sim as GameSim3).playerListPosOf(c)));
+    for (const p of [0, 1]) {
+      const xa = Ea.playerList[p].xpos >> 16, xb = Eb.playerList[p].xpos >> 16;
+      expect(xa).toBeGreaterThan(100);
+      expect(Math.abs(xa - xb)).toBeLessThan(8);
+    }
     await roomB.leave();
     await roomA.leave();
   });

@@ -92,7 +92,7 @@ export function EngineCallback(E: Engine3, callbackID: number): void {
       SetGlobalVariableByName(E, "RewardAdCallback", 1);
       break;
     case CALLBACK_SET1P:
-      E.activePlayerCount = 1;
+      E.activePlayerCount = E.playerSlots > 1 ? E.playerSlots : 1;
       break;
     case CALLBACK_SET2P:
       E.activePlayerCount = 2;

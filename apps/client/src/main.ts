@@ -95,9 +95,14 @@ function showHome(message?: string): void {
   history.replaceState(null, "", location.pathname + (invite && !message ? `?room=${invite}` : ""));
   const nameInput = el("input", { id: "name", maxlength: "16", placeholder: "Your name", autocomplete: "nickname" });
   nameInput.value = playerName();
-  const codeInput = el("input", { id: "code", maxlength: "4", placeholder: "CODE", autocomplete: "off", spellcheck: "false" });
+  const codeInput = el("input", { id: "code", placeholder: "CODE", autocomplete: "off", spellcheck: "false" });
   codeInput.value = invite.toUpperCase();
-  codeInput.addEventListener("input", () => (codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z]/g, "")));
+  // Accepts a bare code or a pasted invite link
+  const cleanCode = (text: string) => {
+    const fromLink = /[?&]room=([A-Za-z]+)/.exec(text);
+    return (fromLink ? fromLink[1] : text).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  };
+  codeInput.addEventListener("input", () => (codeInput.value = cleanCode(codeInput.value)));
   const createBtn = el("button", { class: "primary" }, "Create a lobby");
   const joinBtn = el("button", {}, "Join");
   const status = el("p", { class: "status" }, message ?? "");
@@ -117,7 +122,7 @@ function showHome(message?: string): void {
     }
   };
   const join = async () => {
-    const code = codeInput.value.trim().toUpperCase();
+    const code = cleanCode(codeInput.value);
     if (code.length !== 4) {
       status.textContent = "Room codes have four letters.";
       return;

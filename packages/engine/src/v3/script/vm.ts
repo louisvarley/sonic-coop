@@ -175,7 +175,7 @@ function getVar(E: Engine3, id: number, arrayVal: number): number {
     case VAR.STAGEWATERLEVEL: return E.waterLevel;
     case VAR.STAGEACTIVELAYER: return E.activeTileLayers[arrayVal];
     case VAR.STAGEMIDPOINT: return E.tLayerMidPoint;
-    case VAR.STAGEPLAYERLISTPOS: return E.playerListPos;
+    case VAR.STAGEPLAYERLISTPOS: return E.playerSlots > 1 ? E.playerChars[E.activePlayer] : E.playerListPos;
     case VAR.STAGEACTIVEPLAYER: return E.activePlayer;
     case VAR.SCREENCAMERAENABLED: return E.cameraEnabled;
     case VAR.SCREENCAMERATARGET: return E.cameraTarget;
@@ -249,6 +249,7 @@ function getVar(E: Engine3, id: number, arrayVal: number): number {
     case VAR.ENGINETRIALMODE: return 0;
     case VAR.KEYPRESSANYSTART: return E.anyPress;
     case VAR.ENGINEHAPTICSENABLED: return E.hapticsEnabled;
+    case VAR.STAGEPLAYERCOUNT: return E.playerSlots;
     default: return 0;
   }
 }
@@ -379,7 +380,10 @@ function setVar(E: Engine3, id: number, arrayVal: number, value: number): void {
     case VAR.STAGEWATERLEVEL: E.waterLevel = value; return;
     case VAR.STAGEACTIVELAYER: E.activeTileLayers[arrayVal] = value; return;
     case VAR.STAGEMIDPOINT: E.tLayerMidPoint = value; return;
-    case VAR.STAGEPLAYERLISTPOS: E.playerListPos = value; return;
+    case VAR.STAGEPLAYERLISTPOS:
+      if (E.playerSlots <= 1 || E.activePlayer === 0) E.playerListPos = value;
+      if (E.playerSlots > 1) E.playerChars[E.activePlayer] = value;
+      return;
     case VAR.STAGEACTIVEPLAYER:
       E.activePlayer = value;
       if (E.activePlayer > E.activePlayerCount) E.activePlayer = 0;

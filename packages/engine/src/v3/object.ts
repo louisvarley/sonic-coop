@@ -57,13 +57,31 @@ function isActive(E: Engine3, objectLoop: number): boolean {
   return inBounds;
 }
 
+/** Entity slots of the second player and their Tails' tail (the first player's are 0 and 1). */
+export const P2_ENTITY = 5;
+export const P2_TAIL_ENTITY = 6;
+
+/** The player an entity belongs to (its scripts' Player.* refer to that player). */
+export function playerOfEntity(E: Engine3, slot: number): number {
+  return E.playerSlots > 1 && (slot === P2_ENTITY || slot === P2_TAIL_ENTITY) ? 1 : 0;
+}
+
+/** Players of different characters load different animation files, so a player's own entity draws with its player's. */
+export function bindPlayerAnimation(E: Engine3, slot: number, type: number): void {
+  if (E.playerSlots <= 1) return;
+  const p = E.playerList[playerOfEntity(E, slot)];
+  if (p.boundEntity !== slot || E.typeNames[type] !== "PlayerObject") return;
+  E.objectScriptList[type].animFile = E.animationFileList[p.animationFile];
+}
+
 /**
- * The camera an object's scripts see (co-op): a player's own camera for player slots, player 1's for always-active
+ * The camera an object's scripts see (co-op): a player's own camera for their entities, player 1's for always-active
  * controllers (StageSetup, the HUD), otherwise the nearest camera. Always camera 0 with one player.
  */
 export function cameraForEntity(E: Engine3, slot: number): number {
   if (E.camCount <= 1) return 0;
-  if (slot < E.camCount) return slot;
+  if (slot === 0 || slot === 1) return 0;
+  if (slot === P2_ENTITY || slot === P2_TAIL_ENTITY) return 1;
   const ent = E.objectEntityList[slot];
   if (ent.priority === C.PRIORITY_ACTIVE || ent.priority === C.PRIORITY_ALWAYS) return 0;
   const x = ent.xpos >> 16, y = ent.ypos >> 16;
@@ -84,9 +102,12 @@ function runObject(E: Engine3, objectLoop: number, playerCount: number): void {
   const entity = E.objectEntityList[objectLoop];
   const scriptInfo = E.objectScriptList[entity.type];
   E.setCamera(cameraForEntity(E, objectLoop));
-  E.activePlayer = 0;
+  const own = playerOfEntity(E, objectLoop);
+  bindPlayerAnimation(E, objectLoop, entity.type);
+  E.activePlayer = own;
   if (hasCode(E, scriptInfo.subMain.scriptCodePtr)) ProcessScript(E, scriptInfo.subMain.scriptCodePtr, scriptInfo.subMain.jumpTablePtr, C.SUB_MAIN);
   if (hasCode(E, scriptInfo.subPlayerInteraction.scriptCodePtr)) {
+    E.activePlayer = 0;
     while (E.activePlayer < playerCount) {
       if (E.playerList[E.activePlayer].objectInteractions)
         ProcessScript(E, scriptInfo.subPlayerInteraction.scriptCodePtr, scriptInfo.subPlayerInteraction.jumpTablePtr, C.SUB_PLAYERINTERACTION);

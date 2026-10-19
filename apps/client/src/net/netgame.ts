@@ -63,7 +63,7 @@ export class NetGame {
     this.slot = info.slot;
     this.sim = createGameSim(info.game, vfs, this.host, { headless: opts.headless, players: info.characters.length });
     this.sim.configurePlayers(info.characters);
-    // a seat beyond the players the game drives (Sonic CD is one player) watches player 1
+    // a spectator beyond the players the game drives watches player 1
     this.sim.viewCamera = info.slot < this.sim.E.playerSlots ? info.slot : 0;
     this.remotePads = new Array(info.characters.length).fill(0);
   }

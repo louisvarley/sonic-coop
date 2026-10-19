@@ -50,6 +50,7 @@ export const VARIABLE_NAMES = [
   "Engine.State", "Stage.DebugMode", "Engine.Message", "SaveRAM", "Engine.Language", "Object.SpriteSheet",
   "Engine.OnlineActive", "Engine.FrameSkipTimer", "Engine.FrameSkipSetting", "Engine.SFXVolume", "Engine.BGMVolume",
   "Engine.PlatformID", "Engine.TrialMode", "KeyPress.AnyStart", "Engine.HapticsEnabled",
+  "Stage.PlayerCount",
 ];
 
 export const FUNCTIONS: [string, number][] = [

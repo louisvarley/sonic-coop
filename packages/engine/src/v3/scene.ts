@@ -11,7 +11,7 @@ import { SetActivePalette, SetPaletteEntry, LoadPalette } from "./palette.js";
 import { ClearGraphicsData, RemoveGraphicsFile } from "./sprite.js";
 import { ClearAnimationData } from "./animation.js";
 import { ReadGifPictureData } from "../sprite.js";
-import { ProcessObjects, ProcessPausedObjects, ProcessStartupObjects, SetObjectTypeName, cameraForEntity } from "./object.js";
+import { ProcessObjects, ProcessPausedObjects, ProcessStartupObjects, SetObjectTypeName, cameraForEntity, playerOfEntity, bindPlayerAnimation } from "./object.js";
 import { ProcessScript, PauseSound, ResumeSound } from "./script/vm.js";
 import { ResetCollisionStorage } from "./collision.js";
 import { ConvertStringToInteger3 } from "./script/compiler.js";
@@ -778,6 +778,16 @@ export function SetPlayerLockedScreenPosition(E: Engine3, player: Player3): void
 
 function updateCameras(E: Engine3): void {
   const n = Math.max(1, E.camCount);
+  // The stage scripts drive camera 0 only; the other players' cameras follow their player in the same style.
+  for (let c = 1; c < n; c++) {
+    E.setCamera(0);
+    const style = E.cameraStyle, lag = E.cameraLag, lagStyle = E.cameraLagStyle;
+    E.setCamera(c);
+    E.cameraTarget = c;
+    E.cameraStyle = style;
+    E.cameraLag = lag;
+    E.cameraLagStyle = lagStyle;
+  }
   for (let c = 0; c < n; c++) {
     E.setCamera(c);
     if (E.cameraTarget <= -1) continue;
@@ -880,8 +890,9 @@ export function DrawObjectList(E: Engine3, list: number, camera: number | null):
     E.objectLoop = l.entityRefs[i];
     const type = E.objectEntityList[E.objectLoop].type;
     if (!type) continue;
-    E.activePlayer = 0;
+    E.activePlayer = playerOfEntity(E, E.objectLoop);
     const s = E.objectScriptList[type];
+    bindPlayerAnimation(E, E.objectLoop, type);
     if (E.scriptCode[s.subDraw.scriptCodePtr] > 0) {
       E.setCamera(camera ?? cameraForEntity(E, E.objectLoop));
       ProcessScript(E, s.subDraw.scriptCodePtr, s.subDraw.jumpTablePtr, C.SUB_DRAW);

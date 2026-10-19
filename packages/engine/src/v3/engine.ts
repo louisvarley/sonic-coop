@@ -274,6 +274,8 @@ export class Engine3 {
   readonly inputPrev = new Int32Array(MAX_PLAYERS3);
   /** Number of human players driving player slots 0..playerSlots-1. */
   playerSlots = 1;
+  /** Stage.PlayerListPos of each player (only consulted with more than one player). */
+  readonly playerChars = new Int32Array(MAX_PLAYERS3);
 
   readonly gameMenu = [new TextMenu(), new TextMenu()];
   readonly fontCharacterList = newFontList();
@@ -340,6 +342,7 @@ export class Engine3 {
     reg("cams", this.cams);
     reg("entities", this.entityBuffer);
     reg("players", this.playerBuffer);
+    reg("playerChars", this.playerChars);
     this.drawListEntries.forEach((l, i) => { reg(`draw${i}.n`, l.n); reg(`draw${i}`, l.entityRefs); });
     reg("operands", this.operands);
     reg("temp", this.tempValue);

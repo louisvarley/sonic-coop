@@ -51,13 +51,16 @@ export class GameSim3 {
   }
 
   /**
-   * Set up a new game as the title screen's "no save" start does (characters[0]: 0 Sonic, 1 Tails; Knuckles and Amy
-   * are only spawned by the Use_Origins script platform). Sonic CD's scripts drive one player, so only player 1 plays; anyone else in the room watches their
-   * camera. Call before startStage.
+   * Set up a new game as the title screen's "no save" start does (characters: 0 Sonic, 1 Tails, 2 Knuckles; Amy is
+   * only spawned by the Use_Origins script platform). Up to two players play; any others in the room watch a camera.
+   * Call before startStage.
    */
   configurePlayers(characters: number[], lives = 3): void {
-    this.setPlayers(1);
-    this.playerListPos = this.playerListPosOf(characters[0] ?? 0);
+    this.setPlayers(Math.min(MAX_PLAYERS3, Math.max(1, characters.length)));
+    const E = this.E;
+    E.playerChars.fill(0);
+    for (let p = 0; p < MAX_PLAYERS3; p++) E.playerChars[p] = this.playerListPosOf(characters[p] ?? characters[0] ?? 0);
+    this.playerListPos = E.playerChars[0];
     this.setGlobal("Options.GameMode", 0); // MODE_NOSAVE
     this.setGlobal("Options.AttractMode", 0);
     this.setGlobal("Player.Score", 0);
