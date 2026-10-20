@@ -7,7 +7,7 @@ import { WebSocketTransport } from "@colyseus/ws-transport";
 import { Client, type Room } from "colyseus.js";
 import { hasData, loadVfs, root } from "./helpers.js";
 import { NetGame } from "../apps/client/src/net/netgame.js";
-import { BTN, nullHost, type LobbyState, type StartInfo } from "../packages/engine/src/index.js";
+import { BTN, nullHost, type ChatMessage, type GameEvent, type LobbyState, type StartInfo } from "../packages/engine/src/index.js";
 
 process.env.DATA_DIR = `${root}/data`;
 const { CoopRoom } = await import("../apps/server/src/room.js");
@@ -57,6 +57,11 @@ describe.skipIf(!hasData("sonic2"))("online co-op", () => {
     await expect(new Client(endpoint).joinById("ZZZZ", { name: "Eve" })).rejects.toThrow();
 
     roomA.send("lobby", { setGame: "sonic2" });
+    // only the host sets the options
+    roomB.send("lobby", { setSettings: { infiniteLives: false } });
+    roomA.send("lobby", { setSettings: { tailsFlight: false, respawn: "partner" } });
+    await until(() => lobbyB?.settings.tailsFlight === false);
+    expect(lobbyB!.settings).toMatchObject({ infiniteLives: true, tailsFlight: false, respawn: "partner" });
     roomA.send("lobby", { setCharacter: 0 });
     roomB.send("lobby", { setCharacter: 2 });
     let startA: StartInfo | null = null, startB: StartInfo | null = null;
@@ -70,16 +75,20 @@ describe.skipIf(!hasData("sonic2"))("online co-op", () => {
     expect(startA!.slot).toBe(0);
     expect(startB!.slot).toBe(1);
     expect(startB!.characters).toEqual([0, 2]);
+    expect(startB!.settings).toMatchObject({ tailsFlight: false, respawn: "partner" });
 
     const gameA = new NetGame(roomA, loadVfs("sonic2"), nullHost, startA!, { headless: true });
     const gameB = new NetGame(roomB, loadVfs("sonic2"), nullHost, startB!, { headless: true });
     roomA.onMessage("snap", (bytes: Uint8Array) => gameA.onSnapshot(bytes));
     roomB.onMessage("snap", (bytes: Uint8Array) => gameB.onSnapshot(bytes));
+    const eventsB: GameEvent[] = [];
     roomA.onMessage("event", () => {});
-    roomB.onMessage("event", () => {});
+    roomB.onMessage("event", (e: GameEvent) => eventsB.push(e));
     roomA.send("loaded");
     roomB.send("loaded");
     await until(() => gameA.started && gameB.started);
+    expect(gameB.sim.global("coop.tailsFlight")).toBe(0);
+    expect(gameB.sim.global("coop.respawnRule")).toBe(0);
 
     const tickBeforeBacklog = gameB.sim.E.tick;
     for (let f = 0; f < 60; f++) gameB.step(0);
@@ -110,11 +119,81 @@ describe.skipIf(!hasData("sonic2"))("online co-op", () => {
     expect(pa[1].values[0]).toBe(pb[1].values[0]);
     expect(gameA.stats.snapshots).toBeGreaterThan(50);
 
+    // regroup is a request to the server, which moves the player furthest behind and tells everyone
+    roomB.send("regroup");
+    await until(() => eventsB.some((e) => e.type === "teleport"));
+    expect(eventsB.find((e) => e.type === "teleport")).toEqual({ type: "teleport", from: [1], to: 0 });
+    for (let f = 0; f < 30; f++) {
+      gameA.step(0);
+      gameB.step(0);
+      await wait(1000 / 60);
+    }
+    await wait(300);
+    expect(Math.abs((pb[0].xpos - pb[1].xpos) >> 16)).toBeLessThan(64);
+    // asking again straight away is refused with a reason
+    roomB.send("regroup");
+    await until(() => eventsB.some((e) => e.type === "notice"));
+    expect(eventsB.find((e) => e.type === "notice")).toMatchObject({ message: expect.stringMatching(/^Regroup ready in/) });
+
     await roomB.leave();
     await roomA.leave();
   });
 
-  it("a disconnected player can reconnect into the running game", async () => {
+  it("relays chat, keeps a short history for newcomers, rate-limits and lets the host turn it off", async () => {
+    const a = new Client(endpoint), b = new Client(endpoint);
+    const roomA: Room = await a.create("coop", { name: "Alice" });
+    let lobbyA: LobbyState | null = null;
+    const heardA: ChatMessage[] = [];
+    const noticesA: string[] = [];
+    roomA.onMessage("lobby", (l: LobbyState) => (lobbyA = l));
+    roomA.onMessage("chat", (m: ChatMessage) => heardA.push(m));
+    roomA.onMessage("chatHistory", () => {});
+    roomA.onMessage("notice", (m: string) => noticesA.push(m));
+    await until(() => !!lobbyA);
+    expect(lobbyA!.chat).toBe(true);
+    // the experimental Sonic 3 mode isn't offered
+    expect(lobbyA!.games).not.toContain("sonic3");
+
+    roomA.send("chat", "  hello\nthere  ");
+    await until(() => heardA.length === 1);
+    expect(heardA[0]).toMatchObject({ slot: 0, name: "Alice", text: "hello there" });
+
+    const roomB: Room = await b.joinById(lobbyA!.code, { name: "Bob" });
+    let history: ChatMessage[] | null = null;
+    const heardB: ChatMessage[] = [];
+    roomB.onMessage("lobby", () => {});
+    roomB.onMessage("chatHistory", (h: ChatMessage[]) => (history = h));
+    roomB.onMessage("chat", (m: ChatMessage) => heardB.push(m));
+    await until(() => !!history);
+    expect(history!.map((m) => m.text)).toEqual(["hello there"]);
+
+    roomB.send("chat", "x".repeat(500));
+    await until(() => heardA.length === 2);
+    expect(heardA[1]).toMatchObject({ slot: 1, name: "Bob" });
+    expect(heardA[1].text).toHaveLength(120);
+
+    // a burst beyond 5 messages in 5 seconds is dropped (one was sent already)
+    for (let i = 0; i < 6; i++) roomA.send("chat", `spam ${i}`);
+    await until(() => noticesA.length > 0);
+    await wait(100);
+    expect(heardB.filter((m) => m.text.startsWith("spam"))).toHaveLength(4);
+
+    // only the host can turn chat off; then nothing is relayed
+    roomB.send("lobby", { setChat: false });
+    await wait(100);
+    expect(lobbyA!.chat).toBe(true);
+    roomA.send("lobby", { setChat: false });
+    await until(() => lobbyA!.chat === false);
+    const before = heardA.length;
+    roomB.send("chat", "anyone?");
+    await wait(150);
+    expect(heardA).toHaveLength(before);
+
+    await roomB.leave();
+    await roomA.leave();
+  });
+
+    it("a disconnected player can reconnect into the running game", async () => {
     const a = new Client(endpoint), b = new Client(endpoint);
     const roomA = await a.create("coop", { name: "Host" });
     let lobby: LobbyState | null = null;

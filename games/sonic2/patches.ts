@@ -5,58 +5,93 @@ import { leadingPlayerXCheck, signpostGather } from "../shared/patches.js";
 // Every edit is guarded by `coop.enabled`, so single-player behaves exactly like the original.
 
 const COOP_RESPAWN = `
-// Ring Link co-op: instead of ending the act, a player who loses a life comes back next to their partner.
-// A player on their last life borrows one from the partner; the game is over only when neither can continue.
-// Sets checkResult to true when the player was respawned.
+// Ring Link co-op: instead of ending the act, a player who loses a life comes back on their own: at the last star
+// post (or where the act started), or next to their partner when coop.respawnRule says so or the checkpoint is
+// outside the current screen lock (a boss arena). With limited lives a player on their last life borrows one from
+// a living partner; the game is over only when neither can continue. Sets checkResult when the player respawned.
 public function Player_CoopRespawn
 	checkResult = false
 	arrayPos1 = player.entityPos
 	arrayPos1 ^= 1
+	temp3 = false
 	if player[arrayPos1].groupID == GROUP_PLAYERS
 		CheckEqual(player[arrayPos1].state, Player_State_Death)
 		temp0 = checkResult
 		CheckEqual(player[arrayPos1].state, Player_State_Drown)
 		temp0 |= checkResult
 		if temp0 == false
-			arrayPos0 = VarName[player.lives]
-			arrayPos0 += player.entityPos
-			arrayPos2 = VarName[player.lives]
-			arrayPos2 += arrayPos1
-			if global[arrayPos0] <= 0
-				if global[arrayPos2] > 1
-					global[arrayPos2]--
-					global[arrayPos0] = 1
-				end if
-			end if
-			if global[arrayPos0] > 0
-				player.state			= Player_State_Air
-				player.xpos				= player[arrayPos1].xpos
-				player.ypos				= player[arrayPos1].ypos
-				player.ypos				-= 0x200000
-				player.xvel				= 0
-				player.yvel				= 0
-				player.speed			= 0
-				player.rings			= 0
-				player.gravity			= GRAVITY_AIR
-				player.animation		= ANI_JUMPING
-				player.tileCollisions	= true
-				player.interaction		= true
-				player.visible			= true
-				player.controlMode		= player.entityPos
-				player.scrollTracking	= true
-				player.drawOrder		= DRAWORDER_PLAYER
-				player.sortedDrawOrder	= 4
-				player.collisionPlane	= player[arrayPos1].collisionPlane
-				player.priority			= PRIORITY_ACTIVE
-				player.blinkTimer		= 120
-				currentPlayer = player.entityPos
-				camera[currentPlayer].xpos		= player.ixpos
-				camera[currentPlayer].ypos		= player.iypos
-				camera[currentPlayer].style		= CAMERASTYLE_FOLLOW
-				camera[currentPlayer].enabled	= true
-				checkResult = true
+			temp3 = true
+		end if
+	end if
+	arrayPos0 = VarName[player.lives]
+	arrayPos0 += player.entityPos
+	arrayPos2 = VarName[player.lives]
+	arrayPos2 += arrayPos1
+	if global[arrayPos0] <= 0
+		if temp3 == true
+			if global[arrayPos2] > 1
+				global[arrayPos2]--
+				global[arrayPos0] = 1
 			end if
 		end if
+	end if
+	if global[arrayPos0] > 0
+		temp4 = coop.spawnX
+		temp5 = coop.spawnY
+		if starPostID >= 32
+			arrayPos2 = starPostID
+			temp4 = object[arrayPos2].xpos
+			temp5 = object[arrayPos2].ypos
+		end if
+		temp0 = false
+		if coop.respawnRule == 0
+			temp0 = true
+		end if
+		temp6 = temp4
+		temp6 >>= 16
+		if temp6 < stage.newXBoundary1
+			temp0 = true
+		end if
+		if temp6 > stage.newXBoundary2
+			temp0 = true
+		end if
+		temp0 &= temp3
+		if temp0 == true
+			player.xpos				= player[arrayPos1].xpos
+			player.ypos				= player[arrayPos1].ypos
+			player.ypos				-= 0x200000
+			player.collisionPlane	= player[arrayPos1].collisionPlane
+		else
+			player.xpos				= temp4
+			player.ypos				= temp5
+			player.collisionPlane	= 0
+		end if
+		player.state			= Player_State_Air
+		player.xvel				= 0
+		player.yvel				= 0
+		player.speed			= 0
+		player.rings			= 0
+		player.gravity			= GRAVITY_AIR
+		player.animation		= ANI_JUMPING
+		player.tileCollisions	= true
+		player.interaction		= true
+		player.visible			= true
+		player.controlMode		= player.entityPos
+		player.scrollTracking	= true
+		player.drawOrder		= DRAWORDER_PLAYER
+		player.sortedDrawOrder	= 4
+		player.priority			= PRIORITY_ACTIVE
+		player.blinkTimer		= 120
+		currentPlayer = player.entityPos
+		camera[currentPlayer].xpos		= player.ixpos
+		camera[currentPlayer].ypos		= player.iypos
+		camera[currentPlayer].style		= CAMERASTYLE_FOLLOW
+		camera[currentPlayer].enabled	= true
+		camera[currentPlayer].curXBoundary1 = stage.newXBoundary1
+		camera[currentPlayer].curXBoundary2 = stage.newXBoundary2
+		camera[currentPlayer].curYBoundary1 = stage.newYBoundary1
+		camera[currentPlayer].curYBoundary2 = stage.newYBoundary2
+		checkResult = true
 	end if
 end function
 
@@ -96,6 +131,8 @@ end function`,
     find: `	if stage.player2Enabled == true
 		ResetObjectEntity(SLOT_PLAYER2, TypeName[Player 2 Object], PLAYER_TAILS_A, player[SLOT_PLAYER1].xpos, player[SLOT_PLAYER1].ypos)`,
     replace: `	if coop.enabled == true
+		coop.spawnX = player[SLOT_PLAYER1].xpos
+		coop.spawnY = player[SLOT_PLAYER1].ypos
 		ResetObjectEntity(SLOT_PLAYER2, TypeName[Player 2 Object], coop.p2Character, player[SLOT_PLAYER1].xpos, player[SLOT_PLAYER1].ypos)
 		if starPostID == 0
 			player[SLOT_PLAYER2].xpos -= 0x100000
@@ -131,7 +168,11 @@ end function`,
 			LoadAnimation("Tails.ani")
 			player[SLOT_PLAYER2].character 		= PLAYER_TAILS_A
 			player[SLOT_PLAYER2].jumpOffset 	= -1
-			player[SLOT_PLAYER2].jumpAbility 	= Player_Action_DblJumpTails
+			if coop.tailsFlight == true
+				player[SLOT_PLAYER2].jumpAbility = Player_Action_DblJumpTails
+			else
+				player[SLOT_PLAYER2].jumpAbility = Player_State_Static
+			end if
 		else
 			LoadAnimation("Sonic.ani")
 			player[SLOT_PLAYER2].character 		= PLAYER_SONIC_A
@@ -399,10 +440,14 @@ ${leadingPlayerXCheck("\t\t", "> object.xpos")}`,
 			// X between icon and number
 			DrawSpriteScreenXY(20, 38, 222)
 
-			// The actual player lives number
-			arrayPos0 = VarName[player.lives]
-			arrayPos0 += currentPlayer
-			DrawNumbers(24, 56, 220, global[arrayPos0], 2, 8, false)`,
+			// The actual player lives number (or ∞, frame 38, added below)
+			if coop.infiniteLives == true
+				DrawSpriteScreenXY(38, 48, 220)
+			else
+				arrayPos0 = VarName[player.lives]
+				arrayPos0 += currentPlayer
+				DrawNumbers(24, 56, 220, global[arrayPos0], 2, 8, false)
+			end if`,
   },
 
   // ---- goal: whichever player reaches the sign post first finishes the act -----------------------------------
@@ -460,5 +505,83 @@ ${signpostGather("\t\t\t\t")}
 		end if
 		if player[currentPlayer].xpos > temp0
 			PlayMusic(TRACK_ACTFINISH)`,
+  },
+  {
+    file: "Global/HUD.txt",
+    reason: "an ∞ sprite for infinite lives (#38: the engine paints it below the HUD sheet, see hudglyph.ts)",
+    find: `	// Set the HUD's draw function based on the current platform
+	foreach (TypeName[HUD], arrayPos0, ALL_ENTITIES)`,
+    replace: `	// Ring Link: ∞ for infinite lives
+	SpriteFrame(0, 0, 16, 8, 0, 256)	// #38 - Infinity
+
+	// Set the HUD's draw function based on the current platform
+	foreach (TypeName[HUD], arrayPos0, ALL_ENTITIES)`,
+  },
+
+  {
+    file: "Players/PlayerObject.txt",
+    reason: "player 1 killed by a hit does not freeze the level (or their camera) for player 2 either",
+    find: `#platform: USE_STANDALONE
+			camera[0].enabled = false
+			if options.vsMode == false
+				stage.state = STAGE_FROZEN
+			end if
+#endplatform`,
+    replace: `#platform: USE_STANDALONE
+			if coop.enabled == false
+				camera[0].enabled = false
+				if options.vsMode == false
+					stage.state = STAGE_FROZEN
+				end if
+			end if
+#endplatform`,
+  },
+
+  // ---- characters and host options -------------------------------------------------------------------------------
+  {
+    file: "Players/PlayerObject.txt",
+    reason: "each co-op player uses their own character's physics (the original uses player 1's for both)",
+    find: `softlocks incoming...
+
+	switch stage.playerListPos
+	case PLAYER_SONIC_A
+	case PLAYER_SONIC_TAILS_A
+		temp0 = Player_SonicPhysicsTable`,
+    replace: `softlocks incoming...
+
+	temp0 = stage.playerListPos
+	if coop.enabled == true
+		if currentPlayer == 1
+			temp0 = player[1].character
+		end if
+	end if
+	switch temp0
+	case PLAYER_SONIC_A
+	case PLAYER_SONIC_TAILS_A
+		temp0 = Player_SonicPhysicsTable`,
+  },
+  {
+    file: "Players/PlayerObject.txt",
+    reason: "host option: Knuckles drops off walls instead of climbing them",
+    count: 2,
+    find: `				if temp2 == temp3
+					player.state = Player_State_Climb`,
+    replace: `				if coop.knuxClimb == false
+					temp2 = temp3
+					temp2++
+				end if
+				if temp2 == temp3
+					player.state = Player_State_Climb`,
+  },
+  {
+    file: "Players/PlayerObject.txt",
+    reason: "host option: Tails' flight for player 1",
+    find: `			if options.tailsFlight == true
+				player[SLOT_PLAYER1].jumpAbility = Player_Action_DblJumpTails`,
+    replace: `			if coop.tailsFlight == false
+				options.tailsFlight = false
+			end if
+			if options.tailsFlight == true
+				player[SLOT_PLAYER1].jumpAbility = Player_Action_DblJumpTails`,
   },
 ];

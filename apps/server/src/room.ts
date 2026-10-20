@@ -6,8 +6,8 @@
 
 import { Room, type Client } from "@colyseus/core";
 import {
-  createGameSim, captureState, encodeDelta, encodeSnapshot, decodeInput, decodeU32, isCharacterAvailable, makeRoomCode, KEYFRAME,
-  type AnyGameSim, type GameEvent, type GameId, type LobbyState, type LobbyPlayer, type ClientLobbyMessage, type StartInfo, type ScriptHost,
+  createGameSim, captureState, normalizeSettings, DEFAULT_SETTINGS, CHAT_MAX_LENGTH, encodeDelta, encodeSnapshot, decodeInput, decodeU32, isCharacterAvailable, makeRoomCode, KEYFRAME,
+  type AnyGameSim, type ChatMessage, type GameEvent, type GameId, type LobbyState, type LobbyPlayer, type ClientLobbyMessage, type StartInfo, type ScriptHost,
 } from "@ringlink/engine";
 import { availableGames, createSonic3Game, loadSonic3Pack, loadVfs, stageList } from "./gamedata.js";
 import type { V5Gameplay } from "../../../packages/engine/src/v5/gameplay.js";
@@ -19,6 +19,12 @@ const MAX_PLAYERS = Math.max(1, Math.min(2, Number(process.env.MAX_PLAYERS ?? 2)
 const SNAPSHOT_RATE = Math.max(5, Math.min(60, Number(process.env.SNAPSHOT_RATE ?? 20)));
 const RECONNECT_SECONDS = Number(process.env.RECONNECT_SECONDS ?? 60);
 const DEV_TOOLS = process.env.ENABLE_DEV_TOOLS === "1";
+/** The experimental Sonic 3 mode is off unless asked for: its original game logic isn't available (see README). */
+const SONIC3 = process.env.ENABLE_SONIC3 === "1";
+const CHAT_HISTORY = 30;
+/** At most CHAT_BURST messages per CHAT_WINDOW_MS from one player. */
+const CHAT_BURST = 5;
+const CHAT_WINDOW_MS = 5000;
 const MAX_INPUT_BUFFER = 8;
 const SNAPSHOT_HISTORY = 24;
 
@@ -45,13 +51,19 @@ export class CoopRoom extends Room {
   private loopTimer: NodeJS.Timeout | null = null;
   private loadTimer: NodeJS.Timeout | null = null;
   private serverTick = 0;
+  /** Session that asked for a regroup, applied after the next tick. */
+  private regroupBy: string | null = null;
+  private chatLog: ChatMessage[] = [];
+  private chatId = 0;
+  /** Recent send times per session, for the chat rate limit. */
+  private chatTimes = new Map<string, number[]>();
 
   override onCreate(options: { name?: string; game?: GameId }): void {
     let code = makeRoomCode();
     while (activeCodes.has(code)) code = makeRoomCode();
     activeCodes.add(code);
     this.roomId = code;
-    const games = availableGames();
+    const games = this.games();
     this.lobby = {
       code,
       game: options.game && games.includes(options.game) ? options.game : (games.includes("sonic1") ? "sonic1" : games[0] ?? "sonic1"),
@@ -62,6 +74,8 @@ export class CoopRoom extends Room {
       maxPlayers: MAX_PLAYERS,
       startStage: 0,
       devTools: DEV_TOOLS,
+      settings: { ...DEFAULT_SETTINGS },
+      chat: true,
     };
     this.setMetadata({ code });
     stats.rooms++;
@@ -74,7 +88,12 @@ export class CoopRoom extends Room {
       const seat = this.seatOf(client);
       if (seat) seat.ackSnap = decodeU32(bytes);
     });
+    this.onMessage("chat", (client, text: unknown) => this.onChat(client, text));
     this.onMessage("ping", (client, t: number) => client.send("pong", { t, tick: this.serverTick }));
+    this.onMessage("regroup", (client) => {
+      if (this.sim && this.seatOf(client)) this.regroupBy = client.sessionId;
+      else client.send("event", { type: "notice", message: "Regroup isn't available in this game" });
+    });
     this.onMessage("dev", (client, msg: { setStage?: number; restart?: boolean; teleport?: boolean }) => this.onDev(client, msg));
   }
 
@@ -88,6 +107,7 @@ export class CoopRoom extends Room {
     this.lobby.players.sort((a, b) => a.slot - b.slot);
     if (!this.lobby.hostId) this.lobby.hostId = client.sessionId;
     log("room", `${this.lobby.code}: ${name} joined as player ${slot + 1}`);
+    client.send("chatHistory", this.chatLog);
     this.broadcastLobby();
   }
 
@@ -117,6 +137,7 @@ export class CoopRoom extends Room {
         }
       }
       log("room", `${this.lobby.code}: ${player.name} reconnected`);
+      again.send("chatHistory", this.chatLog);
       this.broadcastLobby();
       if (this.sim || this.v5) again.send("start", this.startInfo(player));
     } catch {
@@ -142,8 +163,14 @@ export class CoopRoom extends Room {
     return this.seats.find((s) => s?.sessionId === client.sessionId) ?? null;
   }
 
+  /** Games the server has data for and this room offers. */
+  private games(): GameId[] {
+    return availableGames().filter((g) => g !== "sonic3" || SONIC3);
+  }
+
   private removePlayer(id: string): void {
     const p = this.lobby.players.find((x) => x.id === id);
+    this.chatTimes.delete(id);
     this.lobby.players = this.lobby.players.filter((x) => x.id !== id);
     if (this.lobby.hostId === id) this.lobby.hostId = this.lobby.players[0]?.id ?? "";
     if (p && this.seats[p.slot]) this.seats[p.slot] = null;
@@ -157,13 +184,33 @@ export class CoopRoom extends Room {
     this.broadcast("lobby", this.lobby);
   }
 
+  private onChat(client: Client, text: unknown): void {
+    const player = this.playerOf(client);
+    if (!player || !this.lobby.chat || typeof text !== "string") return;
+    // control characters (and so line breaks) are dropped; the client renders the text as plain text
+    const clean = text.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, CHAT_MAX_LENGTH);
+    if (!clean) return;
+    const now = Date.now();
+    const times = (this.chatTimes.get(client.sessionId) ?? []).filter((t) => now - t < CHAT_WINDOW_MS);
+    if (times.length >= CHAT_BURST) {
+      client.send("notice", "You're sending messages too quickly.");
+      return;
+    }
+    times.push(now);
+    this.chatTimes.set(client.sessionId, times);
+    const message: ChatMessage = { id: ++this.chatId, slot: player.slot, name: player.name, text: clean };
+    this.chatLog.push(message);
+    if (this.chatLog.length > CHAT_HISTORY) this.chatLog.shift();
+    this.broadcast("chat", message);
+  }
+
   private onLobbyMessage(client: Client, msg: ClientLobbyMessage): void {
     const player = this.playerOf(client);
     if (!player || !msg || typeof msg !== "object") return;
     const isHost = client.sessionId === this.lobby.hostId;
     if ("setName" in msg) player.name = String(msg.setName).trim().slice(0, 16) || player.name;
     if (this.lobby.phase === "lobby") {
-      if ("setGame" in msg && isHost && availableGames().includes(msg.setGame)) {
+      if ("setGame" in msg && isHost && this.games().includes(msg.setGame)) {
         this.lobby.game = msg.setGame;
         this.lobby.startStage = 0;
         for (const p of this.lobby.players) {
@@ -178,6 +225,8 @@ export class CoopRoom extends Room {
         const count = stageList(this.lobby.game).length;
         this.lobby.startStage = Math.max(0, Math.min(Math.floor(Number(msg.setStartStage) || 0), count - 1));
       }
+      if ("setSettings" in msg && isHost) this.lobby.settings = normalizeSettings({ ...this.lobby.settings, ...msg.setSettings });
+      if ("setChat" in msg && isHost) this.lobby.chat = !!msg.setChat;
       if ("start" in msg && isHost) this.tryStart(client);
     } else if ("endGame" in msg && isHost) {
       this.endGame("The host ended the game");
@@ -192,7 +241,7 @@ export class CoopRoom extends Room {
       client.send("notice", "Everyone needs to be ready first.");
       return;
     }
-    if (!availableGames().includes(this.lobby.game)) {
+    if (!this.games().includes(this.lobby.game)) {
       client.send("notice", `${this.lobby.game} data is not installed on the server.`);
       return;
     }
@@ -215,6 +264,7 @@ export class CoopRoom extends Room {
       characters: this.lobby.players.map((x) => x.character),
       startStage: this.lobby.startStage,
       snapshotRate: SNAPSHOT_RATE,
+      settings: this.lobby.settings,
       levelHash: this.lobby.game === "sonic3" ? loadSonic3Pack().hash : undefined,
     };
   }
@@ -258,7 +308,7 @@ export class CoopRoom extends Room {
         this.v5 = createSonic3Game();
       } else {
         const sim = createGameSim(this.lobby.game, loadVfs(this.lobby.game), host, { headless: true, players: slots });
-        sim.configurePlayers(characters);
+        sim.configurePlayers(characters, this.lobby.settings);
         sim.startStage(1, this.startListPos(sim));
         this.sim = sim;
       }
@@ -359,7 +409,20 @@ export class CoopRoom extends Room {
     stats.ticks++;
     this.serverTick++;
     for (const ev of events) this.onGameEvent(ev);
+    if (this.regroupBy) this.regroup(this.regroupBy);
     if (this.sim && this.serverTick % Math.round(60 / SNAPSHOT_RATE) === 0) this.sendSnapshots(pads);
+  }
+
+  /** Regroup (emergency teleport) on a player's request; the result shows up in the next snapshot. */
+  private regroup(sessionId: string): void {
+    this.regroupBy = null;
+    const result = this.sim!.emergencyTeleport();
+    if ("from" in result) {
+      log("room", `${this.lobby.code}: regroup: players ${result.from.map((p) => p + 1).join(", ")} -> player ${result.to + 1}`);
+      this.onGameEvent({ type: "teleport", ...result });
+    } else {
+      this.clients.find((c) => c.sessionId === sessionId)?.send("event", { type: "notice", message: result.reason });
+    }
   }
 
   private stepSonic3(pads: number[]): void {
@@ -425,7 +488,7 @@ export class CoopRoom extends Room {
       sim.startStage(1, Math.max(0, Math.min(pos, sim.E.stageListCount[1] - 1)));
     }
     if (msg.restart) sim.startStage(sim.E.activeStageList, sim.E.stageListPosition);
-    if (msg.teleport) sim.emergencyTeleport();
+    if (msg.teleport) this.regroupBy = client.sessionId;
     log("dev", `${this.lobby.code}: ${client.sessionId} ${JSON.stringify(msg)}`);
   }
 
@@ -433,6 +496,7 @@ export class CoopRoom extends Room {
     this.stopLoop();
     this.sim = null;
     this.v5 = null;
+    this.regroupBy = null;
     this.seats = [];
     this.snapshots.clear();
     this.lobby.phase = "lobby";

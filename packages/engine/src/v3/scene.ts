@@ -3,6 +3,7 @@
 // positions, the water line) are done here, so a headless engine stays in step with a drawing one.
 
 import type { Engine3 } from "./engine.js";
+import { isBossScript } from "../arena.js";
 import { CAM3_STRIDE } from "./engine.js";
 import type { Player3 } from "./entity.js";
 import * as C from "./consts.js";
@@ -109,6 +110,7 @@ export function LoadStageFiles(E: Engine3): void {
     E.host.log(`loading scene ${stage.folder} ${stage.name}`);
     LoadPalette(E, "MasterPalette.act", 0, 0, 0, 256);
     ClearScriptData(E);
+    E.bossType.fill(0);
     for (let i = C.SURFACE_COUNT; i > 0; i--) RemoveGraphicsFile(E, "", i - 1);
 
     const stageConfig = E.vfs.get(stagePath(E, "StageConfig.bin"));
@@ -117,6 +119,7 @@ export function LoadStageFiles(E: Engine3): void {
       const gc = E.gameConfig;
       gc.objectNames.forEach((n, i) => SetObjectTypeName(E, n, scriptID + i));
       for (const path of gc.scriptPaths) {
+        E.bossType[scriptID] = +isBossScript(path);
         E.compiler.ParseScriptFile(path, scriptID++);
         if (E.gameMode === C.ENGINE_SCRIPTERROR) return;
       }
@@ -135,6 +138,7 @@ export function LoadStageFiles(E: Engine3): void {
       names.forEach((n, i) => SetObjectTypeName(E, n, scriptID + i));
       for (let i = 0; i < stageObjectCount; ++i) {
         const path = f.str();
+        E.bossType[scriptID + i] = +isBossScript(path);
         E.compiler.ParseScriptFile(path, scriptID + i);
         if (E.gameMode === C.ENGINE_SCRIPTERROR) return;
       }
@@ -212,6 +216,7 @@ export function LoadActLayout(E: Engine3): void {
     E.yBoundary2 = E.newYBoundary2 = fg.ysize << 7;
   }
   E.setCamera(0);
+  E.arenaLock = 0;
   E.waterLevel = (fg.ysize << 7) + 128;
   fg.tiles.fill(0);
   for (let y = 0; y < fg.ysize; ++y) {

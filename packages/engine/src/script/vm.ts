@@ -1,6 +1,7 @@
 // The RetroScript v4 interpreter (Script.cpp: ProcessScript). Operands are decoded, the function runs, then the
 // operands are written back to their variables, exactly as in the original.
 
+import { ARENA_MAX_WIDTH } from "../arena.js";
 import type { Engine } from "../engine.js";
 import { CAM_INDEX, CAM_STRIDE, MAX_PLAYERS } from "../engine.js";
 import { ENT_STRIDE, F } from "../entity.js";
@@ -147,10 +148,11 @@ function readVar(E: Engine, v: number, arrayVal: number): number {
     case VAR.STAGE_NEW_XBOUNDARY2: return E.newXBoundary2;
     case VAR.STAGE_NEW_YBOUNDARY1: return E.newYBoundary1;
     case VAR.STAGE_NEW_YBOUNDARY2: return E.newYBoundary2;
-    case VAR.STAGE_CUR_XBOUNDARY1: return E.curXBoundary1;
-    case VAR.STAGE_CUR_XBOUNDARY2: return E.curXBoundary2;
-    case VAR.STAGE_CUR_YBOUNDARY1: return E.curYBoundary1;
-    case VAR.STAGE_CUR_YBOUNDARY2: return E.curYBoundary2;
+    // a boss keeps players in its arena by the arena's edges, not by whichever camera it happens to run with
+    case VAR.STAGE_CUR_XBOUNDARY1: return bossArena(E) ? E.newXBoundary1 : E.curXBoundary1;
+    case VAR.STAGE_CUR_XBOUNDARY2: return bossArena(E) ? E.newXBoundary2 : E.curXBoundary2;
+    case VAR.STAGE_CUR_YBOUNDARY1: return bossArena(E) ? E.newYBoundary1 : E.curYBoundary1;
+    case VAR.STAGE_CUR_YBOUNDARY2: return bossArena(E) ? E.newYBoundary2 : E.curYBoundary2;
     case VAR.STAGE_DEFORMATION_DATA0: return E.bgDeformationData0[arrayVal];
     case VAR.STAGE_DEFORMATION_DATA1: return E.bgDeformationData1[arrayVal];
     case VAR.STAGE_DEFORMATION_DATA2: return E.bgDeformationData2[arrayVal];
@@ -281,15 +283,15 @@ function writeVar(E: Engine, v: number, arrayVal: number, value: number): void {
     case VAR.STAGE_MINUTES: E.stageMinutes = value; return;
     case VAR.STAGE_ACT_NUM: E.actID = value; return;
     case VAR.STAGE_PAUSE_ENABLED: E.pauseEnabled = value; return;
-    case VAR.STAGE_NEW_XBOUNDARY1: E.newXBoundary1 = value; return;
-    case VAR.STAGE_NEW_XBOUNDARY2: E.newXBoundary2 = value; return;
-    case VAR.STAGE_NEW_YBOUNDARY1: E.newYBoundary1 = value; return;
-    case VAR.STAGE_NEW_YBOUNDARY2: E.newYBoundary2 = value; return;
+    case VAR.STAGE_NEW_XBOUNDARY1: E.newXBoundary1 = value; noteBossLock(E); return;
+    case VAR.STAGE_NEW_XBOUNDARY2: E.newXBoundary2 = value; noteBossLock(E); return;
+    case VAR.STAGE_NEW_YBOUNDARY1: E.newYBoundary1 = value; noteBossLock(E); return;
+    case VAR.STAGE_NEW_YBOUNDARY2: E.newYBoundary2 = value; noteBossLock(E); return;
     // Writing a current boundary applies to every camera: arena locks are shared by all players.
-    case VAR.STAGE_CUR_XBOUNDARY1: setCurBoundary(E, CAM_INDEX.curXBoundary1, value); if (E.curXBoundary1 !== E.newXBoundary1) E.newXBoundary1 = value; return;
-    case VAR.STAGE_CUR_XBOUNDARY2: setCurBoundary(E, CAM_INDEX.curXBoundary2, value); if (E.curXBoundary2 !== E.newXBoundary2) E.newXBoundary2 = value; return;
-    case VAR.STAGE_CUR_YBOUNDARY1: setCurBoundary(E, CAM_INDEX.curYBoundary1, value); if (E.curYBoundary1 !== E.newYBoundary1) E.newYBoundary1 = value; return;
-    case VAR.STAGE_CUR_YBOUNDARY2: setCurBoundary(E, CAM_INDEX.curYBoundary2, value); if (E.curYBoundary2 !== E.newYBoundary2) E.newYBoundary2 = value; return;
+    case VAR.STAGE_CUR_XBOUNDARY1: setCurBoundary(E, CAM_INDEX.curXBoundary1, value); if (E.curXBoundary1 !== E.newXBoundary1) E.newXBoundary1 = value; noteBossLock(E); return;
+    case VAR.STAGE_CUR_XBOUNDARY2: setCurBoundary(E, CAM_INDEX.curXBoundary2, value); if (E.curXBoundary2 !== E.newXBoundary2) E.newXBoundary2 = value; noteBossLock(E); return;
+    case VAR.STAGE_CUR_YBOUNDARY1: setCurBoundary(E, CAM_INDEX.curYBoundary1, value); if (E.curYBoundary1 !== E.newYBoundary1) E.newYBoundary1 = value; noteBossLock(E); return;
+    case VAR.STAGE_CUR_YBOUNDARY2: setCurBoundary(E, CAM_INDEX.curYBoundary2, value); if (E.curYBoundary2 !== E.newYBoundary2) E.newYBoundary2 = value; noteBossLock(E); return;
     case VAR.STAGE_DEFORMATION_DATA0: E.bgDeformationData0[arrayVal] = value; return;
     case VAR.STAGE_DEFORMATION_DATA1: E.bgDeformationData1[arrayVal] = value; return;
     case VAR.STAGE_DEFORMATION_DATA2: E.bgDeformationData2[arrayVal] = value; return;
@@ -359,11 +361,28 @@ function writeVar(E: Engine, v: number, arrayVal: number, value: number): void {
     case VAR.CAMERA_ENABLED: case VAR.CAMERA_TARGET: case VAR.CAMERA_STYLE: case VAR.CAMERA_XPOS: case VAR.CAMERA_YPOS: case VAR.CAMERA_ADJUST_Y:
       if (arrayVal >= 0 && arrayVal < MAX_PLAYERS) E.cams[arrayVal * CAM_STRIDE + CAM_VARS[v - VAR.CAMERA_ENABLED]] = value;
       return;
+    // one camera's own boundaries (stage.curXBoundary* writes apply to every camera)
+    case VAR.CAMERA_CUR_XBOUNDARY1: case VAR.CAMERA_CUR_XBOUNDARY2: case VAR.CAMERA_CUR_YBOUNDARY1: case VAR.CAMERA_CUR_YBOUNDARY2: {
+      const idx = [CAM_INDEX.curXBoundary1, CAM_INDEX.curXBoundary2, CAM_INDEX.curYBoundary1, CAM_INDEX.curYBoundary2][v - VAR.CAMERA_CUR_XBOUNDARY1];
+      if (arrayVal >= 0 && arrayVal < MAX_PLAYERS) E.cams[arrayVal * CAM_STRIDE + idx] = value;
+      return;
+    }
     default:
       if (v >= VAR.KEY_DOWN_UP && v <= VAR.KEY_DOWN_SELECT) writeKey(E, arrayVal, v - VAR.KEY_DOWN_UP, value, false);
       else if (v >= VAR.KEY_PRESS_UP && v <= VAR.KEY_PRESS_SELECT) writeKey(E, arrayVal, v - VAR.KEY_PRESS_UP, value, true);
       return;
   }
+}
+
+/** Whether the running object is a boss holding the players in its arena (see arena.ts). */
+function bossArena(E: Engine): boolean {
+  return E.arenaLock !== 0 && E.camCount > 1 && E.bossType[E.objectEntityList[E.objectEntityPos]?.type ?? 0] === 1 &&
+    E.newXBoundary2 - E.newXBoundary1 <= ARENA_MAX_WIDTH;
+}
+
+/** A boss setting the screen boundaries arms the co-op arena capture (see arena.ts). */
+function noteBossLock(E: Engine): void {
+  if (E.bossType[E.objectEntityList[E.objectEntityPos]?.type ?? 0]) E.arenaLock = 1;
 }
 
 function setCurBoundary(E: Engine, idx: number, value: number): void {

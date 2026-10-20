@@ -11,6 +11,7 @@ export * from "./state.js";
 export { SoftwareRenderer, RGB565_TO_ABGR } from "./render/drawing.js";
 export { SoftwareRenderer3 } from "./v3/render.js";
 export * from "./net/protocol.js";
+export * from "./settings.js";
 export { V5CollisionWorld, type V5CollisionMask, type V5CollisionLayer, type V5CollisionHit, type V5Surface } from "./v5/collision.js";
 export { V5Movement, type V5MovementState, type V5PlayerState } from "./v5/movement.js";
 export { V5Gameplay, type V5GameplayState, type V5Object, type V5GameplayEvent } from "./v5/gameplay.js";

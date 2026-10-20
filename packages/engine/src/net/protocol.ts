@@ -5,6 +5,7 @@
 //   client -> server  "ack"  u32 snapshotId (the newest snapshot the client has applied)
 //   server -> client  "snap" a state snapshot: a delta against a snapshot the client acknowledged, or a keyframe
 import { deflateSync, inflateSync } from "fflate";
+import type { GameSettings } from "../settings.js";
 
 export const PROTOCOL_VERSION = 1;
 export const TICK_RATE = 60;
@@ -19,8 +20,9 @@ export const CHARACTERS = [
 ] as const;
 
 export function isCharacterAvailable(game: GameId, id: number): boolean {
-  // Sonic 3 seats are fixed: player 1 is Sonic, player 2 is Tails. Sonic CD's scripts only implement Sonic and Tails.
-  return CHARACTERS.some((character) => character.id === id && (game === "sonic2" || id < 2));
+  // Sonic 3 seats are fixed: player 1 is Sonic, player 2 is Tails. Sonic CD's scripts (the standalone release's) only
+  // implement Sonic and Tails; Sonic 1's and 2's have Knuckles too.
+  return CHARACTERS.some((character) => character.id === id && (game === "sonic1" || game === "sonic2" || id < 2));
 }
 
 export interface LobbyPlayer {
@@ -54,8 +56,22 @@ export interface LobbyState {
   /** The selected game's levels (index = startStage), for the level selector. */
   stages?: LobbyStage[];
   devTools: boolean;
+  /** Host options (see settings.ts). */
+  settings: GameSettings;
+  /** The host lets players chat (in the lobby and during the game). */
+  chat: boolean;
   message?: string;
 }
+
+/** A chat line as the server relays it. */
+export interface ChatMessage {
+  id: number;
+  slot: number;
+  name: string;
+  text: string;
+}
+
+export const CHAT_MAX_LENGTH = 120;
 
 /** Sent when a game starts (or to a client that reconnects into a running game). */
 export interface StartInfo {
@@ -64,6 +80,7 @@ export interface StartInfo {
   characters: number[];
   startStage: number;
   snapshotRate: number;
+  settings?: GameSettings;
   /** Sonic 3 only: MD5 of the server's level pack, so a stale client export is rejected. */
   levelHash?: string;
 }
@@ -74,6 +91,8 @@ export type ClientLobbyMessage =
   | { setName: string }
   | { ready: boolean }
   | { setStartStage: number }
+  | { setSettings: Partial<GameSettings> }
+  | { setChat: boolean }
   | { start: true }
   | { endGame: true };
 

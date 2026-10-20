@@ -1,6 +1,7 @@
 // Sprite.cpp (RSDKv3): sprite sheet surfaces. The GIF decoder is shared with the v4 engine. A headless engine
 // registers surfaces with their sizes but skips decoding pixels.
 
+import { isHudSheet, paintHudGlyphs, HUD_GLYPH_ROWS } from "../hudglyph.js";
 import type { Engine3 } from "./engine.js";
 import { FileReader } from "../core/reader.js";
 import { GFXDATA_SIZE, SURFACE_COUNT } from "./consts.js";
@@ -30,10 +31,14 @@ function LoadGIFFile(E: Engine3, filePath: string, sheetID: number): boolean {
   }
   const f = new FileReader(data);
   const h = readGifHeader(f);
-  const surface = newSurface(E, filePath, sheetID, h.width, h.height);
+  const glyphRows = isHudSheet(filePath) ? HUD_GLYPH_ROWS : 0;
+  const surface = newSurface(E, filePath, sheetID, h.width, h.height + glyphRows);
   E.gfxDataPosition += surface.width * surface.height;
   if (E.gfxDataPosition < GFXDATA_SIZE) {
-    if (!E.opts.headless) ReadGifPictureData(f, surface.width, surface.height, h.interlaced, E.graphicData, surface.dataPosition);
+    if (!E.opts.headless) {
+      ReadGifPictureData(f, h.width, h.height, h.interlaced, E.graphicData, surface.dataPosition);
+      if (glyphRows) paintHudGlyphs(E.graphicData, surface.dataPosition, h.width, h.height);
+    }
   } else {
     E.gfxDataPosition = 0;
     E.host.log("WARNING: Exceeded max gfx surface size!");

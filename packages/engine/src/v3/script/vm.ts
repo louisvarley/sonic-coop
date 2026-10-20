@@ -5,6 +5,7 @@ import type { Engine3, ObjectScript3 } from "../engine.js";
 import { VAR, FUNC } from "./ids.js";
 import { FUNCTIONS } from "./tables.js";
 import * as C from "../consts.js";
+import { ARENA_MAX_WIDTH } from "../../arena.js";
 import { BTN } from "../../input.js";
 import { Sin512, Cos512, Sin256, Cos256, ArcTanLookup, nextRand } from "../../math.js";
 import { StrComp, FindStringToken } from "../../strings.js";
@@ -164,10 +165,11 @@ function getVar(E: Engine3, id: number, arrayVal: number): number {
     case VAR.STAGENEWXBOUNDARY2: return E.newXBoundary2;
     case VAR.STAGENEWYBOUNDARY1: return E.newYBoundary1;
     case VAR.STAGENEWYBOUNDARY2: return E.newYBoundary2;
-    case VAR.STAGEXBOUNDARY1: return E.xBoundary1;
-    case VAR.STAGEXBOUNDARY2: return E.xBoundary2;
-    case VAR.STAGEYBOUNDARY1: return E.yBoundary1;
-    case VAR.STAGEYBOUNDARY2: return E.yBoundary2;
+    // a boss keeps players in its arena by the arena's edges, not by whichever camera it happens to run with
+    case VAR.STAGEXBOUNDARY1: return bossArena(E) ? E.arenaX1 : E.xBoundary1;
+    case VAR.STAGEXBOUNDARY2: return bossArena(E) ? E.arenaX2 : E.xBoundary2;
+    case VAR.STAGEYBOUNDARY1: return bossArena(E) ? E.arenaY1 : E.yBoundary1;
+    case VAR.STAGEYBOUNDARY2: return bossArena(E) ? E.arenaY2 : E.yBoundary2;
     case VAR.STAGEDEFORMATIONDATA0: return E.bgDeformationData0[arrayVal];
     case VAR.STAGEDEFORMATIONDATA1: return E.bgDeformationData1[arrayVal];
     case VAR.STAGEDEFORMATIONDATA2: return E.bgDeformationData2[arrayVal];
@@ -371,14 +373,14 @@ function setVar(E: Engine3, id: number, arrayVal: number, value: number, scriptS
     case VAR.STAGEACTNO: E.actID = value; return;
     case VAR.STAGEPAUSEENABLED: E.pauseEnabled = value; return;
     case VAR.STAGELISTSIZE: return;
-    case VAR.STAGENEWXBOUNDARY1: E.newXBoundary1 = value; return;
-    case VAR.STAGENEWXBOUNDARY2: E.newXBoundary2 = value; return;
-    case VAR.STAGENEWYBOUNDARY1: E.newYBoundary1 = value; return;
-    case VAR.STAGENEWYBOUNDARY2: E.newYBoundary2 = value; return;
-    case VAR.STAGEXBOUNDARY1: setBoundary(E, "xBoundary1", "newXBoundary1", value); return;
-    case VAR.STAGEXBOUNDARY2: setBoundary(E, "xBoundary2", "newXBoundary2", value); return;
-    case VAR.STAGEYBOUNDARY1: setBoundary(E, "yBoundary1", "newYBoundary1", value); return;
-    case VAR.STAGEYBOUNDARY2: setBoundary(E, "yBoundary2", "newYBoundary2", value); return;
+    case VAR.STAGENEWXBOUNDARY1: E.newXBoundary1 = value; shareBossBoundary(E, "newXBoundary1"); return;
+    case VAR.STAGENEWXBOUNDARY2: E.newXBoundary2 = value; shareBossBoundary(E, "newXBoundary2"); return;
+    case VAR.STAGENEWYBOUNDARY1: E.newYBoundary1 = value; shareBossBoundary(E, "newYBoundary1"); return;
+    case VAR.STAGENEWYBOUNDARY2: E.newYBoundary2 = value; shareBossBoundary(E, "newYBoundary2"); return;
+    case VAR.STAGEXBOUNDARY1: setBoundary(E, "xBoundary1", "newXBoundary1", value); shareBossBoundary(E, "xBoundary1", "newXBoundary1"); return;
+    case VAR.STAGEXBOUNDARY2: setBoundary(E, "xBoundary2", "newXBoundary2", value); shareBossBoundary(E, "xBoundary2", "newXBoundary2"); return;
+    case VAR.STAGEYBOUNDARY1: setBoundary(E, "yBoundary1", "newYBoundary1", value); shareBossBoundary(E, "yBoundary1", "newYBoundary1"); return;
+    case VAR.STAGEYBOUNDARY2: setBoundary(E, "yBoundary2", "newYBoundary2", value); shareBossBoundary(E, "yBoundary2", "newYBoundary2"); return;
     case VAR.STAGEDEFORMATIONDATA0: E.bgDeformationData0[arrayVal] = value; return;
     case VAR.STAGEDEFORMATIONDATA1: E.bgDeformationData1[arrayVal] = value; return;
     case VAR.STAGEDEFORMATIONDATA2: E.bgDeformationData2[arrayVal] = value; return;
@@ -475,6 +477,37 @@ function setVar(E: Engine3, id: number, arrayVal: number, value: number, scriptS
     case VAR.ENGINEHAPTICSENABLED: E.hapticsEnabled = value; return;
     default: return;
   }
+}
+
+type Boundary = "xBoundary1" | "xBoundary2" | "yBoundary1" | "yBoundary2" | "newXBoundary1" | "newXBoundary2" | "newYBoundary1" | "newYBoundary2";
+
+function isBossObject(E: Engine3): boolean {
+  return E.camCount > 1 && E.bossType[E.objectEntityList[E.objectLoop]?.type ?? 0] === 1;
+}
+
+/** Whether the running object is a boss holding the players in its arena (see arena.ts). */
+function bossArena(E: Engine3): boolean {
+  return E.arenaLock !== 0 && isBossObject(E) && E.arenaX2 - E.arenaX1 <= ARENA_MAX_WIDTH;
+}
+
+/**
+ * Boundaries are per camera in this port; the ones a boss sets apply to every player's camera, and arm the co-op
+ * arena capture with the boss's current camera's (new) boundaries.
+ */
+function shareBossBoundary(E: Engine3, ...fields: Boundary[]): void {
+  if (!isBossObject(E)) return;
+  const values = fields.map((f) => E[f]);
+  const cam = E.curCam;
+  for (let c = 0; c < E.camCount; c++) {
+    E.setCamera(c);
+    fields.forEach((f, i) => (E[f] = values[i]));
+  }
+  E.setCamera(cam);
+  E.arenaLock = 1;
+  E.arenaX1 = E.newXBoundary1;
+  E.arenaX2 = E.newXBoundary2;
+  E.arenaY1 = E.newYBoundary1;
+  E.arenaY2 = E.newYBoundary2;
 }
 
 function setBoundary(E: Engine3, cur: "xBoundary1" | "xBoundary2" | "yBoundary1" | "yBoundary2", next: "newXBoundary1" | "newXBoundary2" | "newYBoundary1" | "newYBoundary2", value: number): void {
@@ -1362,6 +1395,9 @@ export function PlayMusic(E: Engine3, track: number): void {
   if (name.length) {
     E.trackID = track;
     E.musicStatus = 1;
+    // the music thread resets the volume once the track loads (a signpost's fade-out would otherwise mute the next act)
+    E.masterVolume = C.MAX_VOLUME;
+    E.host.setMusicVolume(E.masterVolume);
     E.host.playMusic(track, 0);
   } else {
     E.musicStatus = 0;

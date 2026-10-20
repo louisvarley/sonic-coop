@@ -9,6 +9,10 @@ server {
   listen 8080;
   server_name _;
   root /usr/share/nginx/html;
+  location = /manifest.webmanifest {
+    default_type application/manifest+json;
+    types { }
+  }
 
   gzip on;
   gzip_types text/css application/javascript application/json application/octet-stream image/svg+xml;

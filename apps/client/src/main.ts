@@ -1,10 +1,11 @@
 // Sonic Coop: the browser app (home, lobby, game).
 
 import { Client, type Room } from "colyseus.js";
-import { CHARACTERS, isCharacterAvailable, type LobbyState, type StartInfo, type GameId } from "@ringlink/engine";
+import { CHARACTERS, GAME_SETTINGS, isCharacterAvailable, type GameSettings, type LobbyState, type StartInfo, type GameId } from "@ringlink/engine";
 import { GameRunner } from "./game/runner.js";
 import { Sonic3Runner } from "./game/sonic3-runner.js";
 import { Input } from "./input.js";
+import { Chat, ChatPanel } from "./chat.js";
 import "@fontsource/press-start-2p/latin-400.css";
 import "./style.css";
 
@@ -16,6 +17,8 @@ const app = document.getElementById("app")!;
 let room: Room | null = null;
 let lobby: LobbyState | null = null;
 let runner: GameRunner | Sonic3Runner | null = null;
+let chat: Chat | null = null;
+let chatPanel: ChatPanel | null = null;
 let reconnectToken = "";
 let leaving = false;
 
@@ -30,6 +33,69 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string,
   }
   e.append(...children);
   return e;
+}
+
+// ---- artwork rendered from the user's own game data at extraction time (tools/extract-ui.ts) ---------------------
+
+interface UiArt {
+  cover?: string;
+  demo?: string;
+  chars: Record<string, string>;
+  stages: Record<string, string>;
+}
+
+const art = new Map<GameId, UiArt | null>();
+const artLoading = new Set<GameId>();
+
+/** The game's artwork if it has loaded (null when there is none); starts loading it otherwise. */
+function artFor(game: GameId): UiArt | null {
+  if (game === "sonic3") return null; // the experimental Sonic 3 mode has no artwork export
+  if (art.has(game)) return art.get(game)!;
+  if (!artLoading.has(game)) {
+    artLoading.add(game);
+    fetch(`/data/ui/${game}/ui.json`)
+      .then((r) => (r.ok ? (r.json() as Promise<UiArt>) : null))
+      .catch(() => null)
+      .then((a) => {
+        art.set(game, a);
+        // preload the hover images so they swap in instantly
+        if (a?.demo) new Image().src = artUrl(game, a.demo);
+        if (lobby && !runner) renderLobby();
+        else if (!room) refreshHomeCovers();
+      });
+  }
+  return null;
+}
+
+function artUrl(game: GameId, file: string): string {
+  return `/data/ui/${game}/${file}`;
+}
+
+function pixelImg(src: string, alt: string, cls = ""): HTMLImageElement {
+  const img = el("img", { src, alt, class: `pixel ${cls}`.trim(), decoding: "async" });
+  img.onerror = () => img.remove();
+  return img;
+}
+
+/** A game's card: its title screen (gameplay on hover), or a text card when there is no artwork. */
+function gameCard(game: GameId, selected: boolean): HTMLButtonElement {
+  const a = artFor(game);
+  const media = el("span", { class: "cover" });
+  if (a?.cover) media.append(pixelImg(artUrl(game, a.cover), `${GAME_NAMES[game]} title screen`, "front"));
+  if (a?.demo) media.append(pixelImg(artUrl(game, a.demo), "", "back"));
+  if (!a?.cover) media.append(el("span", { class: "cover-text" }, GAME_SHORT[game]));
+  return el("button", { class: `game-card game-${game}${selected ? " selected" : ""}`, title: GAME_NAMES[game] },
+    media, el("span", { class: "caption" }, el("strong", {}, GAME_SHORT[game]), el("small", {}, GAME_NAMES[game])));
+}
+
+let homeCovers: HTMLElement | null = null;
+let installedGames: GameId[] = [];
+
+function refreshHomeCovers(): void {
+  if (!homeCovers) return;
+  const games = installedGames.filter((g) => artFor(g)?.cover);
+  homeCovers.replaceChildren(...games.map((g) => el("figure", { class: "home-cover" }, pixelImg(artUrl(g, artFor(g)!.cover!), GAME_NAMES[g]))));
+  homeCovers.hidden = games.length === 0;
 }
 
 function toast(msg: string, kind: "info" | "error" = "info"): void {
@@ -74,6 +140,8 @@ function showHome(message?: string): void {
   runner = null;
   room = null;
   lobby = null;
+  chatPanel?.dispose();
+  chatPanel = chat = null;
   const invite = new URLSearchParams(location.search).get("room") ?? "";
   history.replaceState(null, "", location.pathname + (invite && !message ? `?room=${invite}` : ""));
   const nameInput = el("input", { id: "name", maxlength: "16", placeholder: "Your name", autocomplete: "nickname" });
@@ -132,7 +200,8 @@ function showHome(message?: string): void {
       "main",
       { class: "home" },
       el("h1", { class: "logo" }, el("span", { class: "ring" }), "Sonic Coop"),
-      el("p", { class: "tagline" }, "Sonic 1, 2, 3 and CD, together online."),
+      el("p", { class: "tagline" }, "Sonic 1, 2 and CD, together online."),
+      (homeCovers = el("div", { class: "home-covers", hidden: "" })),
       el("label", { class: "field" }, el("span", {}, "Name"), nameInput),
       el("div", { class: "card" }, el("h2", {}, "Host"), el("p", {}, "Start a lobby and send the invite link to a friend."), createBtn),
       el("div", { class: "card" }, el("h2", {}, "Join"), el("div", { class: "row" }, codeInput, joinBtn)),
@@ -141,6 +210,14 @@ function showHome(message?: string): void {
     ),
   );
   (invite ? codeInput : nameInput).focus();
+  fetch(`${API}/health`)
+    .then((r) => r.json() as Promise<{ games?: GameId[] }>)
+    .then((h) => {
+      installedGames = (h.games ?? []).filter((g) => g !== "sonic3");
+      for (const g of installedGames) artFor(g);
+      refreshHomeCovers();
+    })
+    .catch(() => {});
 }
 
 // ---- lobby -------------------------------------------------------------------------------------------------------
@@ -149,10 +226,14 @@ function enterRoom(r: Room): void {
   room = r;
   reconnectToken = r.reconnectionToken;
   leaving = false;
+  chatPanel?.dispose();
+  chat = new Chat(r);
+  chatPanel = new ChatPanel(chat);
   r.onMessage("lobby", (l: LobbyState) => {
     lobby = l;
     history.replaceState(null, "", `?room=${l.code}`);
     if (!runner) renderLobby();
+    else if (runner instanceof GameRunner) runner.onLobby();
   });
   r.onMessage("start", (info: StartInfo) => startGame(info));
   r.onMessage("notice", (m: string) => toast(m));
@@ -196,6 +277,44 @@ async function tryReconnect(): Promise<void> {
   showHome("The connection to the room was lost.");
 }
 
+const SETTING_LABELS: Record<keyof GameSettings, { label: string; hint: string }> = {
+  infiniteLives: { label: "Infinite lives", hint: "Lives never run out" },
+  respawn: { label: "Respawn", hint: "Where a player who dies comes back" },
+  spindash: { label: "Spin dash", hint: "Hold down and press jump to charge" },
+  tailsFlight: { label: "Tails can fly", hint: "Press jump in the air as Tails" },
+  knucklesClimb: { label: "Knuckles can climb", hint: "Otherwise he drops off walls he glides into" },
+  peelOut: { label: "Super peel out", hint: "Sonic: hold up and press jump to charge" },
+};
+
+/** A checkbox option of the lobby's Options section. */
+function toggleOption(label: string, hint: string, checked: boolean, isHost: boolean, onChange: (checked: boolean) => void): HTMLElement {
+  const box = el("input", { type: "checkbox" });
+  box.checked = checked;
+  box.disabled = !isHost;
+  box.onchange = () => onChange(box.checked);
+  return el("label", { class: "option toggle", title: hint }, box, el("span", {}, label), el("small", {}, hint));
+}
+
+/** The host's options for the selected game, and the room's chat; read-only for everyone else. */
+function settingsForm(l: LobbyState, offered: (keyof GameSettings)[], isHost: boolean): HTMLElement {
+  const settings = l.settings;
+  const form = el("div", { class: "options" });
+  for (const key of offered) {
+    const { label, hint } = SETTING_LABELS[key];
+    if (key === "respawn") {
+      const select = el("select", {}, el("option", { value: "checkpoint" }, "Last checkpoint"), el("option", { value: "partner" }, "Next to partner"));
+      select.value = settings.respawn;
+      select.onchange = () => room!.send("lobby", { setSettings: { respawn: select.value as GameSettings["respawn"] } });
+      select.disabled = !isHost;
+      form.append(el("label", { class: "option select", title: hint }, select, el("span", {}, label), el("small", {}, hint)));
+    } else {
+      form.append(toggleOption(label, hint, settings[key], isHost, (checked) => room!.send("lobby", { setSettings: { [key]: checked } })));
+    }
+  }
+  form.append(toggleOption("Chat", "Players can send each other messages (Y in game)", l.chat, isHost, (checked) => room!.send("lobby", { setChat: checked })));
+  return form;
+}
+
 function renderLobby(): void {
   if (!room || !lobby) return;
   const l = lobby;
@@ -217,16 +336,22 @@ function renderLobby(): void {
   const listed: GameId[] = ["sonic1", "sonic2"];
   if (l.games?.includes("soniccd") || l.game === "soniccd") listed.push("soniccd");
   if (l.games?.includes("sonic3") || l.game === "sonic3") listed.push("sonic3");
+  games.className = "game-cards";
   for (const g of listed) {
-    const b = el("button", { class: `choice${l.game === g ? " selected" : ""}` }, el("strong", {}, GAME_SHORT[g]), el("small", {}, GAME_NAMES[g]));
-    b.disabled = !isHost || l.phase !== "lobby";
+    const b = gameCard(g, l.game === g);
+    b.disabled = (!isHost && l.game !== g) || l.phase !== "lobby";
+    if (!isHost) b.classList.add("readonly");
     b.onclick = () => room!.send("lobby", { setGame: g });
     games.append(b);
   }
 
-  const chars = el("div", { class: "choices" });
+  const chars = el("div", { class: "char-cards" });
+  const gameArt = artFor(l.game);
   for (const c of CHARACTERS.filter((character) => isCharacterAvailable(l.game, character.id))) {
-    const b = el("button", { class: `choice char-${c.name.toLowerCase()}${me?.character === c.id ? " selected" : ""}` }, el("strong", {}, c.name));
+    const portrait = gameArt?.chars[c.id];
+    const b = el("button", { class: `char-card char-${c.name.toLowerCase()}${me?.character === c.id ? " selected" : ""}` },
+      portrait ? pixelImg(artUrl(l.game, portrait), c.name, "portrait") : el("span", { class: "portrait-text" }, c.name[0]),
+      el("strong", {}, c.name));
     b.disabled = l.game === "sonic3";
     b.onclick = () => room!.send("lobby", { setCharacter: c.id });
     chars.append(b);
@@ -271,9 +396,22 @@ function renderLobby(): void {
     stage.value = String(Math.max(0, stages.indexOf(current)));
     stage.onchange = () => room!.send("lobby", { setStartStage: Number(stage.value) });
     stage.disabled = !isHost;
-    stageSection.push(el("section", {}, el("h2", {}, "Level"), isHost || !current ? stage : el("p", {}, stageLabel(current))));
+    const thumb = current && gameArt?.stages[String(current.listPos ?? stages.indexOf(current))];
+    const preview = thumb
+      ? el("figure", { class: "stage-preview" }, pixelImg(artUrl(l.game, thumb), stageLabel(current)), el("figcaption", {}, current.level, el("small", {}, current.act)))
+      : "";
+    stageSection.push(el("section", {}, el("h2", {}, "Level"), el("div", { class: "stage-pick" }, preview, isHost || !current ? stage : el("p", {}, stageLabel(current)))));
   }
   const extras: HTMLElement[] = [];
+  const offered = GAME_SETTINGS[l.game] ?? [];
+  if (l.settings) extras.push(el("section", {}, el("h2", {}, "Options"), settingsForm(l, offered, isHost)));
+  // chat once there is someone to talk to
+  const chatFocused = chatPanel?.focused() ?? false;
+  if (chatPanel && l.chat && l.players.length > 1) {
+    chatPanel.mySlot = me?.slot ?? -1;
+    chatPanel.redraw();
+    extras.push(chatPanel.root);
+  }
 
   app.replaceChildren(
     el(
@@ -292,9 +430,10 @@ function renderLobby(): void {
       ...extras,
       el("div", { class: "row actions" }, readyBtn, startBtn, leaveBtn),
       el("p", { class: "hint" }, isHost ? (allReady ? "Everyone is ready." : "Start when everyone is ready.") : "The host starts the game when everyone is ready."),
-      el("details", { class: "controls" }, el("summary", {}, "Controls"), el("p", {}, "Move: arrow keys or WASD · Jump: Z / X / C / Space · Regroup (warp the player furthest behind to the leader): T · Fullscreen: F11 · Gamepads work too (A/B/X jump, Y regroup).")),
+      el("details", { class: "controls" }, el("summary", {}, "Controls"), el("p", {}, "Move: arrow keys or WASD · Jump: Z / X / C / Space · Regroup (warp the player furthest behind to the leader): T · Chat: Y · Fullscreen: F11 · Gamepads work too (A/B/X jump, Y regroup).")),
     ),
   );
+  if (chatFocused && chatPanel?.root.isConnected) chatPanel.restoreFocus();
 }
 
 // ---- game ----------------------------------------------------------------------------------------------------------
@@ -307,6 +446,7 @@ function startGame(info: StartInfo): void {
   const ui = {
     root,
     toast,
+    chat: chat ?? undefined,
     onExit: () => {
       leaving = true;
       runner?.stop();

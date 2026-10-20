@@ -1,6 +1,7 @@
 // Scene.cpp: stage loading and the stage loop (ProcessStage), with one camera per player.
 
 import type { Engine } from "./engine.js";
+import { isBossScript } from "./arena.js";
 import { CAM_STRIDE } from "./engine.js";
 import { FileReader } from "./core/reader.js";
 import {
@@ -326,6 +327,7 @@ export function LoadStageFiles(E: Engine): void {
     E.host.log(`loading scene ${stage.folder} ${stage.name}`);
     E.host.releaseStageSfx?.();
     ClearScriptData(E);
+    E.bossType.fill(0);
     for (let i = SURFACE_COUNT; i > 0; i--) RemoveGraphicsFile(E, "", i - 1);
 
     const stageConfig = E.vfs.get(stagePath(E, "StageConfig.bin"));
@@ -336,6 +338,7 @@ export function LoadStageFiles(E: Engine): void {
       for (let c = 0; c < 0x60; ++c) SetPaletteEntry(E, 0xff, c, gc.palette[c * 3], gc.palette[c * 3 + 1], gc.palette[c * 3 + 2]);
       gc.objectNames.forEach((n, i) => SetObjectTypeName(E, n, scriptID + i));
       for (const path of gc.scriptPaths) {
+        E.bossType[scriptID] = +isBossScript(path);
         E.compiler.ParseScriptFile(path, scriptID++);
         if (E.compiler.errors.length) return;
       }
@@ -363,6 +366,7 @@ export function LoadStageFiles(E: Engine): void {
       names.forEach((n, i) => SetObjectTypeName(E, n, scriptID + i));
       for (let i = 0; i < stageObjectCount; ++i) {
         const path = f.str();
+        E.bossType[scriptID + i] = +isBossScript(path);
         E.compiler.ParseScriptFile(path, scriptID + i);
         if (E.compiler.errors.length) return;
       }
@@ -417,6 +421,7 @@ function LoadActLayout(E: Engine): void {
     f.u8();
     E.newXBoundary1 = 0;
     E.newYBoundary1 = 0;
+    E.arenaLock = 0;
     E.newXBoundary2 = L0.xsize << 7;
     E.newYBoundary2 = L0.ysize << 7;
     for (let c = 0; c < E.cams.length / CAM_STRIDE; c++) {

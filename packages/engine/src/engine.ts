@@ -31,6 +31,8 @@ const SCALARS: [string, "i" | "b" | "u8"][] = [
   ["rngState", "i"], ["trackID", "i"], ["musicStatus", "i"], ["musicVolume", "i"], ["musicPosition", "i"],
   ["vertexCount", "i"], ["faceCount", "i"], ["projectionX", "i"], ["projectionY", "i"], ["fogColor", "i"], ["fogStrength", "i"],
   ["activePaletteID", "i"], ["tick", "i"], ["stageLoadCount", "i"], ["masterFrame", "i"], ["camCount", "i"], ["teleportCooldown", "i"],
+  // co-op boss arena (see arena.ts): set when a boss script locks the screen
+  ["arenaLock", "i"],
 ];
 
 // Per-camera scalars (one block per camera; `curCam` selects the block the accessors use).
@@ -55,6 +57,7 @@ export interface ScalarVars {
   rngState: number; trackID: number; musicStatus: number; musicVolume: number; musicPosition: number;
   vertexCount: number; faceCount: number; projectionX: number; projectionY: number; fogColor: number; fogStrength: number;
   activePaletteID: number; tick: number; stageLoadCount: number; masterFrame: number; camCount: number; teleportCooldown: number;
+  arenaLock: number;
   // per camera
   cameraTarget: number; cameraStyle: number; cameraEnabled: number; cameraAdjustY: number;
   xScrollOffset: number; yScrollOffset: number; cameraXPos: number; cameraYPos: number; cameraShift: number;
@@ -187,6 +190,8 @@ export class Engine {
   readonly objectTypeGroupList: RefList[] = [];
   readonly drawListEntries: RefList[] = [];
   typeNames: string[] = new Array(C.OBJECT_COUNT).fill("");
+  /** Object types whose script is a boss (see arena.ts); set when the stage's scripts load. */
+  readonly bossType = new Uint8Array(C.OBJECT_COUNT);
 
   // ---- scripts
   readonly scriptEng = new ScriptEngineRegs(this);

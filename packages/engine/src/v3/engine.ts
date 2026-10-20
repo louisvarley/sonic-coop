@@ -36,6 +36,8 @@ const SCALARS: [string, Kind][] = [
   ["keyDown", "i"], ["keyPress", "i"], ["anyPress", "i"], ["inputPrevAny", "i"],
   ["collisionLeft", "i"], ["collisionTop", "i"], ["collisionRight", "i"], ["collisionBottom", "i"],
   ["frameCount", "i"], ["tick", "i"], ["stageLoadCount", "i"], ["camCount", "i"], ["teleportCooldown", "i"],
+  // co-op boss arena (see arena.ts): the boundaries the boss last set, shared by every camera
+  ["arenaLock", "i"], ["arenaX1", "i"], ["arenaX2", "i"], ["arenaY1", "i"], ["arenaY2", "i"],
 ];
 
 // Per-camera scalars (one block per camera; `curCam` selects the block the accessors use).
@@ -66,6 +68,7 @@ export interface ScalarVars3 {
   keyDown: number; keyPress: number; anyPress: number; inputPrevAny: number;
   collisionLeft: number; collisionTop: number; collisionRight: number; collisionBottom: number;
   frameCount: number; tick: number; stageLoadCount: number; camCount: number; teleportCooldown: number;
+  arenaLock: number; arenaX1: number; arenaX2: number; arenaY1: number; arenaY2: number;
   // per camera
   cameraTarget: number; cameraStyle: number; cameraEnabled: number; cameraAdjustY: number;
   xScrollOffset: number; yScrollOffset: number; yScrollA: number; yScrollB: number; xScrollA: number; xScrollB: number;
@@ -173,6 +176,8 @@ export class Engine3 {
   readonly playerList: Player3[] = [];
   readonly drawListEntries: DrawList3[] = [];
   typeNames: string[] = new Array(C.OBJECT_COUNT).fill("");
+  /** Object types whose script is a boss (see arena.ts); set when the stage's scripts load. */
+  readonly bossType = new Uint8Array(C.OBJECT_COUNT);
   OBJECT_BORDER_X1 = 0x80;
   OBJECT_BORDER_X2 = 0;
 

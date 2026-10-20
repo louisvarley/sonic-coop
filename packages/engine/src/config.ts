@@ -22,17 +22,14 @@ export interface GameConfig {
 export const COOP_GLOBALS: [string, number][] = [
   ["coop.enabled", 0], // 1 when more than one human player is in the level
   ["coop.playerCount", 1],
-  ["coop.p1Character", 0], // character ids as in the GameConfig player list (0 Sonic, 1 Tails, ...)
-  ["coop.p2Character", 0],
-  ["coop.p1Rings", 0],
-  ["coop.p2Rings", 0],
-  ["coop.p1Lives", 3],
-  ["coop.p2Lives", 3],
-  ["coop.p1Score", 0],
-  ["coop.p2Score", 0],
-  ["coop.respawnRule", 0], // 0: fly in next to the partner, 1: restart from the last checkpoint
-  ["coop.p1Finished", 0],
-  ["coop.p2Finished", 0],
+  ["coop.p2Character", 0], // character ids as in the GameConfig player list (0 Sonic, 1 Tails, 2 Knuckles)
+  ["coop.p2Lives", 3], // Sonic 1 keeps one lives counter (player 1's); this is player 2's
+  ["coop.respawnRule", 1], // 0: next to the partner, 1: at the last checkpoint (the partner when that is out of reach)
+  ["coop.infiniteLives", 1], // lives never run out (the engine keeps them topped up) and the HUD shows ∞
+  ["coop.tailsFlight", 1], // Tails can fly
+  ["coop.knuxClimb", 1], // Knuckles can climb walls (otherwise he drops off them)
+  ["coop.spawnX", 0], // where the act started: the respawn point before any checkpoint
+  ["coop.spawnY", 0],
 ];
 
 /** Native functions in registration order (their id is their position; scripts see them as globals of that name). */

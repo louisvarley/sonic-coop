@@ -1,5 +1,5 @@
 // Exact-text edits applied to the decompiled game scripts at extraction time.
-// Each edit must match exactly once, so an upstream change can never silently skip a patch.
+// Each edit must match exactly once (or exactly `count` times), so an upstream change can never silently skip a patch.
 
 export interface ScriptPatch {
   /** Script path relative to the game's Scripts folder, e.g. "Players/Player2Object.txt". */
@@ -8,6 +8,8 @@ export interface ScriptPatch {
   reason: string;
   find: string;
   replace: string;
+  /** Edit every one of exactly this many identical occurrences (for code the original repeats verbatim). */
+  count?: number;
 }
 
 export function applyPatches(sources: Map<string, string>, patches: ScriptPatch[]): void {
@@ -22,6 +24,12 @@ export function applyPatches(sources: Map<string, string>, patches: ScriptPatch[
     const replace = crlf ? p.replace.replace(/\r?\n/g, "\r\n") : p.replace;
     const first = text.indexOf(find);
     if (first < 0) throw new Error(`patch did not match in ${p.file}: ${p.reason}`);
+    if (p.count !== undefined) {
+      const parts = text.split(find);
+      if (parts.length - 1 !== p.count) throw new Error(`patch matched ${parts.length - 1} times (expected ${p.count}) in ${p.file}: ${p.reason}`);
+      sources.set(p.file, parts.join(replace));
+      continue;
+    }
     if (text.indexOf(find, first + 1) >= 0) throw new Error(`patch matched more than once in ${p.file}: ${p.reason}`);
     sources.set(p.file, text.slice(0, first) + replace + text.slice(first + find.length));
   }

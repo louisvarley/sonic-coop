@@ -13,15 +13,16 @@ import type { Engine3 } from "../packages/engine/src/v3/engine.js";
 import { SoftwareRenderer3 } from "../packages/engine/src/v3/render.js";
 import { captureState, stateHash, encodeDelta, applyDelta } from "../packages/engine/src/state.js";
 import { NetGame } from "../apps/client/src/net/netgame.js";
-import { BTN, nullHost, type LobbyState, type StartInfo } from "../packages/engine/src/index.js";
+import { BTN, nullHost, DEFAULT_SETTINGS, type GameSettings, type LobbyState, type StartInfo } from "../packages/engine/src/index.js";
+import { INFINITE_LIVES } from "../packages/engine/src/game.js";
 
 process.env.DATA_DIR = `${root}/data`;
 
 const script = (f: number) => (f < 120 ? 0 : f % 90 < 10 ? BTN.RIGHT | BTN.C : BTN.RIGHT);
 
-function newCD(headless = true): GameSim3 {
+function newCD(headless = true, settings: GameSettings = DEFAULT_SETTINGS): GameSim3 {
   const sim = new GameSim3(loadVfs("soniccd"), nullHost, { headless, players: 1 });
-  sim.configurePlayers([0]);
+  sim.configurePlayers([0], settings);
   return sim;
 }
 
@@ -34,9 +35,43 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
     for (let f = 1; f < 300; f++) sim.tick([script(f)]);
     expect(sim.E.compiler.errors).toEqual([]);
     expect(sim.E.stageList[1][sim.E.stageListPosition].folder).toBe("R11A");
-    expect(sim.global("Player.Lives")).toBe(3);
+    expect(sim.global("Player.Lives")).toBe(INFINITE_LIVES); // infinite lives by default
     // the player ran right from the start position
     expect(sim.E.playerList[0].xpos >> 16).toBeGreaterThan(startX + 150);
+  });
+
+  for (const peelOut of [true, false]) {
+    it(`up + jump ${peelOut ? "charges the super peel out" : "is a plain jump with the peel out turned off"}`, () => {
+      const sim = newCD(true, { ...DEFAULT_SETTINGS, peelOut });
+      sim.startStage(1, sim.findStage("PALMTREE PANIC ZONE 1 A"));
+      for (let f = 0; f < 240; f++) sim.tick([0]);
+      for (let f = 0; f < 20; f++) sim.tick([BTN.UP]);
+      sim.tick([BTN.UP | BTN.C]);
+      const p = sim.E.playerList[0];
+      for (let f = 0; f < 5; f++) sim.tick([BTN.UP]);
+      expect(p.gravity).toBe(peelOut ? 0 : 1);
+      for (let f = 0; f < 35; f++) sim.tick([BTN.UP]);
+      for (let f = 0; f < 3; f++) sim.tick([0]);
+      // released: the peel out launches Sonic at full speed
+      if (peelOut) expect(p.speed).toBeGreaterThan(8 << 16);
+      else expect(Math.abs(p.speed)).toBeLessThan(1 << 16);
+    });
+  }
+
+  it("starting a track restores the music volume a signpost faded out (act 2 has music)", () => {
+    const calls: string[] = [];
+    const host = { ...nullHost, playMusic: (t: number) => calls.push(`play ${t}`), setMusicVolume: (v: number) => calls.push(`volume ${v}`) };
+    const sim = new GameSim3(loadVfs("soniccd"), host, { headless: true, players: 1 });
+    sim.configurePlayers([0]);
+    sim.startStage(1, sim.findStage("PALMTREE PANIC ZONE 1 A"));
+    for (let f = 0; f < 10; f++) sim.tick([0]);
+    sim.E.masterVolume = 0; // what the goal signpost's fade leaves behind
+    calls.length = 0;
+    sim.startStage(1, sim.findStage("PALMTREE PANIC ZONE 2 A"));
+    for (let f = 0; f < 200; f++) sim.tick([0]);
+    expect(calls).toContain("play 0");
+    expect(sim.E.masterVolume).toBe(100);
+    expect(calls.lastIndexOf("volume 100")).toBeGreaterThanOrEqual(0);
   });
 
   it("two runs with the same inputs produce identical states", () => {
@@ -136,6 +171,56 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
       sim.E.setCamera(0);
     });
   }
+
+  it("regroups the player furthest behind with the leader, camera included", () => {
+    const sim = newCD2([0, 1]);
+    const E = sim.E;
+    for (let f = 0; f < 60; f++) sim.tick([0, 0]);
+    expect(sim.emergencyTeleport()).toEqual({ reason: "Everyone is already together" });
+    for (let f = 0; f < 400; f++) sim.tick([BTN.RIGHT, 0]);
+    expect(sim.emergencyTeleport()).toEqual({ from: [1], to: 0 });
+    const [p1, p2] = [E.playerList[0], E.playerList[1]];
+    expect(p2.xpos).toBe(p1.xpos);
+    expect(Math.abs((p1.ypos - p2.ypos) >> 16)).toBeLessThan(32);
+    for (let f = 0; f < 10; f++) sim.tick([0, 0]);
+    E.setCamera(1);
+    expect(Math.abs(E.xScrollOffset + E.SCREEN_CENTERX - (p2.xpos >> 16))).toBeLessThan(32);
+    E.setCamera(0);
+  });
+
+  it("the boss arena's boundaries hold every player's camera, and a player outside it is brought in", () => {
+    const sim = newCD2([0, 1]);
+    const E = sim.E;
+    sim.startStage(1, sim.findStage("PALMTREE PANIC ZONE 3 C"));
+    for (let f = 0; f < 200; f++) sim.tick([0, 0]);
+    const boss = E.objectEntityList.find((e) => e.type && E.bossType[e.type] === 1)!;
+    expect(E.typeNames[boss.type]).toBe("BossFace");
+    const put = (p: number, x: number, y: number) => {
+      const plr = E.playerList[p];
+      plr.xpos = x << 16;
+      plr.ypos = y << 16;
+      plr.xvel = plr.yvel = plr.speed = 0;
+    };
+    // player 2 waits far past the boss; player 1 walks in and starts it
+    put(1, (boss.xpos >> 16) + 1200, (boss.ypos >> 16) - 32);
+    put(0, (boss.xpos >> 16) - 3000, (boss.ypos >> 16) - 32);
+    for (let f = 0; f < 120; f++) sim.tick([0, 0]);
+    put(0, (boss.xpos >> 16) - 500, (boss.ypos >> 16) - 32);
+    let captured = false;
+    for (let f = 0; f < 600 && !captured; f++) captured = sim.tick([BTN.RIGHT, BTN.RIGHT]).some((e) => e.type === "arena");
+    expect(captured).toBe(true);
+    for (let f = 0; f < 600; f++) {
+      sim.tick([BTN.RIGHT, BTN.RIGHT | (f % 40 < 3 ? BTN.C : 0)]);
+      const x = E.playerList[1].xpos >> 16;
+      expect(x).toBeGreaterThanOrEqual(E.arenaX1 - 64);
+      expect(x).toBeLessThanOrEqual(E.arenaX2 + 64);
+    }
+    for (let c = 0; c < 2; c++) {
+      E.setCamera(c);
+      expect([E.newXBoundary1, E.newXBoundary2]).toEqual([E.arenaX1, E.arenaX2]);
+    }
+    E.setCamera(0);
+  });
 
   it("draws player 2's character in player 2's view", () => {
     const sim = new GameSim3(loadVfs("soniccd"), nullHost, { headless: false, players: 2 });
@@ -289,8 +374,8 @@ describe.skipIf(!hasData("soniccd"))("Sonic CD", () => {
     expect(stateHash(captureState(rejoined.E))).toBe(stateHash(captureState(sim.E)));
   });
 
-  it("preserves the original single-player death and life deduction", () => {
-    const sim = newCD();
+  it("preserves the original single-player death and life deduction with classic lives", () => {
+    const sim = newCD(true, { ...DEFAULT_SETTINGS, infiniteLives: false });
     sim.startStage(1, 0);
     for (let f = 0; f < 100; f++) sim.tick([0]);
     const player = sim.E.playerList[0];

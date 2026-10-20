@@ -8,6 +8,8 @@ import { NetGame } from "../net/netgame.js";
 import { AudioHost } from "../audio.js";
 import { Input } from "../input.js";
 import { loadGameData } from "./data.js";
+import { TouchControls, isTouchDevice } from "./touch.js";
+import { ChatOverlay, type Chat } from "../chat.js";
 
 const SCREEN_W = 424;
 const SCREEN_H = 240;
@@ -18,6 +20,7 @@ export interface RunnerUI {
   root: HTMLElement;
   toast(msg: string): void;
   onExit(): void;
+  chat?: Chat;
 }
 
 export class GameRunner {
@@ -44,6 +47,10 @@ export class GameRunner {
   private fpsAt = 0;
   private scaleMode: "pixel" | "fit" = "pixel";
   private resizeObs: ResizeObserver;
+  private touch: TouchControls | null = null;
+  private wakeLock: { release(): Promise<void> } | null = null;
+  private wentFullscreen = false;
+  private chat: ChatOverlay | null = null;
 
   constructor(
     private room: Room,
@@ -60,10 +67,12 @@ export class GameRunner {
         <canvas class="game-overlay" width="${SCREEN_W * 2}" height="${SCREEN_H * 2}"></canvas>
         <div class="game-status">Loading…</div>
         <pre class="dev-panel" hidden></pre>
+        <div class="rotate-hint">Turn your phone sideways</div>
       </div>
       <div class="game-bar">
         <span class="game-bar-title"></span>
         <span class="spacer"></span>
+        <button data-act="chat" title="Chat with the other players (Y)" hidden>Chat</button>
         <button data-act="teleport" title="Bring whoever is furthest behind to the player in front (T / gamepad Y)">Regroup</button>
         <button data-act="scale" title="Pixel-perfect or fit-to-window scaling">Pixel perfect</button>
         <button data-act="mute" title="Mute">Mute</button>
@@ -88,13 +97,94 @@ export class GameRunner {
     root.querySelector<HTMLButtonElement>('[data-act="dev"]')!.hidden = !lobby().devTools;
     root.querySelector(".game-bar")!.addEventListener("click", (e) => this.onBar((e.target as HTMLElement).closest("button")?.dataset.act));
     this.updateScaleButton();
+    if (ui.chat) {
+      this.chat = new ChatOverlay(ui.chat, root.querySelector(".game-stage")!, info.slot, (open) => {
+        // typing must not steer the character
+        this.input.enabled = !open;
+        if (open) root.classList.remove("bar-open");
+      });
+    }
+    this.onLobby();
     this.resizeObs = new ResizeObserver(() => this.layout());
     this.resizeObs.observe(root.querySelector(".game-stage")!);
     window.addEventListener("keydown", this.onKey);
+    if (isTouchDevice()) this.enableTouch();
+    else window.addEventListener("touchstart", this.onFirstTouchEvent, { once: true, passive: true });
+    document.addEventListener("visibilitychange", this.onVisibility);
+  }
+
+  /** Chat is there when the host allows it and someone else is in the room. */
+  private chatAvailable(): boolean {
+    const l = this.lobby();
+    return !!this.chat && l.chat && l.players.length > 1;
+  }
+
+  /** The lobby state changed (a player joined or left, the host changed an option). */
+  onLobby(): void {
+    const available = this.chatAvailable();
+    this.ui.root.querySelector<HTMLButtonElement>('[data-act="chat"]')!.hidden = !available;
+    if (this.chat) this.chat.root.hidden = !available;
+    if (!available) this.chat?.close();
+  }
+
+  private onFirstTouchEvent = () => {
+    if (this.running || this.net) this.enableTouch();
+  };
+
+  private enableTouch(): void {
+    if (this.touch) return;
+    const root = this.ui.root;
+    root.classList.add("touch");
+    // fit the screen (pixel-perfect steps leave big borders on a phone) unless the player chose otherwise
+    try {
+      if (!localStorage.getItem("ringlink.scale")) this.scaleMode = "fit";
+    } catch {
+      this.scaleMode = "fit";
+    }
+    this.updateScaleButton();
+    this.touch = new TouchControls(root.querySelector(".game-stage")!, {
+      regroup: () => this.room.send("regroup"),
+      menu: () => root.classList.toggle("bar-open"),
+      touched: () => this.onFirstTouch(),
+    });
+    this.layout();
+  }
+
+  /** On the first touch: sound may start, and on phones that allow it the game goes fullscreen in landscape. */
+  private onFirstTouch(): void {
+    this.audio?.resume();
+    if (this.wentFullscreen) return;
+    this.wentFullscreen = true;
+    const page = document.documentElement;
+    if (!document.fullscreenElement && page.requestFullscreen) {
+      page.requestFullscreen({ navigationUI: "hide" })
+        .then(() => (screen.orientation as ScreenOrientation & { lock?(o: string): Promise<void> }).lock?.("landscape"))
+        .catch(() => {});
+    }
+  }
+
+  private onVisibility = () => {
+    if (document.visibilityState === "hidden") this.touch?.reset();
+    else void this.keepAwake();
+  };
+
+  /** Stop the phone dimming its screen mid-act (the lock is dropped whenever the page is hidden). */
+  private async keepAwake(): Promise<void> {
+    const wl = (navigator as Navigator & { wakeLock?: { request(type: "screen"): Promise<{ release(): Promise<void> }> } }).wakeLock;
+    if (!wl || !this.running) return;
+    try {
+      this.wakeLock = await wl.request("screen");
+    } catch {
+      /* not allowed (battery saver, unsupported) */
+    }
   }
 
   private onKey = (e: KeyboardEvent) => {
-    if (e.code === "F11") {
+    if (e.target instanceof HTMLInputElement) return;
+    if (e.code === "KeyY" && this.chatAvailable()) {
+      e.preventDefault();
+      this.chat!.open();
+    } else if (e.code === "F11") {
       e.preventDefault();
       this.toggleFullscreen();
     } else if (e.code === "F1" && this.lobby().devTools) {
@@ -115,8 +205,11 @@ export class GameRunner {
   private onBar(act?: string): void {
     this.audio?.resume();
     switch (act) {
+      case "chat":
+        if (this.chatAvailable()) this.chat!.open();
+        break;
       case "teleport":
-        this.pendingTeleport = true;
+        this.room.send("regroup");
         break;
       case "scale":
         this.scaleMode = this.scaleMode === "pixel" ? "fit" : "pixel";
@@ -146,7 +239,8 @@ export class GameRunner {
     }
   }
 
-  private pendingTeleport = false;
+  /** Whether the regroup button (T / gamepad Y) was held last frame. */
+  private teleportHeld = false;
 
   private updateScaleButton(): void {
     this.ui.root.querySelector<HTMLButtonElement>('[data-act="scale"]')!.textContent = this.scaleMode === "pixel" ? "Pixel perfect" : "Fit window";
@@ -158,9 +252,10 @@ export class GameRunner {
   }
 
   private toggleFullscreen(): void {
-    const el = this.ui.root.querySelector<HTMLElement>(".game-stage")!;
+    // phones put the whole page fullscreen so the touch controls and menu come along
+    const el = this.touch ? document.documentElement : this.ui.root.querySelector<HTMLElement>(".game-stage")!;
     if (document.fullscreenElement) void document.exitFullscreen();
-    else void el.requestFullscreen?.();
+    else void el.requestFullscreen?.()?.catch(() => {});
   }
 
   /** Integer scaling when it fits (crisp pixels), otherwise the largest size keeping the aspect ratio. */
@@ -187,7 +282,6 @@ export class GameRunner {
     this.net = new NetGame(this.room, data.vfs, this.audio, info, { headless: false });
     this.setDraw(true);
     if (this.renderer instanceof SoftwareRenderer) this.renderer.overlay = (E, r) => this.drawHitboxes(E, r);
-    this.net.onEvent = (e) => this.onGameEvent(e);
     this.room.onMessage("snap", (bytes: Uint8Array) => this.net?.onSnapshot(bytes));
     this.room.onMessage("event", (e: GameEvent) => this.onServerEvent(e));
     this.room.onMessage("pong", (m: { t: number }) => (this.ping = performance.now() - m.t));
@@ -200,19 +294,22 @@ export class GameRunner {
     this.raf = requestAnimationFrame(this.frame);
     this.pingTimer = setInterval(() => this.room.send("ping", performance.now()), 2000);
     document.addEventListener("pointerdown", this.unlockAudio);
+    document.addEventListener("touchend", this.unlockAudio);
     document.addEventListener("keydown", this.unlockAudio);
+    void this.keepAwake();
   }
 
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private unlockAudio = () => this.audio?.resume();
 
-  private onGameEvent(e: GameEvent): void {
-    if (e.type === "teleport") this.ui.toast(`Player ${e.from + 1} warped to player ${e.to + 1}`);
-  }
-
   private onServerEvent(e: GameEvent): void {
     if (e.type === "gameOver") this.ui.toast("Game over");
     if (e.type === "stageLoaded") this.ui.toast(e.name);
+    if (e.type === "notice") this.ui.toast(e.message);
+    if (e.type === "teleport") {
+      const who = e.from.map((p) => (p === this.info.slot ? "You" : `Player ${p + 1}`)).join(", ");
+      this.ui.toast(`${who} warped to ${e.to === this.info.slot ? "you" : `player ${e.to + 1}`}`);
+    }
   }
 
   private frame = (now: number) => {
@@ -231,11 +328,12 @@ export class GameRunner {
     }
     if (this.acc > FRAME_MS * 4) this.acc = 0;
     for (let i = 0; i < steps; i++) {
-      let pad = this.input.read();
-      if (this.pendingTeleport) {
-        pad |= BTN.TELEPORT;
-        this.pendingTeleport = false;
-      }
+      let pad = this.input.read() | (this.touch?.pad ?? 0);
+      // regroup is a server request, not part of the simulated pad
+      const teleport = (pad & BTN.TELEPORT) !== 0;
+      if (teleport && !this.teleportHeld) this.room.send("regroup");
+      this.teleportHeld = teleport;
+      pad &= ~BTN.TELEPORT;
       this.setDraw(i === steps - 1);
       net.step(pad);
     }
@@ -333,7 +431,16 @@ export class GameRunner {
     if (this.pingTimer) clearInterval(this.pingTimer);
     window.removeEventListener("keydown", this.onKey);
     document.removeEventListener("pointerdown", this.unlockAudio);
+    document.removeEventListener("touchend", this.unlockAudio);
     document.removeEventListener("keydown", this.unlockAudio);
+    document.removeEventListener("visibilitychange", this.onVisibility);
+    window.removeEventListener("touchstart", this.onFirstTouchEvent);
+    this.touch?.dispose();
+    this.chat?.dispose();
+    this.input.enabled = true;
+    void this.wakeLock?.release().catch(() => {});
+    this.wakeLock = null;
+    if (this.touch && document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     this.resizeObs.disconnect();
     this.audio?.dispose();
     this.net = null;

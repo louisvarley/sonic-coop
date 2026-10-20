@@ -10,6 +10,13 @@ export interface GameConfig3 {
   sfxPaths: string[];
 }
 
+/** Global variables added by Ring Link for the co-op patches (games/soniccd/patches.ts). */
+export const COOP_GLOBALS3: [string, number][] = [
+  ["Coop.InfiniteLives", 1],
+  ["Coop.TailsFlight", 1],
+  ["Coop.PeelOut", 1],
+];
+
 export function LoadGameConfig(E: Engine3): GameConfig3 {
   const data = E.vfs.get("Data/Game/GameConfig.bin");
   if (!data) throw new Error("Data/Game/GameConfig.bin missing from the game data");
@@ -52,6 +59,12 @@ export function LoadGameConfig(E: Engine3): GameConfig3 {
       const highlighted = f.u8();
       E.stageList[cat].push({ folder, id, name, highlighted });
     }
+  }
+
+  // Ring Link's co-op settings (see GameSettings), after the game's own globals so their ids are unchanged.
+  for (const [name, value] of COOP_GLOBALS3) {
+    E.globalVariables[E.globalVariableNames.length] = value;
+    E.globalVariableNames.push(name);
   }
 
   // Set by the decompilation's engine (RetroEngine::LoadGameConfig with the mod loader).

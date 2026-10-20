@@ -5,7 +5,9 @@
 import { Engine3, MAX_PLAYERS3 } from "./engine.js";
 import type { ScriptHost } from "../host.js";
 import type { Vfs } from "../core/pak.js";
-import type { GameEvent, GameOptions } from "../game.js";
+import { ARENA_MARGIN_X, ARENA_MARGIN_Y, ARENA_MAX_WIDTH } from "../arena.js";
+import { DEFAULT_SETTINGS, type GameSettings } from "../settings.js";
+import { INFINITE_LIVES, TELEPORT_COOLDOWN, type GameEvent, type GameOptions, type TeleportResult } from "../game.js";
 import { BTN } from "../input.js";
 import * as C from "./consts.js";
 import { LoadGameConfig, GetGlobalVariableByName, SetGlobalVariableByName } from "./config.js";
@@ -55,7 +57,7 @@ export class GameSim3 {
    * only spawned by the Use_Origins script platform). Up to two players play; any others in the room watch a camera.
    * Call before startStage.
    */
-  configurePlayers(characters: number[], lives = 3): void {
+  configurePlayers(characters: number[], settings: GameSettings = DEFAULT_SETTINGS, lives = 3): void {
     this.setPlayers(Math.min(MAX_PLAYERS3, Math.max(1, characters.length)));
     const E = this.E;
     E.playerChars.fill(0);
@@ -68,6 +70,9 @@ export class GameSim3 {
     this.setGlobal("Player.ScoreBonus", 50000);
     this.setGlobal("LampPost.Check", 0);
     this.setGlobal("Good_Future", 0);
+    this.setGlobal("Coop.InfiniteLives", +settings.infiniteLives);
+    this.setGlobal("Coop.TailsFlight", +settings.tailsFlight);
+    this.setGlobal("Coop.PeelOut", +settings.peelOut);
   }
 
   /** Stage.PlayerListPos of a character: the game's PLAYER_* globals (Origins numbers Amy 5), else the list index. */
@@ -100,9 +105,123 @@ export class GameSim3 {
     return this.E.stageList[list].findIndex((s) => s.name.replace(/ /g, "").toUpperCase() === n);
   }
 
-  /** Co-op emergency teleport: not available for Sonic CD yet. */
-  emergencyTeleport(): { from: number; to: number } | null {
-    return null;
+  private scriptFunction(name: string): number {
+    return this.E.scriptFunctionList.findIndex((f) => f.name === name);
+  }
+
+  /** A player is "in play" when it is a live, colliding player (not dying, warping or in a cutscene). */
+  private inPlay(p: number): boolean {
+    const E = this.E;
+    const plr = E.playerList[p];
+    if (!plr.objectInteractions || !plr.tileCollisions) return false;
+    const state = E.objectEntityList[plr.boundEntity]?.state ?? -1;
+    return !["Player_State_Death", "Player_State_Drown", "Player_State_OuttaHere"].some((n) => this.scriptFunction(n) === state);
+  }
+
+  /** Co-op emergency teleport: every player well behind the one furthest ahead is moved to them (see GameSim). */
+  emergencyTeleport(): TeleportResult {
+    const E = this.E;
+    if (E.playerSlots < 2) return { reason: "Regroup needs two or more players" };
+    if (E.stageMode !== C.STAGEMODE_NORMAL) return { reason: "Can't regroup right now" };
+    if (E.teleportCooldown > 0) return { reason: `Regroup ready in ${Math.ceil(E.teleportCooldown / 60)}s` };
+    let lead = -1;
+    for (let p = 0; p < E.playerSlots; p++) {
+      if (this.inPlay(p) && (lead < 0 || E.playerList[p].xpos > E.playerList[lead].xpos)) lead = p;
+    }
+    if (lead < 0) return { reason: "Can't regroup while nobody is on their feet" };
+    const L = E.playerList[lead];
+    const from: number[] = [];
+    for (let p = 0; p < E.playerSlots; p++) {
+      if (p === lead || !this.inPlay(p)) continue;
+      const T = E.playerList[p];
+      if (Math.abs((L.xpos - T.xpos) >> 16) < 96 && Math.abs((L.ypos - T.ypos) >> 16) < 96) continue;
+      this.moveToPartner(p, lead);
+      from.push(p);
+    }
+    if (!from.length) {
+      let inPlay = 0;
+      for (let p = 0; p < E.playerSlots; p++) inPlay += +this.inPlay(p);
+      return { reason: inPlay < 2 ? "Can't regroup while a player is respawning" : "Everyone is already together" };
+    }
+    E.teleportCooldown = TELEPORT_COOLDOWN;
+    return { from, to: lead };
+  }
+
+  /** Put player `p` just above player `to`, airborne and briefly invulnerable, with their camera on them. */
+  private moveToPartner(p: number, to: number): void {
+    const E = this.E;
+    const T = E.playerList[p], L = E.playerList[to];
+    const air = this.scriptFunction("Player_State_Air");
+    T.xpos = L.xpos;
+    T.ypos = L.ypos - 0x100000;
+    T.xvel = 0;
+    T.yvel = 0;
+    T.speed = 0;
+    T.gravity = 1;
+    T.collisionMode = 0;
+    T.angle = 0;
+    T.collisionPlane = L.collisionPlane;
+    const body = E.objectEntityList[T.boundEntity];
+    if (body) {
+      body.xpos = T.xpos;
+      body.ypos = T.ypos;
+      body.rotation = 0;
+      if (air >= 0) body.state = air;
+    }
+    T.values[5] = Math.max(T.values[5], 60); // Player.BlinkTimer (brief invulnerability)
+    const prev = E.curCam;
+    E.setCamera(p);
+    // re-centre the scroll window on the player (SetPlayerScreenPosition only drifts it 16px per frame)
+    E.xScrollA = (T.xpos >> 16) - E.SCREEN_CENTERX;
+    E.xScrollB = E.xScrollA + E.SCREEN_XSIZE;
+    E.yScrollA = (T.ypos >> 16) - (C.SCREEN_YSIZE >> 1);
+    E.yScrollB = E.yScrollA + C.SCREEN_YSIZE;
+    E.xScrollOffset = E.xScrollA;
+    E.yScrollOffset = E.yScrollA;
+    E.cameraEnabled = 1;
+    E.setCamera(prev);
+  }
+
+  /**
+   * Co-op boss arenas (see arena.ts): while a boss that locked the screen is alive, a player outside its arena is
+   * brought to a partner inside it, and their screen is locked to the arena too.
+   */
+  private captureArena(): { from: number[]; to: number } | null {
+    const E = this.E;
+    if (!E.arenaLock || E.playerSlots < 2 || E.stageMode !== C.STAGEMODE_NORMAL) return null;
+    const { arenaX1: x1, arenaX2: x2, arenaY1: y1, arenaY2: y2 } = E;
+    if (x2 - x1 > ARENA_MAX_WIDTH) return null;
+    let boss = false;
+    for (let i = 0; i < E.objectEntityList.length && !boss; i++) boss = E.bossType[E.objectEntityList[i].type] === 1;
+    if (!boss) {
+      E.arenaLock = 0;
+      return null;
+    }
+    const inside = (p: number) => {
+      const x = E.playerList[p].xpos >> 16, y = E.playerList[p].ypos >> 16;
+      return x >= x1 - ARENA_MARGIN_X && x <= x2 + ARENA_MARGIN_X && y >= y1 - ARENA_MARGIN_Y && y <= y2 + ARENA_MARGIN_Y;
+    };
+    let anchor = -1;
+    const mid = (x1 + x2) >> 1;
+    for (let p = 0; p < E.playerSlots; p++) {
+      if (!this.inPlay(p) || !inside(p)) continue;
+      if (anchor < 0 || Math.abs((E.playerList[p].xpos >> 16) - mid) < Math.abs((E.playerList[anchor].xpos >> 16) - mid)) anchor = p;
+    }
+    if (anchor < 0) return null;
+    const from: number[] = [];
+    for (let p = 0; p < E.playerSlots; p++) {
+      if (p === anchor || !this.inPlay(p) || inside(p)) continue;
+      this.moveToPartner(p, anchor);
+      const prev = E.curCam;
+      E.setCamera(p);
+      E.xBoundary1 = E.newXBoundary1 = x1;
+      E.xBoundary2 = E.newXBoundary2 = x2;
+      E.yBoundary1 = E.newYBoundary1 = y1;
+      E.yBoundary2 = E.newYBoundary2 = y2;
+      E.setCamera(prev);
+      from.push(p);
+    }
+    return from.length ? { from, to: anchor } : null;
   }
 
   /** Restore a full state (from a snapshot), loading the stage it belongs to if necessary. */
@@ -140,7 +259,13 @@ export class GameSim3 {
     switch (E.gameMode) {
       case C.ENGINE_MAINGAME:
         if (E.teleportCooldown > 0) E.teleportCooldown--;
+        // with infinite lives the counter is kept topped up, so no death ends the game (the HUD shows ∞)
+        if (this.global("Coop.InfiniteLives")) this.setGlobal("Player.Lives", INFINITE_LIVES);
         ProcessStage(E, this.viewCamera);
+        {
+          const captured = this.captureArena();
+          if (captured) events.push({ type: "arena", ...captured });
+        }
         break;
       case C.ENGINE_ENTER_HIRESMODE:
       case C.ENGINE_EXIT_HIRESMODE:

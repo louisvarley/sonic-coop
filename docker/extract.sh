@@ -31,8 +31,15 @@ fi
 if "$sources_changed" || stale data/sonic3/experimental.pak; then
   npx tsx tools/export-rsdkv5.ts || { echo "sonic 3 export failed" >&2; exit 1; }
 fi
-if "$sources_changed" || stale data/ui/sonic1/Title/Title.png; then
-  npx tsx tools/extract-ui.ts --out data/ui || echo "ui sprite export failed"
+# UI artwork (covers, character portraits, level thumbnails) is rendered from the packs above.
+ui_stale=false
+for game in sonic1 sonic2 soniccd; do
+  if [ -f "data/$game/core.pak" ] && { [ ! -f "data/ui/$game/ui.json" ] || [ "data/$game/core.pak" -nt "data/ui/$game/ui.json" ]; }; then
+    ui_stale=true
+  fi
+done
+if "$ui_stale"; then
+  npx tsx tools/extract-ui.ts --data data --out data/ui || echo "ui artwork export failed"
 fi
 printf '%s\n' "$source_hash" > data/.extract-sources.sha256 || exit 1
 exit 0

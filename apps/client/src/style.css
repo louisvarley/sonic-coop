@@ -115,9 +115,6 @@ footer { color: var(--text); margin-top: auto; padding-top: 24px; font-size: 9px
 .choice.selected small { color: #fff3a8; }
 .choice.selected::before { content: "\25B6"; position: absolute; right: 10px; top: 8px; color: var(--gold); text-shadow: 2px 2px 0 var(--ink); }
 .choice { position: relative; }
-.char-sonic.selected { background: #1646d8; box-shadow: inset 0 0 0 3px #7fb0ff, 5px 5px 0 var(--ink); }
-.char-tails.selected { background: #b45d00; box-shadow: inset 0 0 0 3px #ffc24d, 5px 5px 0 var(--ink); }
-.char-knuckles.selected { background: #a01820; box-shadow: inset 0 0 0 3px #ff7b80, 5px 5px 0 var(--ink); }
 .players { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .players li { display: grid; grid-template-columns: 3.2em 1fr auto auto; gap: 14px; align-items: center; padding: 12px 14px; }
 .players li.ready { background: #0f6b2e; box-shadow: inset 0 0 0 3px var(--green), 6px 6px 0 var(--ink); }
@@ -126,9 +123,28 @@ footer { color: var(--text); margin-top: auto; padding-top: 24px; font-size: 9px
 .players .slot { color: var(--red); text-shadow: 2px 2px 0 var(--ink); }
 .players li.ready .slot { color: var(--gold); }
 .players .state, .players .char { color: var(--muted); font-size: 9px; }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 18px; }
+.option { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; cursor: pointer; }
+.option span { color: var(--text); }
+.option small { grid-column: 2; color: var(--muted); font-size: 9px; line-height: 1.6; }
+.option.select { grid-template-columns: 1fr; }
+.option.select small, .option.select span { grid-column: 1; }
+.option.select select { order: 3; }
+.option input[type="checkbox"] { width: 22px; height: 22px; padding: 0; margin: 0; accent-color: var(--gold); cursor: pointer; }
+.option input:disabled, .option select:disabled { cursor: default; }
 .actions { margin-top: 6px; gap: 14px; }
 .hint, .notice { color: var(--muted); margin: 0; font-size: 9px; line-height: 2; }
 .notice { color: var(--gold); font-size: 10px; text-shadow: 2px 2px 0 var(--ink); }
+/* chat: the lobby panel (whole history) */
+.chat-log { list-style: none; margin: 0 0 12px; padding: 10px 12px; height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+  background: var(--navy); border: 4px solid var(--ink); box-shadow: inset 3px 3px 0 rgba(0, 0, 0, 0.55); font-size: 10px; line-height: 1.7; }
+.chat-line { overflow-wrap: anywhere; }
+.chat-line strong { font-weight: 400; color: var(--muted); }
+.chat-line.p1 strong { color: #7fb0ff; }
+.chat-line.p2 strong { color: #ffc24d; }
+.chat-empty { color: var(--muted); font-size: 9px; }
+.chat-form { gap: 10px; }
+.chat-form .chat-input { flex: 1; min-width: 0; }
 details.controls { color: var(--muted); padding: 12px 16px; font-size: 9px; line-height: 2; }
 details.controls summary { cursor: pointer; color: var(--gold); font-size: 11px; }
 
@@ -144,6 +160,18 @@ main.game { max-width: none; height: 100vh; padding: 0; gap: 0; }
 .game-bar .spacer { flex: 1; }
 .game-bar-title { color: var(--gold); font-size: 10px; text-shadow: 2px 2px 0 var(--ink); }
 
+/* chat over the game: recent lines fade out; all of them come back while the message box is open */
+.chat-overlay { position: absolute; left: 12px; bottom: 12px; z-index: 4; width: min(420px, calc(100% - 24px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.chat-overlay[hidden] { display: none; }
+.chat-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 10px; line-height: 1.6; }
+.chat-lines .chat-line { align-self: flex-start; padding: 4px 8px; background: rgba(10, 20, 80, 0.75); text-shadow: 1px 1px 0 var(--ink); transition: opacity 0.6s steps(4); }
+.chat-lines .chat-line.faded { opacity: 0; }
+.chat-overlay.open .chat-line.faded { opacity: 1; }
+.chat-overlay .chat-form { pointer-events: auto; }
+.chat-overlay .chat-form[hidden] { display: none; }
+.chat-overlay .chat-input { width: 100%; padding: 8px 10px; font-size: 10px; }
+main.game.touch .chat-overlay { bottom: auto; top: 56px; left: 50%; transform: translateX(-50%); z-index: 7; }
+main.game.touch .chat-overlay:not(.open) .chat-form { display: none; }
 .toast { position: fixed; left: 50%; bottom: 72px; transform: translate(-50%, 20px); opacity: 0; transition: all 0.25s steps(5);
   background: var(--navy); color: var(--text); border: 4px solid var(--ink); box-shadow: inset 0 0 0 3px var(--panel-hi), 6px 6px 0 var(--ink);
   padding: 12px 18px; z-index: 10; max-width: calc(100% - 32px); }
@@ -155,3 +183,131 @@ main.game { max-width: none; height: 100vh; padding: 0; gap: 0; }
   .players .char, .players .state { grid-column: 2; }
   .lobby header .code { margin-left: 0; text-align: left; }
 }
+
+/* ---- artwork (rendered from the player's own game data) ---------------------------------------------------------- */
+img.pixel { image-rendering: pixelated; display: block; }
+main.lobby { max-width: 960px; }
+
+/* game cards: the title screen, gameplay on hover */
+.game-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
+.game-card {
+  position: relative; display: flex; flex-direction: column; padding: 0; text-align: left; text-transform: none;
+  color: var(--text); background: var(--navy); overflow: hidden;
+  box-shadow: inset 0 0 0 3px var(--panel-hi), 6px 6px 0 var(--ink);
+  transition: transform 120ms steps(3);
+}
+.game-card .cover { position: relative; display: block; aspect-ratio: 424 / 240; background: #000; border-bottom: 4px solid var(--ink); overflow: hidden; }
+.game-card .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.game-card .cover img.back { opacity: 0; transition: opacity 240ms steps(4); }
+.game-card:hover:not(:disabled) .cover img.back, .game-card:focus-visible .cover img.back { opacity: 1; }
+.game-card .cover-text { position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.4rem; color: var(--gold);
+  text-shadow: 3px 3px 0 var(--ink); background: repeating-linear-gradient(45deg, #102a9c 0 12px, #0c2283 12px 24px); }
+.game-card .caption { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px 12px; }
+.game-card .caption small { color: var(--muted); font-size: 8px; line-height: 1.6; }
+.game-card:hover:not(:disabled) { transform: translateY(-3px); background: #1a38c8; }
+.game-card:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: inset 0 0 0 3px var(--panel-hi), 2px 2px 0 var(--ink); }
+.game-card.selected { background: #8a6a00; transform: translateY(-4px); box-shadow: inset 0 0 0 4px var(--gold), 6px 10px 0 var(--ink), 0 0 0 4px var(--ink); }
+.game-card.selected .caption small { color: #fff3a8; }
+.game-card.selected::after { content: "\25B6 Selected"; position: absolute; top: 8px; left: 8px; padding: 4px 8px; font-size: 8px;
+  color: var(--ink); background: var(--gold); box-shadow: 3px 3px 0 var(--ink); text-transform: uppercase; }
+.game-card:disabled { opacity: 0.55; filter: grayscale(0.7); }
+.game-card.readonly:disabled { cursor: default; }
+.game-card.selected:disabled { opacity: 1; filter: none; }
+
+/* character cards: each character standing in their game's first act */
+.char-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+.char-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 12px; color: var(--text);
+  text-transform: none; background: var(--panel); box-shadow: inset 0 0 0 3px var(--panel-hi), 5px 5px 0 var(--ink); }
+.char-card .portrait, .char-card .portrait-text { width: 128px; height: 128px; border: 4px solid var(--ink); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4); }
+.char-card .portrait-text { display: grid; place-items: center; font-size: 3rem; color: var(--gold); background: var(--navy); }
+.char-card:hover:not(:disabled) { background: #1a38c8; }
+.char-card:hover:not(:disabled) .portrait { animation: hop 400ms steps(2) infinite alternate; }
+.char-card:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: inset 0 0 0 3px var(--panel-hi), 2px 2px 0 var(--ink); }
+.char-card.selected::before { content: "\25B6"; position: absolute; right: 10px; top: 8px; color: var(--gold); text-shadow: 2px 2px 0 var(--ink); }
+.char-card.selected .portrait { animation: hop 500ms steps(2) infinite alternate; }
+.char-sonic.selected { background: #1646d8; box-shadow: inset 0 0 0 3px #7fb0ff, 5px 5px 0 var(--ink); }
+.char-tails.selected { background: #b45d00; box-shadow: inset 0 0 0 3px #ffc24d, 5px 5px 0 var(--ink); }
+.char-knuckles.selected { background: #a01820; box-shadow: inset 0 0 0 3px #ff7b80, 5px 5px 0 var(--ink); }
+@keyframes hop { to { transform: translateY(-4px); } }
+
+/* level preview */
+.stage-pick { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 18px; align-items: end; }
+.stage-pick > :only-child { grid-column: 1 / -1; }
+.stage-preview { position: relative; margin: 0; border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); background: #000; }
+.stage-preview img { width: 100%; aspect-ratio: 424 / 240; }
+.stage-preview figcaption { position: absolute; left: 0; bottom: 0; display: flex; flex-direction: column; gap: 4px; padding: 10px 14px;
+  color: var(--gold); text-transform: uppercase; text-shadow: 2px 2px 0 var(--ink); background: rgba(10, 20, 80, 0.85); border-top-right-radius: 0;
+  box-shadow: 4px -4px 0 var(--ink); }
+.stage-preview figcaption small { color: var(--text); font-size: 9px; }
+
+/* home: the installed games' title screens */
+.home-covers { display: flex; justify-content: center; gap: 0; margin: 4px 0 8px; padding: 0 20px; }
+.home-covers[hidden] { display: none; }
+.home-cover { margin: 0 -14px; width: 34%; border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); background: #000;
+  transform: rotate(-4deg); animation: bob 2.4s steps(4) infinite alternate; }
+.home-cover:nth-child(2) { transform: rotate(2deg) translateY(-8px); z-index: 1; animation-delay: -0.8s; }
+.home-cover:nth-child(3) { transform: rotate(5deg); animation-delay: -1.6s; }
+.home-cover img { width: 100%; aspect-ratio: 424 / 240; }
+@keyframes bob { to { translate: 0 -6px; } }
+@media (prefers-reduced-motion: reduce) {
+  .home-cover, .char-card .portrait { animation: none !important; }
+  .game-card, .game-card .cover img.back { transition: none; }
+}
+@media (max-width: 560px) {
+  .home-cover { margin: 0 -8px; }
+  .game-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .game-card .caption small { display: none; }
+  .stage-pick { grid-template-columns: 1fr; }
+  .char-card .portrait, .char-card .portrait-text { width: 96px; height: 96px; }
+}
+
+/* ---- phones and tablets: touch controls over the game, the game bar behind a menu button --------------------------- */
+main.game { height: 100vh; height: 100dvh; }
+main.game.touch .game-stage { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+main.game.touch .game-bar { display: none; }
+main.game.touch.bar-open .game-bar { display: flex; position: absolute; top: 0; left: 0; right: 0; z-index: 5;
+  padding-top: max(10px, env(safe-area-inset-top)); padding-left: calc(max(10px, env(safe-area-inset-left)) + 56px); padding-right: max(12px, env(safe-area-inset-right));
+  border-top: 0; border-bottom: 4px solid var(--ink); }
+main.game.touch.bar-open .game-bar-title { display: none; }
+main.game.touch .game-bar button { padding: 10px 14px; font-size: 10px; }
+
+.touch-controls { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+/* with the menu open only the menu button stays on top of it */
+main.game.touch.bar-open .touch-controls > :not(.touch-menu) { visibility: hidden; }
+.touch-controls > * { pointer-events: auto; }
+.touch-stick-zone { position: absolute; left: 0; top: 56px; bottom: 0; width: 50%; touch-action: none; }
+.touch-stick { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.10) 0 55%, rgba(255, 255, 255, 0.22) 56% 60%, transparent 61%);
+  border: 3px solid rgba(255, 255, 255, 0.35); }
+.touch-stick[hidden] { display: none; }
+.touch-knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%;
+  background: rgba(255, 210, 31, 0.75); border: 3px solid rgba(0, 0, 0, 0.6); }
+.touch-btn, .touch-small {
+  position: absolute; font: inherit; color: #fff; text-transform: uppercase; touch-action: none; user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent; border: 3px solid rgba(0, 0, 0, 0.55); box-shadow: none; padding: 0; transform: none;
+}
+.touch-btn { width: 78px; height: 78px; border-radius: 50%; font-size: 18px; background: rgba(238, 44, 44, 0.55); text-shadow: 2px 2px 0 #000; }
+.touch-btn.touch-jump { right: max(22px, env(safe-area-inset-right)); bottom: max(26px, env(safe-area-inset-bottom)); width: 92px; height: 92px; }
+.touch-btn.touch-jump2 { right: calc(max(22px, env(safe-area-inset-right)) + 104px); bottom: max(14px, env(safe-area-inset-bottom)); width: 66px; height: 66px;
+  font-size: 14px; background: rgba(42, 108, 240, 0.55); }
+.touch-btn.held, .touch-btn:active { background: rgba(255, 210, 31, 0.8); color: #000; text-shadow: none; }
+.touch-small { top: max(8px, env(safe-area-inset-top)); height: 40px; padding: 0 12px; font-size: 9px; background: rgba(10, 20, 80, 0.6); }
+.touch-small:active { background: rgba(255, 210, 31, 0.8); color: #000; }
+/* touch browsers keep :hover after a tap; don't let the site's button hover style take over */
+.touch-controls .touch-small:hover:not(:active) { background: rgba(10, 20, 80, 0.6); color: #fff; }
+.touch-controls .touch-btn:hover:not(.held):not(:active) { background: rgba(238, 44, 44, 0.55); color: #fff; }
+.touch-controls .touch-jump2:hover:not(.held):not(:active) { background: rgba(42, 108, 240, 0.55); }
+.touch-regroup { right: max(10px, env(safe-area-inset-right)); }
+.touch-menu { left: max(10px, env(safe-area-inset-left)); width: 44px; font-size: 16px; padding: 0; }
+main.game.touch .toast { bottom: auto; top: 56px; }
+main.game.touch .dev-panel { top: 56px; }
+
+.rotate-hint { display: none; }
+@media (orientation: portrait) {
+  main.game.touch .rotate-hint { display: block; position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 3; pointer-events: none;
+    padding: 10px 14px; color: var(--gold); font-size: 10px; white-space: nowrap; text-shadow: 2px 2px 0 var(--ink);
+    background: rgba(10, 20, 80, 0.85); border: 3px solid var(--ink); animation: hint-fade 6s steps(6) forwards; }
+  /* in portrait the picture sits at the top and the controls share the space below it */
+  main.game.touch .game-stage { place-items: start center; padding-top: 104px; }
+}
+@keyframes hint-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }

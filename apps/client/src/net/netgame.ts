@@ -5,7 +5,7 @@
 // Other players are predicted by repeating the pad the server last saw them use. No DOM: also used by tests.
 
 import {
-  createGameSim, applyDelta, decodeSnapshot, encodeInput, encodeU32, KEYFRAME, type AnyGameSim, type GameEvent, type ScriptHost, type StartInfo, type Vfs,
+  createGameSim, applyDelta, normalizeSettings, decodeSnapshot, encodeInput, encodeU32, KEYFRAME, type AnyGameSim, type GameEvent, type ScriptHost, type StartInfo, type Vfs,
 } from "@ringlink/engine";
 
 export interface RoomLike {
@@ -62,7 +62,7 @@ export class NetGame {
     this.host = new GatedHost(host);
     this.slot = info.slot;
     this.sim = createGameSim(info.game, vfs, this.host, { headless: opts.headless, players: info.characters.length });
-    this.sim.configurePlayers(info.characters);
+    this.sim.configurePlayers(info.characters, normalizeSettings(info.settings));
     // a spectator beyond the players the game drives watches player 1
     this.sim.viewCamera = info.slot < this.sim.E.playerSlots ? info.slot : 0;
     this.remotePads = new Array(info.characters.length).fill(0);

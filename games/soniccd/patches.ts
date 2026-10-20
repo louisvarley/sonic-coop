@@ -405,4 +405,91 @@ end sub`,
 		end if
 `,
   },
+  // ---- infinite lives and host options ---------------------------------------------------------------------------
+  {
+    file: "Global/HUD.txt",
+    reason: "an ∞ sprite for infinite lives (22: the engine paints it below the HUD sheets, see hudglyph.ts)",
+    find: `	// 21 - Debug Y
+	SpriteFrame(0, 0, 8, 8, 10, 98)
+`,
+    replace: `	// 21 - Debug Y
+	SpriteFrame(0, 0, 8, 8, 10, 98)
+
+	// 22 - Ring Link: Infinity, for infinite lives
+	SpriteFrame(0, 0, 16, 11, 16, 274)
+`,
+  },
+  {
+    file: "Global/HUD.txt",
+    reason: "draw ∞ instead of the lives count when lives are infinite",
+    find: `		// Only draw as many digits as the Lives has
+		if Player.Lives < 10
+			DrawNumbers(0, 40, 217, Player.Lives, 1, 8, true)
+			TempValue1 = 52
+		else
+			DrawNumbers(0, 48, 217, Player.Lives, 2, 8, true)
+			TempValue1 = 60
+		end if`,
+    replace: `		// Only draw as many digits as the Lives has
+		if Coop.InfiniteLives == true
+			DrawSpriteScreenXY(22, 40, 217)
+			TempValue1 = 60
+		else
+		if Player.Lives < 10
+			DrawNumbers(0, 40, 217, Player.Lives, 1, 8, true)
+			TempValue1 = 52
+		else
+			DrawNumbers(0, 48, 217, Player.Lives, 2, 8, true)
+			TempValue1 = 60
+		end if
+		end if`,
+  },
+  {
+    file: "Players/PlayerObject.txt",
+    reason: "host option: Tails' flight",
+    find: `function Player_Action_DblJumpTails
+	if Player.AbilityTimer > 0
+		Player.AbilityTimer--
+	else
+		if Player.JumpPress == true`,
+    replace: `function Player_Action_DblJumpTails
+	if Player.AbilityTimer > 0
+		Player.AbilityTimer--
+	else
+		if Player.JumpPress == true
+		if Coop.TailsFlight == true`,
+  },
+  {
+    file: "Players/PlayerObject.txt",
+    reason: "close the Tails' flight option branch",
+    find: `				Player.Animation = ANI_SWIMMING
+			end if
+		end if
+	end if
+end function
+
+function Player_State_Ground`,
+    replace: `				Player.Animation = ANI_SWIMMING
+			end if
+		end if
+		end if
+	end if
+end function
+
+function Player_State_Ground`,
+  },
+  {
+    file: "Players/PlayerObject.txt",
+    reason: "host option: Sonic's super peel out (off: jumping while looking up, as Tails does)",
+    find: `			if Player.JumpPress == true
+				CallFunction(Player.ActionPeelout)
+			end if`,
+    replace: `			if Player.JumpPress == true
+				if Coop.PeelOut == true
+					CallFunction(Player.ActionPeelout)
+				else
+					CallFunction(Player_Action_Jump)
+				end if
+			end if`,
+  },
 ];

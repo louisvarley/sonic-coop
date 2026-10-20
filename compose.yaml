@@ -17,6 +17,7 @@ services:
       SNAPSHOT_RATE: ${SNAPSHOT_RATE:-20}
       RECONNECT_SECONDS: ${RECONNECT_SECONDS:-60}
       ENABLE_DEV_TOOLS: ${ENABLE_DEV_TOOLS:-0}
+      ENABLE_SONIC3: ${ENABLE_SONIC3:-0}
     volumes:
       - ${DATA_PATH:-./data}:/data:ro
     depends_on:

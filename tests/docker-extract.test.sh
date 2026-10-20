@@ -9,8 +9,8 @@ printf 'original game data\n' > "$work/game-files/SonicCDu.rsdk"
 printf 'original audio\n' > "$work/game-files/SCD_music.acb"
 cp "$work/game-files/SonicCDu.rsdk" "$work/original.rsdk"
 cp "$work/game-files/SCD_music.acb" "$work/original.acb"
-mkdir -p "$work/data/sonic3" "$work/data/ui/sonic1/Title"
-touch "$work/data/sonic3/experimental.pak" "$work/data/ui/sonic1/Title/Title.png"
+mkdir -p "$work/data/sonic3"
+touch "$work/data/sonic3/experimental.pak"
 printf 'original\n' > "$work/games/soniccd/patches.ts"
 sed "s|/app|$work|g" docker/extract.sh > "$work/extract.sh"
 cat > "$work/bin/npm" <<'EOF'
@@ -26,6 +26,13 @@ if [ "$RSDK_DIR" != "$PWD/game-files" ]; then
 fi
 if [ "$2" = tools/rsdk-detect.ts ]; then
   [ "$3" = "$RSDK_DIR" ] || exit 1
+fi
+if [ "$2" = tools/extract-ui.ts ]; then
+  printf 'ui\n' >> ui-calls
+  for game in sonic1 sonic2 soniccd; do
+    mkdir -p "data/ui/$game"
+    touch "data/ui/$game/ui.json"
+  done
 fi
 if [ "$2" = tools/extract.ts ]; then
   [ "$3" = --source ] && [ "$4" = "$RSDK_DIR" ] || exit 1
@@ -55,6 +62,8 @@ run_extract
 assert_calls 1
 run_extract
 assert_calls 1
+# UI artwork is rendered once from the new packs, then left alone until they change.
+[ "$(wc -l < "$work/ui-calls" | tr -d ' ')" = 1 ] || { echo "UI artwork should be rendered once" >&2; exit 1; }
 
 # Content, not timestamps, determines whether patched scripts have changed.
 printf 'co-op patch\n' > "$work/games/soniccd/patches.ts"

@@ -1,5 +1,5 @@
 // Deployment smoke test: two simulated players create/join a room through the public endpoint and play.
-//   tsx tools/dev/smoke.ts http://10.25.0.166:8080 [sonic1|sonic2] [seconds]
+//   tsx tools/dev/smoke.ts http://10.25.0.166:8080 [sonic1|sonic2|soniccd] [seconds]
 import fs from "node:fs";
 import path from "node:path";
 import { Client, type Room } from "colyseus.js";
@@ -73,7 +73,9 @@ for (let f = 0; f < frames; f++) {
   await wait(1000 / 60);
 }
 await wait(500);
-const A = ga.sim.E.objectEntityList, B = gb.sim.E.objectEntityList;
+// Sonic CD (RSDKv3) keeps its players in playerList; Sonic 1 and 2 in entity slots 0 and 1
+const players = (g: NetGame) => ("playerList" in g.sim.E ? g.sim.E.playerList : g.sim.E.objectEntityList);
+const A = players(ga), B = players(gb);
 console.log(`client A sees P1 ${A[0].xpos >> 16},${A[0].ypos >> 16} P2 ${A[1].xpos >> 16},${A[1].ypos >> 16}`);
 console.log(`client B sees P1 ${B[0].xpos >> 16},${B[0].ypos >> 16} P2 ${B[1].xpos >> 16},${B[1].ypos >> 16}`);
 console.log(`snapshots A ${ga.stats.snapshots} (last ${ga.stats.lastSnapshotBytes} B), B ${gb.stats.snapshots}; resim ticks A ${ga.stats.resimTicks}`);

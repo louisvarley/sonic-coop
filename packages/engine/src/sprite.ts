@@ -1,6 +1,7 @@
 // Sprite.cpp: sprite sheet surfaces and the GIF decoder. A headless engine (the server) registers surfaces with
 // their sizes but skips decoding pixels.
 
+import { isHudSheet, paintHudGlyphs, HUD_GLYPH_ROWS } from "./hudglyph.js";
 import type { Engine } from "./engine.js";
 import { FileReader } from "./core/reader.js";
 import { GFXDATA_SIZE, SURFACE_COUNT } from "./c.js";
@@ -185,9 +186,10 @@ function LoadGIFFile(E: Engine, filePath: string, sheetID: number): boolean {
   const f = new FileReader(data);
   const h = readGifHeader(f);
   const surface = E.gfxSurface[sheetID];
+  const glyphRows = isHudSheet(filePath) ? HUD_GLYPH_ROWS : 0;
   surface.fileName = filePath;
   surface.width = h.width;
-  surface.height = h.height;
+  surface.height = h.height + glyphRows;
   surface.dataPosition = E.gfxDataPosition;
   surface.widthShift = 0;
   let w = surface.width;
@@ -197,7 +199,10 @@ function LoadGIFFile(E: Engine, filePath: string, sheetID: number): boolean {
   }
   E.gfxDataPosition += surface.width * surface.height;
   if (E.gfxDataPosition < GFXDATA_SIZE) {
-    if (!E.opts.headless) ReadGifPictureData(f, surface.width, surface.height, h.interlaced, E.graphicData, surface.dataPosition);
+    if (!E.opts.headless) {
+      ReadGifPictureData(f, h.width, h.height, h.interlaced, E.graphicData, surface.dataPosition);
+      if (glyphRows) paintHudGlyphs(E.graphicData, surface.dataPosition, h.width, h.height);
+    }
   } else {
     E.gfxDataPosition = 0;
     E.host.log("WARNING: Exceeded max gfx size!");
